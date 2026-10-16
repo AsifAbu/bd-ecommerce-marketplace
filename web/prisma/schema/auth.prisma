@@ -24,6 +24,11 @@ model User {
   sessions  Session[]
   auditLogs AuditLog[]
 
+  // accounts relations
+  avatarUrl     String?        @map("avatar_url")
+  addresses     Address[]
+  accountTokens AccountToken[]
+
   @@map("user")
 }
 
