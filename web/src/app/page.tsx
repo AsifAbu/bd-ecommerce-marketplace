@@ -2,6 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { auth } from "@/auth";
+import { LogoutButton } from "@/features/accounts/ui/page-shell";
 
 export default function Home() {
   return (
@@ -21,19 +22,24 @@ async function SessionStatus() {
   if (!session?.user) {
     return (
       <p className="text-sm">
-        <Link className="underline" href="/api/auth/signin">
+        <Link className="underline" href="/login">
           Log in
         </Link>{" "}
-        with your mobile number or email.
+        with your mobile number or email, or{" "}
+        <Link className="underline" href="/signup">
+          create an account
+        </Link>
+        .
       </p>
     );
   }
   return (
-    <p className="text-sm">
-      Logged in as {session.user.name ?? session.user.email}.{" "}
-      <Link className="underline" href="/api/auth/signout">
-        Log out
+    <div className="flex flex-wrap gap-x-4 text-sm">
+      <span>Logged in as {session.user.name ?? session.user.email}.</span>
+      <Link className="underline" href="/account">
+        My account
       </Link>
-    </p>
+      <LogoutButton />
+    </div>
   );
 }
