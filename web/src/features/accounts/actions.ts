@@ -1,6 +1,7 @@
 "use server";
 
 import { AuthError } from "next-auth";
+import { safePath } from "./safe-path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { signIn, signOut } from "@/auth";
@@ -29,7 +30,6 @@ const str = (fd: FormData, key: string) => {
 };
 
 /** Only same-site relative paths, so the login page cannot redirect elsewhere. */
-const safePath = (p: string) => (p.startsWith("/") && !p.startsWith("//") && !p.startsWith("/\\") ? p : "/account");
 
 const isUniqueViolation = (err: unknown) =>
   err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
