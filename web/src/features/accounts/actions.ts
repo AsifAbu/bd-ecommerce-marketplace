@@ -4,7 +4,7 @@ import { AuthError } from "next-auth";
 import { safePath } from "./safe-path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { signIn, signOut } from "@/auth";
+import { LoginLockedError, signIn, signOut } from "@/auth";
 import { parseLoginIdentifier } from "@/features/auth/identifier";
 import { hashPassword } from "@/features/auth/password";
 import { Prisma } from "@/generated/prisma/client";
@@ -75,6 +75,12 @@ export async function loginAction(_prev: FormState, fd: FormData): Promise<FormS
       redirectTo: safePath(str(fd, "callbackUrl")),
     });
   } catch (err) {
+    if (err instanceof LoginLockedError) {
+      return {
+        error: "Too many failed login attempts. Wait 15 minutes or reset your password.",
+        values: { identifier: str(fd, "identifier") },
+      };
+    }
     if (err instanceof AuthError) {
       return {
         error: "Wrong mobile number, email or password, or the account is suspended.",

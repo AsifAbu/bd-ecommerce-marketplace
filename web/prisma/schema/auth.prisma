@@ -86,3 +86,15 @@ model VerificationToken {
   @@unique([identifier, token])
   @@map("verification_token")
 }
+
+// One row per failed password login. Drives the lockout in src/features/auth/credentials.ts.
+model LoginFailure {
+  id         String   @id @default(cuid())
+  identifier String // normalised email or +880 mobile, whether or not an account exists
+  ip         String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([identifier, createdAt])
+  @@index([ip, createdAt])
+  @@map("login_failure")
+}
