@@ -10,6 +10,8 @@ import { hashPassword } from "../src/features/auth/password";
 import { slugify } from "../src/features/catalog/tree";
 import type { AttributeType, FilterWidget } from "../src/generated/prisma/enums";
 import { getStorage } from "../src/lib/storage";
+import { POLICY_SLUGS, SIGNUP_POLICY_SLUGS, CHECKOUT_POLICY_SLUGS } from "../src/features/policies/catalog";
+import { SEED_POLICY_TEXT } from "../src/features/policies/seed-text";
 
 export const TEST_PASSWORD = "Test@12345";
 
@@ -56,9 +58,10 @@ async function seedUsers() {
   // Past COD refusals for the flagged customer. Recorded as audit entries until the
   // orders feature exists; the checkout agent should replace these with refused orders.
   const flagged = await prisma.user.findUniqueOrThrow({ where: { email: "customer.flagged@ecom.test" } });
-  await prisma.auditLog.deleteMany({ where: { action: "order.cod_refused", entityId: flagged.id } });
+  // The audit log is append-only (6-year records, src/lib/retention.ts): add only missing rows.
+  const existing = await prisma.auditLog.count({ where: { action: "order.cod_refused", entityId: flagged.id } });
   await prisma.auditLog.createMany({
-    data: ["TEST-ORDER-0001", "TEST-ORDER-0002"].map((orderNo) => ({
+    data: ["TEST-ORDER-0001", "TEST-ORDER-0002"].slice(existing).map((orderNo) => ({
       action: "order.cod_refused",
       entity: "user",
       entityId: flagged.id,
@@ -442,11 +445,64 @@ async function seedAccounts() {
   console.info(`Seeded ${addresses.length} test addresses`);
 }
 
+/**
+ * Policies (US-080): version 1 of every policy, published, with [TEST] wording. Published rows
+ * are immutable, so an existing version 1 is left as it is. Every seeded user has accepted the
+ * Terms and Privacy Policy v1 (as at sign-up); the verified customer also accepted Return and
+ * Delivery v1 (as at checkout). Acceptance rows are append-only: only missing ones are added.
+ */
+async function seedPolicies() {
+  const effectiveAt = new Date("2026-10-01T00:00:00+06:00");
+  const admin = await prisma.user.findUniqueOrThrow({ where: { email: "admin@ecom.test" }, select: { id: true } });
+  const v1 = new Map<string, { id: string; slug: string; version: number }>();
+  for (const slug of POLICY_SLUGS) {
+    const { title, body } = SEED_POLICY_TEXT[slug];
+    const row = await prisma.policyDocument.upsert({
+      where: { slug_version: { slug, version: 1 } },
+      update: {},
+      create: {
+        slug,
+        version: 1,
+        title,
+        body,
+        changeSummary: "[TEST] First version (seed)",
+        status: "published",
+        effectiveAt,
+        publishedAt: effectiveAt,
+        createdById: admin.id,
+        publishedById: admin.id,
+      },
+      select: { id: true, slug: true, version: true },
+    });
+    v1.set(slug, row);
+  }
+
+  const users = await prisma.user.findMany({ where: { email: { endsWith: "@ecom.test" } }, select: { id: true, email: true } });
+  let added = 0;
+  for (const user of users) {
+    const plan: [readonly string[], "signup" | "checkout"][] = [[SIGNUP_POLICY_SLUGS, "signup"]];
+    if (user.email === "customer.verified@ecom.test") plan.push([CHECKOUT_POLICY_SLUGS, "checkout"]);
+    for (const [slugs, context] of plan) {
+      for (const slug of slugs) {
+        const policy = v1.get(slug)!;
+        const exists = await prisma.policyAcceptance.count({ where: { userId: user.id, policyId: policy.id } });
+        if (exists) continue;
+        await prisma.policyAcceptance.create({
+          data: { userId: user.id, policyId: policy.id, slug, version: policy.version, context, userAgent: "seed" },
+        });
+        added++;
+      }
+    }
+  }
+  console.info(`Seeded version 1 of ${v1.size} policies; added ${added} acceptance records`);
+}
+
 async function main() {
   await seedUsers();
   await seedCatalog();
   await seedShops();
   await seedAccounts();
+  await seedPolicies();
 }
 
 main()

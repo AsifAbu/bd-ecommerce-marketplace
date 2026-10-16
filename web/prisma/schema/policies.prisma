@@ -1,0 +1,62 @@
+// Policies feature: versioned policy pages and acceptance records (US-080, US-081).
+// One PolicyDocument row per version of a policy (plan: `policy_document`).
+// Published versions are immutable and never deleted; a newer published version supersedes
+// the older one from its effective date. Acceptance rows are append-only proof, kept 6 years
+// (src/lib/retention.ts).
+
+enum PolicyStatus {
+  draft
+  published
+}
+
+enum PolicyAcceptanceContext {
+  signup // Terms + Privacy at account creation
+  checkout // Return + Delivery (+ Privacy for guests) when placing an order
+  account // a logged-in user accepting an updated version
+}
+
+model PolicyDocument {
+  id            String       @id @default(cuid())
+  slug          String // one of POLICIES in src/features/policies/catalog.ts, e.g. "terms"
+  version       Int // 1, 2, 3 … per slug; a draft takes the next number
+  title         String
+  body          String // markdown subset, rendered without HTML (src/features/policies/markdown.tsx)
+  changeSummary String?      @map("change_summary") // what changed from the previous version
+  status        PolicyStatus @default(draft)
+  effectiveAt   DateTime?    @map("effective_at") // set on publish; may be in the future
+  publishedAt   DateTime?    @map("published_at")
+  createdById   String?      @map("created_by")
+  publishedById String?      @map("published_by")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  createdBy   User?              @relation("PolicyCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  publishedBy User?              @relation("PolicyPublishedBy", fields: [publishedById], references: [id], onDelete: Restrict)
+  acceptances PolicyAcceptance[]
+
+  @@unique([slug, version])
+  @@index([slug, status, effectiveAt])
+  @@map("policy_document")
+}
+
+// Append-only. A user (userId) or a guest at checkout (guestPhone, E.164) accepts one version.
+model PolicyAcceptance {
+  id         String                  @id @default(cuid())
+  userId     String?                 @map("user_id")
+  guestPhone String?                 @map("guest_phone")
+  policyId   String                  @map("policy_id")
+  slug       String // copy of the policy's slug, for lookups and reports
+  version    Int // copy of the policy's version
+  context    PolicyAcceptanceContext
+  ip         String?
+  userAgent  String?                 @map("user_agent")
+  acceptedAt DateTime                @default(now()) @map("accepted_at")
+
+  user   User?          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  policy PolicyDocument @relation(fields: [policyId], references: [id], onDelete: Restrict)
+
+  @@index([userId, slug, version])
+  @@index([guestPhone])
+  @@index([policyId])
+  @@map("policy_acceptance")
+}

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { SiteFooter } from "@/components/site-footer";
 import { TestModeBanner } from "@/components/test-mode-banner";
+import { CookieNotice } from "@/features/policies/ui/cookie-notice";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,7 +17,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={null}>
           <TestModeBanner />
         </Suspense>
+        <Suspense fallback={null}>
+          <CookieNotice />
+        </Suspense>
         {children}
+        <SiteFooter />
       </body>
     </html>
   );

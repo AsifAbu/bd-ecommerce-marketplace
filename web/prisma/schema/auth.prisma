@@ -39,6 +39,11 @@ model User {
   addresses     Address[]
   accountTokens AccountToken[]
 
+  // policies relations
+  policiesCreated   PolicyDocument[]   @relation("PolicyCreatedBy")
+  policiesPublished PolicyDocument[]   @relation("PolicyPublishedBy")
+  policyAcceptances PolicyAcceptance[]
+
   @@map("user")
 }
 
