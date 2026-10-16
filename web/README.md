@@ -36,6 +36,14 @@ Seeded accounts (password `Test@12345`). Log in at `/api/auth/signin` with mobil
 | Customer, new | customer.new@ecom.test | (none) |
 | Customer, past COD refusals | customer.flagged@ecom.test | 01700000003 |
 
+Seeded shops (all approved): Test Tech Shop, Test Fashion Shop and Test Pharmacy (Verified; the pharmacy has a
+verified dummy drug licence) and Test Book Shop (Basic). Each has `owner.<shop>@ecom.test` and
+`staff.<shop>@ecom.test` (`<shop>` = tech, books, fashion, pharmacy), password `Test@12345`.
+
+Shops pages: `/shops/apply` (apply), `/seller` (my shops), `/admin/shops` (Platform Admin review queue).
+Uploaded documents go to the private MinIO bucket (`S3_BUCKET_PRIVATE`); in test mode any file is accepted.
+Staff invite emails land in Mailpit (http://localhost:8025). The worker runs the daily licence-expiry job.
+
 ## Scripts
 
 `dev`, `build`, `start`, `lint`, `typecheck`, `test` (Vitest), `test:e2e` (Playwright; first run
