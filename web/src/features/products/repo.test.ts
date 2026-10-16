@@ -190,3 +190,33 @@ describe("images", () => {
     expect(await repo.publicFindImage("iA")).toBeNull();
   });
 });
+
+describe("product page reads (US-044)", () => {
+  it("publicFindLiveProduct returns only live listings", async () => {
+    expect(await repo.publicFindLiveProduct("pA", TODAY)).toMatchObject({ id: "pA" });
+    expect(await repo.publicFindLiveProduct("pA-gone", TODAY)).toBeNull(); // deleted
+
+    row(db.product, "pA").status = "inactive";
+    expect(await repo.publicFindLiveProduct("pA", TODAY)).toBeNull();
+    row(db.product, "pA").status = "active";
+
+    row(db.product, "pA").expiresOn = new Date("2026-10-15T00:00:00Z"); // expired yesterday
+    expect(await repo.publicFindLiveProduct("pA", TODAY)).toBeNull();
+    row(db.product, "pA").expiresOn = TODAY; // expires today: still sold
+    expect(await repo.publicFindLiveProduct("pA", TODAY)).toMatchObject({ id: "pA" });
+
+    row(db.shop, "A").status = "suspended";
+    expect(await repo.publicFindLiveProduct("pA", TODAY)).toBeNull();
+    row(db.shop, "A").status = "approved";
+
+    // Medicine listing of a shop whose medicine selling is suspended.
+    row(db.category, "cat").requiresLicence = true;
+    row(db.shop, "A").medicineSuspended = true;
+    expect(await repo.publicFindLiveProduct("pA", TODAY)).toBeNull();
+  });
+
+  it("publicFindCategories returns the requested categories", async () => {
+    expect((await repo.publicFindCategories(["cat"])).map((c) => c.id)).toEqual(["cat"]);
+    expect(await repo.publicFindCategories(["missing"])).toEqual([]);
+  });
+});
