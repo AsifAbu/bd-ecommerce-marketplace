@@ -10,6 +10,7 @@ import { hashPassword } from "../src/features/auth/password";
 import { slugify } from "../src/features/catalog/tree";
 import type { AttributeType, FilterWidget } from "../src/generated/prisma/enums";
 import { getStorage } from "../src/lib/storage";
+import { isTestMode } from "../src/lib/config";
 
 export const TEST_PASSWORD = "Test@12345";
 
@@ -29,7 +30,8 @@ async function seedUsers() {
     {
       email: "customer.verified@ecom.test",
       phone: "+8801700000002",
-      name: "[TEST] Customer, verified phone",
+      name: "[TEST] Customer, verified phone and email",
+      emailVerifiedAt: now,
       phoneVerifiedAt: now,
     },
     {
@@ -443,6 +445,8 @@ async function seedAccounts() {
 }
 
 async function main() {
+  // Seed accounts share a published password: never let them reach a production database.
+  if (!isTestMode()) throw new Error("Refusing to seed: set APP_MODE=test (seed data is for test mode only)");
   await seedUsers();
   await seedCatalog();
   await seedShops();
