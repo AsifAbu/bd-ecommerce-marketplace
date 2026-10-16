@@ -33,7 +33,7 @@ Read the knowledge files only when a task needs them; this page is enough to sta
 
 ## Open items and next steps
 
-1. **Offered, not yet approved:** test charters for the 10 riskiest areas (guest checkout, COD limits, medicine licences, seller tiers, filters, cart, returns/complaints, roles, policies, test-mode safety), as a Word file in `docs/`.
-2. Then start building at Sprint 0 (repo, CI, test mode, seed scripts). Hosting plan: managed services first (e.g. Vercel + managed Postgres + Meilisearch Cloud + R2), region near Bangladesh.
+1. **Next wave (needs owner's go):** Sprint 4 product listing form (US-030–034, uses the catalog schema API), which unlocks the seller beta at week 9. Not yet approved: test charters (Word file in `docs/`).
+2. Hosting plan: managed services first (e.g. Vercel + managed Postgres + Meilisearch Cloud + R2), region near Bangladesh.
 3. **Before release** (pre-release checklist in the plan): official guideline text and Bengali Terms, DBID and compliance officer, real SMS provider, production medicine verification, final commission and fake-order limits, courier merchant account, 100 active shops, remove seed data, decide on prescriptions, confirm the Basic seller tier is legal.
 4. Open questions: try-on budget (paid API or self-host).
