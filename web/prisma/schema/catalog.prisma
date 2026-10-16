@@ -1,0 +1,143 @@
+// Catalog schema (US-020 to US-024, ADR-001): category tree, attribute
+// definitions and their per-leaf assignments, and seller category requests.
+// Products attach only to leaf categories (Sprint 4).
+
+enum AttributeType {
+  enum
+  multi_enum
+  number
+  boolean
+  text
+}
+
+enum FilterWidget {
+  checkbox_list
+  range_slider
+  toggle
+}
+
+enum AttributeOptionStatus {
+  active
+  pending
+}
+
+enum CategoryRequestKind {
+  category
+  enum_option
+}
+
+enum CategoryRequestStatus {
+  pending
+  approved
+  rejected
+}
+
+model Category {
+  id               String    @id @default(cuid())
+  parentId         String?   @map("parent_id")
+  name             String
+  slug             String    @unique
+  // Materialised path of ids from the root, e.g. "/rootId/childId/". Ends with this category's id.
+  path             String
+  isLeaf           Boolean   @default(true) @map("is_leaf")
+  isOther          Boolean   @default(false) @map("is_other")
+  requiresLicence  Boolean   @default(false) @map("requires_licence")
+  requiresExpiry   Boolean   @default(false) @map("requires_expiry")
+  // Percent, e.g. 12.00 = 12%. Deducted before the shop payout.
+  commissionRate   Decimal   @default(10) @map("commission_rate") @db.Decimal(5, 2)
+  // Updated by a background job once products exist (Sprint 4).
+  liveProductCount Int       @default(0) @map("live_product_count")
+  archivedAt       DateTime? @map("archived_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  parent     Category?           @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children   Category[]          @relation("CategoryTree")
+  attributes CategoryAttribute[]
+  requests   CategoryRequest[]
+
+  @@index([parentId])
+  @@index([path])
+  @@map("category")
+}
+
+// Defined once globally, then assigned to leaf categories. Archived, never hard-deleted.
+model Attribute {
+  id         String        @id @default(cuid())
+  key        String        @unique
+  name       String
+  type       AttributeType
+  unit       String?
+  archivedAt DateTime?     @map("archived_at")
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
+
+  options    AttributeOption[]
+  categories CategoryAttribute[]
+  requests   CategoryRequest[]
+
+  @@map("attribute")
+}
+
+// Allowed values for enum and multi_enum attributes. Pending until an admin approves.
+model AttributeOption {
+  id          String                @id @default(cuid())
+  attributeId String                @map("attribute_id")
+  value       String
+  label       String
+  status      AttributeOptionStatus @default(active)
+  createdAt   DateTime              @default(now()) @map("created_at")
+
+  attribute Attribute         @relation(fields: [attributeId], references: [id], onDelete: Restrict)
+  requests  CategoryRequest[]
+
+  @@unique([attributeId, value])
+  @@map("attribute_option")
+}
+
+model CategoryAttribute {
+  categoryId    String        @map("category_id")
+  attributeId   String        @map("attribute_id")
+  required      Boolean       @default(false)
+  filterable    Boolean       @default(false)
+  filterWidget  FilterWidget? @map("filter_widget")
+  displayOrder  Int           @default(0) @map("display_order")
+  isVariantAxis Boolean       @default(false) @map("is_variant_axis")
+
+  category  Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  attribute Attribute @relation(fields: [attributeId], references: [id], onDelete: Restrict)
+
+  @@id([categoryId, attributeId])
+  @@index([attributeId])
+  @@map("category_attribute")
+}
+
+// A seller asks for a new category (under parentId) or a new enum option (for attributeId).
+// The admin answers within 24 hours (dueAt).
+model CategoryRequest {
+  id                String                @id @default(cuid())
+  kind              CategoryRequestKind
+  requestedByUserId String                @map("requested_by_user_id")
+  shopId            String?               @map("shop_id") // TODO link to Shop after merge
+  parentId          String?               @map("parent_id")
+  attributeId       String?               @map("attribute_id")
+  optionId          String?               @map("option_id")
+  name              String
+  reason            String?
+  status            CategoryRequestStatus @default(pending)
+  dueAt             DateTime              @map("due_at")
+  decidedById       String?               @map("decided_by_id")
+  decidedAt         DateTime?             @map("decided_at")
+  decisionNote      String?               @map("decision_note")
+  createdAt         DateTime              @default(now()) @map("created_at")
+
+  requestedBy User             @relation("CategoryRequestRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  decidedBy   User?            @relation("CategoryRequestDecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+  parent      Category?        @relation(fields: [parentId], references: [id], onDelete: SetNull)
+  attribute   Attribute?       @relation(fields: [attributeId], references: [id], onDelete: SetNull)
+  option      AttributeOption? @relation(fields: [optionId], references: [id], onDelete: SetNull)
+
+  @@index([status, dueAt])
+  @@index([requestedByUserId])
+  @@map("category_request")
+}

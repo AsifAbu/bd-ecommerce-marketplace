@@ -24,6 +24,10 @@ model User {
   sessions  Session[]
   auditLogs AuditLog[]
 
+  // catalog relations
+  categoryRequests        CategoryRequest[] @relation("CategoryRequestRequestedBy")
+  categoryRequestsDecided CategoryRequest[] @relation("CategoryRequestDecidedBy")
+
   @@map("user")
 }
 
