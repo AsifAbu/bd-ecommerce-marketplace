@@ -5,6 +5,8 @@ export interface SignUpDeps {
   /** True if an account already uses this email or phone. */
   identifierTaken(kind: "email" | "phone", value: string): Promise<boolean>;
   createUser(data: { name: string; email: string | null; phone: string | null; passwordHash: string }): Promise<{ id: string }>;
+  /** Records acceptance of the current Terms and Privacy Policy versions (US-080). */
+  recordConsent(userId: string): Promise<void>;
 }
 
 export type SignUpResult =
@@ -18,7 +20,8 @@ export const TAKEN_MESSAGE = {
 
 /**
  * Creates an unverified account. Phone and email are unique; they count as
- * verified only after an OTP or email link, never at sign-up.
+ * verified only after an OTP or email link, never at sign-up. The consent checkbox is required
+ * and its acceptance of the current Terms and Privacy Policy is recorded.
  */
 export async function signUp(raw: unknown, deps: SignUpDeps): Promise<SignUpResult> {
   const parsed = signUpSchema.safeParse(raw);
@@ -36,5 +39,6 @@ export async function signUp(raw: unknown, deps: SignUpDeps): Promise<SignUpResu
     phone: input.phone ?? null,
     passwordHash: await hashPassword(input.password),
   });
+  await deps.recordConsent(user.id);
   return { ok: true, userId: user.id, input };
 }

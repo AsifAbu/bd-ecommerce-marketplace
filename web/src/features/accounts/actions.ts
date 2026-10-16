@@ -47,7 +47,7 @@ async function trySendTokenEmail(user: { id: string; email: string }, type: "ema
 
 export async function signUpAction(_prev: FormState, fd: FormData): Promise<FormState> {
   const values = { name: str(fd, "name"), phone: str(fd, "phone"), email: str(fd, "email") };
-  const raw = { ...values, password: str(fd, "password") };
+  const raw = { ...values, password: str(fd, "password"), acceptPolicies: str(fd, "acceptPolicies") };
   let result;
   try {
     result = await signUp(raw, signUpDeps);

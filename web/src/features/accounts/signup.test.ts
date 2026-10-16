@@ -4,17 +4,21 @@ import { signUp, TAKEN_MESSAGE, type SignUpDeps } from "./signup";
 
 function deps(existing: { email?: string; phone?: string }[] = []) {
   const created: Parameters<SignUpDeps["createUser"]>[0][] = [];
+  const consents: string[] = [];
   const d: SignUpDeps = {
+    recordConsent: async (userId) => {
+      consents.push(userId);
+    },
     identifierTaken: async (kind, value) => existing.some((u) => u[kind] === value),
     createUser: async (data) => {
       created.push(data);
       return { id: "new-user" };
     },
   };
-  return { d, created };
+  return { d, created, consents };
 }
 
-const base = { name: "Rahim", password: "Secret@123" };
+const base = { name: "Rahim", password: "Secret@123", acceptPolicies: "on" };
 
 describe("sign-up validation", () => {
   it("accepts an 11-digit mobile starting 01 and stores it as +880", async () => {
@@ -44,7 +48,7 @@ describe("sign-up validation", () => {
 
   it("needs a mobile or an email, a name and an 8+ character password", async () => {
     const { d } = deps();
-    const res = await signUp({ name: "", password: "short" }, d);
+    const res = await signUp({ name: "", password: "short", acceptPolicies: "on" }, d);
     expect(res.ok).toBe(false);
     if (!res.ok) expect(Object.keys(res.fields).sort()).toEqual(["name", "password", "phone"]);
   });
@@ -81,5 +85,21 @@ describe("sign-up uniqueness", () => {
     await signUp({ ...base, phone: "01712345678", email: "a@ecom.test" }, d);
     expect(created[0]).not.toHaveProperty("phoneVerifiedAt");
     expect(created[0]).not.toHaveProperty("emailVerifiedAt");
+  });
+});
+
+describe("sign-up consent (US-080)", () => {
+  it("is blocked without the Terms and Privacy Policy checkbox, and creates nothing", async () => {
+    const { d, created, consents } = deps();
+    const res = await signUp({ name: "Rahim", password: "Secret@123", phone: "01712345678" }, d);
+    expect(res).toMatchObject({ ok: false, fields: { acceptPolicies: expect.stringMatching(/Terms and Conditions/) } });
+    expect(created).toHaveLength(0);
+    expect(consents).toHaveLength(0);
+  });
+
+  it("records the acceptance for the new account", async () => {
+    const { d, consents } = deps();
+    await expect(signUp({ ...base, phone: "01712345678" }, d)).resolves.toMatchObject({ ok: true });
+    expect(consents).toEqual(["new-user"]);
   });
 });
