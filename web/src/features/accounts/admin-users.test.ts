@@ -4,7 +4,7 @@ import { ForbiddenError, UnauthorizedError } from "@/lib/auth/errors";
 import { createAdminUsers, type AdminUsersDeps } from "./admin-users";
 import { errorResponse } from "./http";
 
-const admin: GuardUser = { id: "admin", email: "a@ecom.test", phone: null, name: "A", isPlatformAdmin: true, status: "active" };
+const admin: GuardUser = { id: "admin", email: "a@ecom.test", emailVerifiedAt: new Date(), phone: null, name: "A", isPlatformAdmin: true, status: "active" };
 const customer: GuardUser = { ...admin, id: "cust", isPlatformAdmin: false };
 
 function setup(sessionUser: GuardUser | null) {

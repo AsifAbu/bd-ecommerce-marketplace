@@ -18,7 +18,7 @@ export const { requireUser, requirePlatformAdmin } = createGuards({
   findUserById: (id) =>
     prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, phone: true, name: true, isPlatformAdmin: true, status: true },
+      select: { id: true, email: true, emailVerifiedAt: true, phone: true, name: true, isPlatformAdmin: true, status: true },
     }),
 });
 

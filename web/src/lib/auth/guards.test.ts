@@ -5,6 +5,7 @@ import { ForbiddenError, UnauthorizedError } from "./errors";
 const base: GuardUser = {
   id: "u1",
   email: "c@ecom.test",
+  emailVerifiedAt: new Date(),
   phone: null,
   name: "Customer",
   isPlatformAdmin: false,

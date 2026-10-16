@@ -1,7 +1,7 @@
 import type { User } from "@/generated/prisma/client";
 import { ForbiddenError, UnauthorizedError } from "./errors";
 
-export type GuardUser = Pick<User, "id" | "email" | "phone" | "name" | "isPlatformAdmin" | "status">;
+export type GuardUser = Pick<User, "id" | "email" | "emailVerifiedAt" | "phone" | "name" | "isPlatformAdmin" | "status">;
 
 export interface GuardDeps {
   getSessionUserId: () => Promise<string | null | undefined>;

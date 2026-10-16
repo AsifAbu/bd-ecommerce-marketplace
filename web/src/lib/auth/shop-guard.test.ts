@@ -7,6 +7,7 @@ import { createShopGuard } from "./shop-guard-core";
 const user = (id: string): GuardUser => ({
   id,
   email: `${id}@ecom.test`,
+  emailVerifiedAt: new Date(),
   phone: null,
   name: id,
   isPlatformAdmin: false,
