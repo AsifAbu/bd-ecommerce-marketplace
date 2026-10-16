@@ -1,4 +1,5 @@
 import type { Job } from "pg-boss";
+import { refreshLiveCounts } from "@/features/products/live-counts";
 import { prismaExpiryDeps, runLicenceExpiryCheck } from "@/features/shops/licence-expiry";
 import { queues, type JobData, type QueueName } from "./queues";
 
@@ -14,5 +15,9 @@ export const handlers: Handlers = {
   "shops.licence-expiry": async () => {
     const result = await runLicenceExpiryCheck(new Date(), prismaExpiryDeps);
     console.info("[worker] shops.licence-expiry", result);
+  },
+  "products.refresh-counts": async () => {
+    const result = await refreshLiveCounts(new Date());
+    console.info("[worker] products.refresh-counts", result);
   },
 };
