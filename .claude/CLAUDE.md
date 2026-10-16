@@ -32,7 +32,16 @@
 
 Read the knowledge files only when a task needs them; this page is enough to start.
 
+## Working in the cloud (claude.ai/code)
+
+- Repo: private GitHub `AsifAbu/bd-ecommerce-marketplace`. The owner instructs from claude.ai/code while their PC is off.
+- Setup: the environment runs `bash web/scripts/cloud-setup.sh` (installs Postgres, Meilisearch, MinIO, Mailpit without Docker; npm ci; migrate; seed). If a service fails to install, say so in the PR.
+- Flow per task: new branch `feature/<name>` or `fix/<name>` from `main` → build with tests → run `npm run lint && npm run typecheck && npm test && npm run build` in `web/` → push → open a **pull request** with `gh pr create` (summary, stories, test results). **Never merge to `main` yourself; the owner approves PRs.**
+- Migrations: on a branch, add a Prisma migration only when the PR is meant to merge alone; note it in the PR.
+
 ## Open items and next steps
+
+0. **Audit findings to fix (ponytail audit, 16 Oct 2026):** must fix: (1) staff invite accepts an unverified email (`features/shops/actions.ts` acceptInvite), (2) no login rate limit/lockout (`src/auth.ts`), (3) licence-expiry job can leave expired shops unsuspended if an email fails (`features/shops/licence-expiry.ts`), (4) `prisma/seed.ts` has no production guard. Should fix: (5) rejecting a category request deletes an already-approved option (`catalog/service.ts`), (6) three duplicate form-action helpers/styles → keep shops `runAction` in `src/lib`.
 
 1. **Next wave (needs owner's go):** Sprint 4 product listing form (US-030–034, uses the catalog schema API), which unlocks the seller beta at week 9. Not yet approved: test charters (Word file in `docs/`).
 2. Hosting plan: managed services first (e.g. Vercel + managed Postgres + Meilisearch Cloud + R2), region near Bangladesh.
