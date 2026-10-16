@@ -36,9 +36,9 @@ Seeded accounts (password `Test@12345`). Log in at `/api/auth/signin` with mobil
 | Customer, new | customer.new@ecom.test | (none) |
 | Customer, past COD refusals | customer.flagged@ecom.test | 01700000003 |
 
-Seeded shops (all approved): Test Tech Shop, Test Fashion Shop and Test Pharmacy (Verified; the pharmacy has a
+Seeded shops (approved): Test Tech Shop, Test Fashion Shop and Test Pharmacy (Verified; the pharmacy has a
 verified dummy drug licence) and Test Book Shop (Basic). Each has `owner.<shop>@ecom.test` and
-`staff.<shop>@ecom.test` (`<shop>` = tech, books, fashion, pharmacy), password `Test@12345`.
+`staff.<shop>@ecom.test` (`<shop>` = tech, books, fashion, pharmacy, suspended for the suspended test shop), password `Test@12345`.
 
 Shops pages: `/shops/apply` (apply), `/seller` (my shops), `/admin/shops` (Platform Admin review queue).
 Uploaded documents go to the private MinIO bucket (`S3_BUCKET_PRIVATE`); in test mode any file is accepted.
@@ -63,6 +63,19 @@ automatically. JSON API: `/api/shops/<shopId>/products/...`; images are served b
 (redirect to a short-lived signed URL; uploads fail with a clear 503 when MinIO is not running). The worker's
 daily `products.refresh-counts` job recounts each category's live listings. The seed adds two `[TEST]`
 products per seeded shop (no images).
+
+## Storefronts (US-014)
+
+Every approved shop has a public storefront at `/s/<shop slug>` (the slug chosen at application, e.g.
+`/s/test-tech-shop`): banner, logo, name, "Verified seller" badge, description, policies, member since, and a grid
+of the shop's live, in-stock products (24 per page) linking to `/products/<productId>`. URL parameters:
+`?category=<category slug>` (only categories the shop sells in), `?sort=newest|price_asc|price_desc`, `?page=<n>`.
+Pending, rejected, suspended and unknown shops show "Shop not found" (noindex). Open Graph/Twitter tags use the
+shop name, description and banner (or logo), so Facebook previews look right.
+
+The seller dashboard shows the full link (base URL from `APP_URL`, else `AUTH_URL`) with **Copy link**, **Share on
+Facebook** and **View storefront**, for the owner and staff; the admin shops list links each approved storefront.
+The seed adds `[TEST] Suspended Shop` (`/s/test-suspended-shop`, suspended, one hidden product).
 
 ## Scripts
 
