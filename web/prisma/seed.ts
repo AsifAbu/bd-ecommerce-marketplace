@@ -7,6 +7,8 @@
 import "dotenv/config";
 import { prisma } from "../src/lib/db";
 import { hashPassword } from "../src/features/auth/password";
+import { slugify } from "../src/features/catalog/tree";
+import type { AttributeType, FilterWidget } from "../src/generated/prisma/enums";
 
 export const TEST_PASSWORD = "Test@12345";
 
@@ -66,8 +68,252 @@ async function seedUsers() {
   console.info(`Seeded ${users.length} test users (password: ${TEST_PASSWORD})`);
 }
 
+// ---------- Catalog (US-020 to US-024) ----------
+
+type SeedAttr = { key: string; name: string; type: AttributeType; unit?: string; options?: string[] };
+// [attribute key, required, filterable, variant axis]
+type SeedAssign = [string, boolean, boolean, boolean?];
+type SeedCategory = {
+  name: string;
+  commissionRate?: number;
+  requiresLicence?: boolean;
+  requiresExpiry?: boolean;
+  attributes?: SeedAssign[];
+  children?: SeedCategory[];
+};
+
+const CATALOG_ATTRIBUTES: SeedAttr[] = [
+  {
+    key: "brand",
+    name: "Brand",
+    type: "enum",
+    options: [
+      "AMD", "Intel", "Corsair", "Kingston", "G.Skill", "ASUS", "MSI", "Gigabyte", "ASRock",
+      "Yellow", "Ecstasy", "Aarong", "Easy", "Richman",
+      "Square", "Beximco", "Incepta", "ACI", "Renata",
+    ],
+  },
+  { key: "socket", name: "Socket", type: "enum", options: ["AM4", "AM5", "LGA1700", "LGA1851"] },
+  { key: "core_count", name: "Core count", type: "number" },
+  { key: "base_clock_ghz", name: "Base clock", type: "number", unit: "GHz" },
+  { key: "tdp_w", name: "TDP", type: "number", unit: "W" },
+  { key: "integrated_graphics", name: "Integrated graphics", type: "boolean" },
+  { key: "model_number", name: "Model number", type: "text" },
+  { key: "memory_type", name: "Memory type", type: "enum", options: ["DDR4", "DDR5"] },
+  { key: "capacity_gb", name: "Capacity", type: "number", unit: "GB" },
+  { key: "speed_mhz", name: "Speed", type: "number", unit: "MHz" },
+  { key: "module_type", name: "Module type", type: "enum", options: ["DIMM", "SO-DIMM"] },
+  { key: "chipset", name: "Chipset", type: "enum", options: ["A620", "B650", "X670", "B760", "Z790"] },
+  { key: "form_factor", name: "Form factor", type: "enum", options: ["ATX", "Micro-ATX", "Mini-ITX"] },
+  { key: "author", name: "Author", type: "text" },
+  { key: "language", name: "Language", type: "enum", options: ["Bangla", "English"] },
+  { key: "format", name: "Format", type: "enum", options: ["Hardcover", "Paperback", "Ebook"] },
+  {
+    key: "genre",
+    name: "Genre",
+    type: "enum",
+    options: ["Novel", "Thriller", "Poetry", "Science", "Engineering", "Business", "Picture book", "Rhymes"],
+  },
+  { key: "isbn", name: "ISBN", type: "text" },
+  { key: "page_count", name: "Page count", type: "number" },
+  { key: "fit", name: "Fit", type: "enum", options: ["Slim", "Regular", "Relaxed"] },
+  { key: "material", name: "Material", type: "enum", options: ["Cotton", "Linen", "Denim", "Polyester", "Viscose"] },
+  { key: "size", name: "Size", type: "enum", options: ["S", "M", "L", "XL", "XXL", "28", "30", "32", "34", "36"] },
+  { key: "colour", name: "Colour", type: "enum", options: ["Black", "White", "Blue", "Navy", "Grey", "Red", "Green"] },
+  { key: "tryon_eligible", name: "Try-on eligible", type: "boolean" },
+  {
+    key: "generic_name",
+    name: "Generic name",
+    type: "enum",
+    options: ["Paracetamol", "Ibuprofen", "Naproxen", "Vitamin C", "Vitamin D3", "Multivitamin", "Calcium + D3"],
+  },
+  { key: "dosage_form", name: "Dosage form", type: "enum", options: ["Tablet", "Capsule", "Syrup", "Suspension"] },
+  { key: "strength_mg", name: "Strength", type: "number", unit: "mg" },
+  { key: "pack_size", name: "Pack size", type: "number", unit: "units" },
+  { key: "otc", name: "Over the counter (OTC)", type: "boolean" },
+];
+
+const BOOK_ATTRS: SeedAssign[] = [
+  ["author", true, true], ["language", true, true], ["format", true, true], ["genre", false, true],
+  ["isbn", false, false], ["page_count", false, false],
+];
+const FASHION_ATTRS: SeedAssign[] = [
+  ["brand", true, true], ["fit", false, true], ["material", true, true],
+  ["size", true, true, true], ["colour", true, true, true], ["tryon_eligible", false, true],
+];
+const MEDICINE_ATTRS: SeedAssign[] = [
+  ["brand", true, true], ["generic_name", true, true], ["dosage_form", true, true],
+  ["strength_mg", true, true], ["pack_size", true, false], ["otc", true, false],
+];
+
+// Commission testing values from the plan; children inherit from their root.
+const CATALOG_TREE: SeedCategory[] = [
+  {
+    name: "Electronics",
+    commissionRate: 5,
+    children: [
+      {
+        name: "Computer Components",
+        children: [
+          {
+            name: "Processor",
+            attributes: [
+              ["brand", true, true], ["socket", true, true], ["core_count", true, true], ["base_clock_ghz", true, true],
+              ["tdp_w", false, true], ["integrated_graphics", false, true], ["model_number", false, false],
+            ],
+          },
+          {
+            name: "RAM",
+            attributes: [
+              ["brand", true, true], ["memory_type", true, true], ["capacity_gb", true, true],
+              ["speed_mhz", false, true], ["module_type", true, true],
+            ],
+          },
+          {
+            name: "Motherboard",
+            attributes: [
+              ["brand", true, true], ["socket", true, true], ["chipset", true, true],
+              ["form_factor", true, true], ["memory_type", true, true],
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    name: "Books",
+    commissionRate: 8,
+    children: [
+      { name: "Fiction", attributes: BOOK_ATTRS },
+      { name: "Academic", attributes: BOOK_ATTRS },
+      { name: "Children's", attributes: BOOK_ATTRS },
+    ],
+  },
+  {
+    name: "Fashion",
+    commissionRate: 12,
+    children: [
+      { name: "Men's Shirts", attributes: FASHION_ATTRS },
+      { name: "Men's Pants", attributes: FASHION_ATTRS },
+      { name: "Women's Tops", attributes: FASHION_ATTRS },
+    ],
+  },
+  {
+    name: "Medicine",
+    commissionRate: 5,
+    requiresLicence: true,
+    requiresExpiry: true,
+    children: [
+      { name: "Pain Relief", attributes: MEDICINE_ATTRS },
+      { name: "Vitamins", attributes: MEDICINE_ATTRS },
+    ],
+  },
+];
+
+function widgetFor(type: AttributeType): FilterWidget {
+  if (type === "number") return "range_slider";
+  if (type === "boolean") return "toggle";
+  return "checkbox_list";
+}
+
+async function seedCatalog() {
+  const attrIds = new Map<string, { id: string; type: AttributeType }>();
+  for (const a of CATALOG_ATTRIBUTES) {
+    const attr = await prisma.attribute.upsert({
+      where: { key: a.key },
+      update: { name: a.name, type: a.type, unit: a.unit ?? null, archivedAt: null },
+      create: { key: a.key, name: a.name, type: a.type, unit: a.unit ?? null },
+    });
+    attrIds.set(a.key, { id: attr.id, type: a.type });
+    for (const label of a.options ?? []) {
+      const value = slugify(label);
+      await prisma.attributeOption.upsert({
+        where: { attributeId_value: { attributeId: attr.id, value } },
+        update: { label, status: "active" },
+        create: { attributeId: attr.id, value, label },
+      });
+    }
+  }
+
+  let count = 0;
+  async function upsertCategory(
+    c: { name: string; slug: string; isOther: boolean; isLeaf: boolean },
+    parent: { id: string; path: string; commissionRate: number; requiresLicence: boolean; requiresExpiry: boolean } | null,
+    own: Pick<SeedCategory, "commissionRate" | "requiresLicence" | "requiresExpiry">,
+  ) {
+    const data = {
+      name: c.name,
+      parentId: parent?.id ?? null,
+      isLeaf: c.isLeaf,
+      isOther: c.isOther,
+      commissionRate: own.commissionRate ?? parent?.commissionRate ?? 10,
+      requiresLicence: own.requiresLicence ?? parent?.requiresLicence ?? false,
+      requiresExpiry: own.requiresExpiry ?? parent?.requiresExpiry ?? false,
+      archivedAt: null,
+    };
+    const row = await prisma.category.upsert({
+      where: { slug: c.slug },
+      update: data,
+      create: { ...data, slug: c.slug, path: "" },
+    });
+    count++;
+    const path = `${parent?.path ?? "/"}${row.id}/`;
+    await prisma.category.update({ where: { id: row.id }, data: { path } });
+    return { id: row.id, path, commissionRate: data.commissionRate, requiresLicence: data.requiresLicence, requiresExpiry: data.requiresExpiry };
+  }
+
+  async function walk(nodes: SeedCategory[], parent: Awaited<ReturnType<typeof upsertCategory>> | null) {
+    for (const n of nodes) {
+      const slug = slugify(n.name);
+      const isLeaf = !n.children?.length;
+      const row = await upsertCategory({ name: n.name, slug, isOther: false, isLeaf }, parent, n);
+      for (const [i, [key, required, filterable, isVariantAxis = false]] of (n.attributes ?? []).entries()) {
+        const attr = attrIds.get(key)!;
+        const settings = {
+          required,
+          filterable,
+          filterWidget: filterable ? widgetFor(attr.type) : null,
+          displayOrder: i + 1,
+          isVariantAxis,
+        };
+        await prisma.categoryAttribute.upsert({
+          where: { categoryId_attributeId: { categoryId: row.id, attributeId: attr.id } },
+          update: settings,
+          create: { categoryId: row.id, attributeId: attr.id, ...settings },
+        });
+      }
+      if (!isLeaf) {
+        await walk(n.children!, row);
+        // US-024: every parent gets an "Other" leaf with only the common fields.
+        await upsertCategory({ name: "Other", slug: `${slug}-other`, isOther: true, isLeaf: true }, row, {});
+      }
+    }
+  }
+  await walk(CATALOG_TREE, null);
+
+  // One pending seller request so the admin queue is not empty.
+  const requester = await prisma.user.findUniqueOrThrow({ where: { email: "customer.verified@ecom.test" } });
+  const components = await prisma.category.findUniqueOrThrow({ where: { slug: "computer-components" } });
+  const existing = await prisma.categoryRequest.findFirst({ where: { name: "[TEST] Graphics Card", requestedByUserId: requester.id } });
+  if (!existing) {
+    await prisma.categoryRequest.create({
+      data: {
+        kind: "category",
+        requestedByUserId: requester.id,
+        parentId: components.id,
+        name: "[TEST] Graphics Card",
+        reason: "Seed request for the admin queue",
+        dueAt: new Date(Date.now() + 24 * 3600_000),
+      },
+    });
+  }
+
+  console.info(`Seeded ${CATALOG_ATTRIBUTES.length} attributes and ${count} categories`);
+}
+
 async function main() {
   await seedUsers();
+  await seedCatalog();
 }
 
 main()
