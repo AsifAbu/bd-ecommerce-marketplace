@@ -229,7 +229,7 @@ export async function EditProductView({ shopId, productId, notice }: { shopId: s
       <Section id="stock" title="Stock">
         {product.variants.map((v) => (
           <StockForm
-            key={`${v.id}:${v.stock}`}
+            key={v.id}
             shopId={shopId}
             productId={product.id}
             variantId={v.id}
