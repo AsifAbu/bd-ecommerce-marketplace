@@ -8,28 +8,24 @@ import { signIn, signOut } from "@/auth";
 import { parseLoginIdentifier } from "@/features/auth/identifier";
 import { hashPassword } from "@/features/auth/password";
 import { Prisma } from "@/generated/prisma/client";
+import { AppError } from "@/lib/errors";
+import { formString as str, parseForm, runAction, ValidationError, type ActionResult } from "@/lib/actions";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { USER_ACTIONS, type UserAction } from "./admin-users";
 import { OTP_MESSAGES } from "./otp-service";
-import { addressSchema, bdMobile, fieldErrors, password as passwordSchema, profileSchema } from "./schemas";
+import { addressSchema, bdMobile, password as passwordSchema, profileSchema } from "./schemas";
 import { addressRepo, adminUsers, clientIp, otpService, sendTokenEmail, signUpDeps, tokenService } from "./services";
 import { signUp, TAKEN_MESSAGE } from "./signup";
 
-export type FormState = {
-  error?: string;
-  message?: string;
-  fields?: Record<string, string>;
-  /** Submitted values (never passwords) so the form keeps them after an error. */
-  values?: Record<string, string>;
-};
+/*
+ * Form actions return the shared ActionResult (@/lib/actions): runAction() turns a thrown
+ * ValidationError (per-field messages) or AppError (form-level message) into an error result and
+ * passes `values` back so the form keeps what was typed. Passwords are never in `values`.
+ */
 
-const str = (fd: FormData, key: string) => {
-  const v = fd.get(key);
-  return typeof v === "string" ? v : "";
-};
-
-/** Only same-site relative paths, so the login page cannot redirect elsewhere. */
+/** A form-level error message (shown above the form). */
+const formError = (message: string) => new AppError(400, "FORM", message);
 
 const isUniqueViolation = (err: unknown) =>
   err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
@@ -45,49 +41,48 @@ async function trySendTokenEmail(user: { id: string; email: string }, type: "ema
 
 // --- Sign-up, login, logout (US-001, US-003) ---------------------------------
 
-export async function signUpAction(_prev: FormState, fd: FormData): Promise<FormState> {
+export async function signUpAction(_prev: ActionResult, fd: FormData): Promise<ActionResult> {
   const values = { name: str(fd, "name"), phone: str(fd, "phone"), email: str(fd, "email") };
-  const raw = { ...values, password: str(fd, "password") };
-  let result;
-  try {
-    result = await signUp(raw, signUpDeps);
-  } catch (err) {
-    if (isUniqueViolation(err)) return { fields: { phone: TAKEN_MESSAGE.phone, email: TAKEN_MESSAGE.email }, values };
-    throw err;
-  }
-  if (!result.ok) return { fields: result.fields, values };
+  return runAction(async () => {
+    const raw = { ...values, password: str(fd, "password") };
+    let result;
+    try {
+      result = await signUp(raw, signUpDeps);
+    } catch (err) {
+      if (isUniqueViolation(err)) throw new ValidationError({ phone: TAKEN_MESSAGE.phone, email: TAKEN_MESSAGE.email });
+      throw err;
+    }
+    if (!result.ok) throw new ValidationError(result.fields);
 
-  const { phone, email } = result.input;
-  if (email) await trySendTokenEmail({ id: result.userId, email }, "email_verify");
-  await signIn("credentials", {
-    identifier: phone ?? email,
-    password: raw.password,
-    redirectTo: phone ? "/account/verify-phone" : "/account",
-  });
-  return {};
+    const { phone, email } = result.input;
+    if (email) await trySendTokenEmail({ id: result.userId, email }, "email_verify");
+    await signIn("credentials", {
+      identifier: phone ?? email,
+      password: raw.password,
+      redirectTo: phone ? "/account/verify-phone" : "/account",
+    });
+    return ""; // signIn redirects
+  }, { values });
 }
 
 const LOGIN_FAILED_MESSAGE =
   "Wrong mobile number, email or password, or the account is suspended. After 5 wrong tries, login is paused for 15 minutes.";
 
-export async function loginAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  try {
-    await signIn("credentials", {
-      identifier: str(fd, "identifier"),
-      password: str(fd, "password"),
-      redirectTo: safePath(str(fd, "callbackUrl")),
-    });
-  } catch (err) {
-    if (err instanceof AuthError) {
-      return {
-        // One message for every failure, including a lockout, so it never reveals whether an account exists.
-        error: LOGIN_FAILED_MESSAGE,
-        values: { identifier: str(fd, "identifier") },
-      };
+export async function loginAction(_prev: ActionResult, fd: FormData): Promise<ActionResult> {
+  return runAction(async () => {
+    try {
+      await signIn("credentials", {
+        identifier: str(fd, "identifier"),
+        password: str(fd, "password"),
+        redirectTo: safePath(str(fd, "callbackUrl")),
+      });
+    } catch (err) {
+      // One message for every failure, including a lockout, so it never reveals whether an account exists.
+      if (err instanceof AuthError) throw formError(LOGIN_FAILED_MESSAGE);
+      throw err; // the success redirect is thrown too
     }
-    throw err; // the success redirect is thrown too
-  }
-  return {};
+    return "";
+  }, { values: { identifier: str(fd, "identifier") } });
 }
 
 export async function logoutAction() {
@@ -96,32 +91,36 @@ export async function logoutAction() {
 
 // --- Password reset (US-003) -------------------------------------------------
 
-export async function forgotPasswordAction(_prev: FormState, fd: FormData): Promise<FormState> {
+export async function forgotPasswordAction(_prev: ActionResult, fd: FormData): Promise<ActionResult> {
   const values = { identifier: str(fd, "identifier") };
-  const id = parseLoginIdentifier(values.identifier);
-  if (!id) return { fields: { identifier: "Enter your mobile number or email" }, values };
+  return runAction(async () => {
+    const id = parseLoginIdentifier(values.identifier);
+    if (!id) throw new ValidationError({ identifier: "Enter your mobile number or email" });
 
-  if (id.kind === "email") {
-    const user = await prisma.user.findUnique({ where: { email: id.value }, select: { id: true, status: true } });
-    if (user?.status === "active") await trySendTokenEmail({ id: user.id, email: id.value }, "password_reset");
-    return { message: "If an account uses this email, we have sent a reset link. It works for 1 hour." };
-  }
+    if (id.kind === "email") {
+      const user = await prisma.user.findUnique({ where: { email: id.value }, select: { id: true, status: true } });
+      if (user?.status === "active") await trySendTokenEmail({ id: user.id, email: id.value }, "password_reset");
+      return "If an account uses this email, we have sent a reset link. It works for 1 hour.";
+    }
 
-  const user = await prisma.user.findUnique({ where: { phone: id.value }, select: { status: true } });
-  if (user?.status === "active") {
-    const sent = await otpService.requestOtp(id.value, "password_reset", await clientIp());
-    if (!sent.ok) return { error: OTP_MESSAGES[sent.code], values };
-  }
-  redirect(`/reset-password/sms?phone=${encodeURIComponent(id.value.replace("+88", ""))}`);
+    const user = await prisma.user.findUnique({ where: { phone: id.value }, select: { status: true } });
+    if (user?.status === "active") {
+      const sent = await otpService.requestOtp(id.value, "password_reset", await clientIp());
+      if (!sent.ok) throw formError(OTP_MESSAGES[sent.code]);
+    }
+    redirect(`/reset-password/sms?phone=${encodeURIComponent(id.value.replace("+88", ""))}`);
+  }, { values });
 }
 
-export async function resetPasswordWithTokenAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  const pw = passwordSchema.safeParse(str(fd, "password"));
-  if (!pw.success) return { fields: { password: pw.error.issues[0].message } };
+export async function resetPasswordWithTokenAction(_prev: ActionResult, fd: FormData): Promise<ActionResult> {
+  return runAction(async () => {
+    const pw = passwordSchema.safeParse(str(fd, "password"));
+    if (!pw.success) throw new ValidationError({ password: pw.error.issues[0].message });
 
-  const ok = await resetWithToken(str(fd, "token"), pw.data);
-  if (!ok) return { error: "This reset link is invalid or has expired. Ask for a new one." };
-  redirect("/login?reset=1");
+    const ok = await resetWithToken(str(fd, "token"), pw.data);
+    if (!ok) throw formError("This reset link is invalid or has expired. Ask for a new one.");
+    redirect("/login?reset=1");
+  });
 }
 
 async function resetWithToken(token: string, newPassword: string) {
@@ -138,22 +137,24 @@ async function resetWithToken(token: string, newPassword: string) {
   return true;
 }
 
-export async function resetPasswordWithOtpAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  const phone = bdMobile.safeParse(str(fd, "phone"));
-  if (!phone.success) return { fields: { phone: phone.error.issues[0].message } };
-  const pw = passwordSchema.safeParse(str(fd, "password"));
-  if (!pw.success) return { fields: { password: pw.error.issues[0].message } };
+export async function resetPasswordWithOtpAction(_prev: ActionResult, fd: FormData): Promise<ActionResult> {
+  return runAction(async () => {
+    const phone = bdMobile.safeParse(str(fd, "phone"));
+    if (!phone.success) throw new ValidationError({ phone: phone.error.issues[0].message });
+    const pw = passwordSchema.safeParse(str(fd, "password"));
+    if (!pw.success) throw new ValidationError({ password: pw.error.issues[0].message });
 
-  const check = await otpService.verifyOtp(phone.data, "password_reset", str(fd, "code"));
-  if (!check.ok) return { fields: { code: OTP_MESSAGES[check.code] } };
+    const check = await otpService.verifyOtp(phone.data, "password_reset", str(fd, "code"));
+    if (!check.ok) throw new ValidationError({ code: OTP_MESSAGES[check.code] });
 
-  const user = await prisma.user.findUnique({ where: { phone: phone.data }, select: { id: true, phoneVerifiedAt: true } });
-  if (!user) return { fields: { code: OTP_MESSAGES.INVALID } };
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { passwordHash: await hashPassword(pw.data), phoneVerifiedAt: user.phoneVerifiedAt ?? new Date() },
+    const user = await prisma.user.findUnique({ where: { phone: phone.data }, select: { id: true, phoneVerifiedAt: true } });
+    if (!user) throw new ValidationError({ code: OTP_MESSAGES.INVALID });
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: await hashPassword(pw.data), phoneVerifiedAt: user.phoneVerifiedAt ?? new Date() },
+    });
+    redirect("/login?reset=1");
   });
-  redirect("/login?reset=1");
 }
 
 // --- Phone OTP (US-005) ------------------------------------------------------
@@ -163,32 +164,39 @@ async function currentPhone() {
   return prisma.user.findUniqueOrThrow({ where: { id }, select: { id: true, phone: true, phoneVerifiedAt: true } });
 }
 
-export async function sendPhoneOtpAction(): Promise<FormState> {
-  const user = await currentPhone();
-  if (!user.phone) return { error: "Add a mobile number to your profile first." };
-  if (user.phoneVerifiedAt) return { message: "Your mobile number is already verified." };
-  const res = await otpService.requestOtp(user.phone, "phone_verify", await clientIp());
-  return res.ok ? { message: "We sent a 6-digit code by SMS. It works for 5 minutes." } : { error: OTP_MESSAGES[res.code] };
+export async function sendPhoneOtpAction(): Promise<ActionResult> {
+  return runAction(async () => {
+    const user = await currentPhone();
+    if (!user.phone) throw formError("Add a mobile number to your profile first.");
+    if (user.phoneVerifiedAt) return "Your mobile number is already verified.";
+    const res = await otpService.requestOtp(user.phone, "phone_verify", await clientIp());
+    if (!res.ok) throw formError(OTP_MESSAGES[res.code]);
+    return "We sent a 6-digit code by SMS. It works for 5 minutes.";
+  });
 }
 
-export async function verifyPhoneAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  const user = await currentPhone();
-  if (!user.phone) return { error: "Add a mobile number to your profile first." };
-  const res = await otpService.verifyOtp(user.phone, "phone_verify", str(fd, "code"));
-  if (!res.ok) return { fields: { code: OTP_MESSAGES[res.code] } };
-  // Only if the phone has not changed meanwhile.
-  await prisma.user.updateMany({ where: { id: user.id, phone: user.phone }, data: { phoneVerifiedAt: new Date() } });
-  redirect("/account?phoneVerified=1");
+export async function verifyPhoneAction(_prev: ActionResult, fd: FormData): Promise<ActionResult> {
+  return runAction(async () => {
+    const user = await currentPhone();
+    if (!user.phone) throw formError("Add a mobile number to your profile first.");
+    const res = await otpService.verifyOtp(user.phone, "phone_verify", str(fd, "code"));
+    if (!res.ok) throw new ValidationError({ code: OTP_MESSAGES[res.code] });
+    // Only if the phone has not changed meanwhile.
+    await prisma.user.updateMany({ where: { id: user.id, phone: user.phone }, data: { phoneVerifiedAt: new Date() } });
+    redirect("/account?phoneVerified=1");
+  });
 }
 
 // --- Profile (US-002) --------------------------------------------------------
 
-export async function updateProfileAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  const { id } = await requireUser();
+export async function updateProfileAction(_prev: ActionResult, fd: FormData): Promise<ActionResult> {
   const values = { name: str(fd, "name"), phone: str(fd, "phone"), email: str(fd, "email"), avatarUrl: str(fd, "avatarUrl") };
-  const parsed = profileSchema.safeParse(values);
-  if (!parsed.success) return { fields: fieldErrors(parsed.error), values };
-  const input = parsed.data;
+  return runAction(() => updateProfile(values), { values });
+}
+
+async function updateProfile(values: Record<string, string>): Promise<string> {
+  const { id } = await requireUser();
+  const input = parseForm(profileSchema, values);
   const current = await prisma.user.findUniqueOrThrow({ where: { id }, select: { phone: true, email: true } });
 
   const phone = input.phone ?? null;
@@ -199,7 +207,7 @@ export async function updateProfileAction(_prev: FormState, fd: FormData): Promi
   const fields: Record<string, string> = {};
   if (phoneChanged && phone && (await prisma.user.count({ where: { phone, NOT: { id } } }))) fields.phone = "This mobile number is used by another account.";
   if (emailChanged && email && (await prisma.user.count({ where: { email, NOT: { id } } }))) fields.email = "This email is used by another account.";
-  if (Object.keys(fields).length) return { fields, values };
+  if (Object.keys(fields).length) throw new ValidationError(fields);
 
   try {
     await prisma.user.update({
@@ -215,7 +223,7 @@ export async function updateProfileAction(_prev: FormState, fd: FormData): Promi
       },
     });
   } catch (err) {
-    if (isUniqueViolation(err)) return { error: "That mobile number or email is used by another account.", values };
+    if (isUniqueViolation(err)) throw formError("That mobile number or email is used by another account.");
     throw err;
   }
   if (emailChanged && email) await trySendTokenEmail({ id, email }, "email_verify");
@@ -224,34 +232,37 @@ export async function updateProfileAction(_prev: FormState, fd: FormData): Promi
   const notes = ["Profile saved."];
   if (phoneChanged && phone) notes.push("Verify your new mobile number.");
   if (emailChanged && email) notes.push("We sent a verification link to your new email.");
-  return { message: notes.join(" ") };
+  return notes.join(" ");
 }
 
-export async function resendEmailVerificationAction(): Promise<FormState> {
-  const { id } = await requireUser();
-  const user = await prisma.user.findUniqueOrThrow({ where: { id }, select: { email: true, emailVerifiedAt: true } });
-  if (!user.email) return { error: "Add an email to your profile first." };
-  if (user.emailVerifiedAt) return { message: "Your email is already verified." };
-  await trySendTokenEmail({ id, email: user.email }, "email_verify");
-  return { message: "We sent a verification link. It works for 24 hours." };
+export async function resendEmailVerificationAction(): Promise<ActionResult> {
+  return runAction(async () => {
+    const { id } = await requireUser();
+    const user = await prisma.user.findUniqueOrThrow({ where: { id }, select: { email: true, emailVerifiedAt: true } });
+    if (!user.email) throw formError("Add an email to your profile first.");
+    if (user.emailVerifiedAt) return "Your email is already verified.";
+    await trySendTokenEmail({ id, email: user.email }, "email_verify");
+    return "We sent a verification link. It works for 24 hours.";
+  });
 }
 
 // --- Address book (US-006) ---------------------------------------------------
 
-export async function saveAddressAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  const { id: userId } = await requireUser();
+export async function saveAddressAction(_prev: ActionResult, fd: FormData): Promise<ActionResult> {
   const values = Object.fromEntries([...fd].filter(([k, v]) => !k.startsWith("$") && typeof v === "string")) as Record<string, string>;
-  const parsed = addressSchema.safeParse(values);
-  if (!parsed.success) return { fields: fieldErrors(parsed.error), values };
+  return runAction(async () => {
+    const { id: userId } = await requireUser();
+    const input = parseForm(addressSchema, values);
 
-  const addressId = str(fd, "id");
-  if (addressId) {
-    if (!(await addressRepo.update(userId, addressId, parsed.data))) return { error: "Address not found." };
-  } else {
-    await addressRepo.create(userId, parsed.data);
-  }
-  revalidatePath("/account/addresses");
-  redirect("/account/addresses");
+    const addressId = str(fd, "id");
+    if (addressId) {
+      if (!(await addressRepo.update(userId, addressId, input))) throw formError("Address not found.");
+    } else {
+      await addressRepo.create(userId, input);
+    }
+    revalidatePath("/account/addresses");
+    redirect("/account/addresses");
+  }, { values });
 }
 
 export async function deleteAddressAction(fd: FormData) {

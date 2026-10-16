@@ -1,45 +1,17 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
-import type { ActionState } from "../actions";
+import type { ComponentProps, ReactNode } from "react";
+import { ActionForm as SharedActionForm } from "@/components/action-form";
 
-/** A form bound to a catalog server action; shows its success or error message. */
+/**
+ * The shared <ActionForm> with the catalog admin defaults: compact row layout, buttons in the
+ * children, field errors listed under the message, browser validation, fields reset after submit.
+ */
 export function ActionForm({
-  action,
-  children,
   className = "flex flex-wrap items-end gap-2",
-  label,
-}: {
-  action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
-  children: ReactNode;
-  className?: string;
-  label?: string;
-}) {
-  const [state, formAction, pending] = useActionState(action, null);
-  return (
-    <form action={formAction} className={className} aria-label={label} aria-busy={pending}>
-      {children}
-      {state?.ok && (
-        <p role="status" className="w-full text-sm text-green-800">
-          {state.ok}
-        </p>
-      )}
-      {state?.error && (
-        <div role="alert" className="w-full text-sm text-red-700">
-          <p>{state.error.message}</p>
-          {state.error.fields && (
-            <ul className="list-disc pl-5">
-              {Object.entries(state.error.fields).map(([field, message]) => (
-                <li key={field}>
-                  {field}: {message}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-    </form>
-  );
+  ...props
+}: Omit<ComponentProps<typeof SharedActionForm>, "submitLabel" | "variant">) {
+  return <SharedActionForm className={className} listFieldErrors resetOnSubmit nativeValidation {...props} />;
 }
 
 export function SubmitButton({

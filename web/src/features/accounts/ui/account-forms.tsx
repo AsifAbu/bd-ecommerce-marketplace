@@ -1,16 +1,15 @@
 "use client";
 
+import { resultFields, resultValues } from "@/lib/actions";
 import { useActionState } from "react";
 import {
   resendEmailVerificationAction,
   sendPhoneOtpAction,
   updateProfileAction,
-  verifyPhoneAction,
-  type FormState,
+  verifyPhoneAction
 } from "../actions";
 import { Field, FormMessage, SubmitButton } from "./form-parts";
 
-const initial: FormState = {};
 
 export interface ProfileDefaults {
   name: string;
@@ -20,9 +19,9 @@ export interface ProfileDefaults {
 }
 
 export function ProfileForm({ defaults }: { defaults: ProfileDefaults }) {
-  const [state, action] = useActionState(updateProfileAction, initial);
-  const f = state.fields ?? {};
-  const v = { ...defaults, ...state.values };
+  const [state, action] = useActionState(updateProfileAction, undefined);
+  const f = resultFields(state);
+  const v = { ...defaults, ...resultValues(state) };
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>
       <FormMessage state={state} />
@@ -61,8 +60,8 @@ export function ProfileForm({ defaults }: { defaults: ProfileDefaults }) {
 }
 
 export function VerifyPhoneForms() {
-  const [sendState, send] = useActionState(sendPhoneOtpAction, initial);
-  const [verifyState, verify] = useActionState(verifyPhoneAction, initial);
+  const [sendState, send] = useActionState(sendPhoneOtpAction, undefined);
+  const [verifyState, verify] = useActionState(verifyPhoneAction, undefined);
   return (
     <div className="flex flex-col gap-6">
       <form action={send} className="flex flex-col gap-3">
@@ -78,7 +77,7 @@ export function VerifyPhoneForms() {
           autoComplete="one-time-code"
           maxLength={6}
           required
-          error={verifyState.fields?.code}
+          error={resultFields(verifyState).code}
         />
         <SubmitButton className="self-start">Verify</SubmitButton>
       </form>
@@ -87,7 +86,7 @@ export function VerifyPhoneForms() {
 }
 
 export function ResendEmailButton() {
-  const [state, action] = useActionState(resendEmailVerificationAction, initial);
+  const [state, action] = useActionState(resendEmailVerificationAction, undefined);
   return (
     <form action={action} className="flex flex-col gap-2">
       <FormMessage state={state} />

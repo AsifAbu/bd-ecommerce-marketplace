@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { requireUser } from "@/lib/auth";
 import { acceptInvite } from "@/features/shops/actions";
-import { ActionForm } from "@/features/shops/components/action-form";
+import { ActionForm } from "@/components/action-form";
 import { guardPage } from "@/features/shops/page-guard";
 import { getAccountEmail } from "@/features/shops/repo";
 

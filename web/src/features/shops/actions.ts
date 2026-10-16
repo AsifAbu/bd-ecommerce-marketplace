@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { requirePlatformAdmin, requireShopRole, requireUser } from "@/lib/auth";
 import { isTestMode } from "@/lib/config";
 import { getStorage } from "@/lib/storage";
-import { formString, parseForm, runAction, ValidationError, type ActionResult } from "./action-result";
+import { formString, parseForm, runAction, ValidationError, type ActionResult } from "@/lib/actions";
 import { sendMail } from "@/lib/mail";
 import * as repo from "./repo";
 import {

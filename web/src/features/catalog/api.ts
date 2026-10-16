@@ -1,4 +1,4 @@
-import { toErrorBody } from "./errors";
+import { toErrorBody } from "@/lib/errors";
 import type { CategorySchema } from "./schema";
 import { getCategorySchema } from "./service";
 
