@@ -34,6 +34,11 @@ model User {
   reviewedLicences ShopLicence[] @relation("LicenceReviewer")
   shopInvites      ShopInvite[]  @relation("ShopInviter")
 
+  // accounts relations
+  avatarUrl     String?        @map("avatar_url")
+  addresses     Address[]
+  accountTokens AccountToken[]
+
   @@map("user")
 }
 

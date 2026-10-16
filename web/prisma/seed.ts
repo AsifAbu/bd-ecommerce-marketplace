@@ -395,10 +395,58 @@ async function seedShops() {
   console.info(`Seeded ${shops.length} test shops with an owner and a staff user each (owner.<shop>@ecom.test)`);
 }
 
+/** Accounts feature: saved addresses for the seeded customers (fixed ids, so re-running updates them). */
+async function seedAccounts() {
+  const addresses = [
+    {
+      id: "seed-address-verified-home",
+      email: "customer.verified@ecom.test",
+      name: "[TEST] Customer, verified phone",
+      phone: "+8801700000002",
+      division: "Dhaka",
+      district: "Dhaka",
+      upazila: "Dhanmondi",
+      area: "Dhanmondi 27",
+      line1: "House 10, Road 27",
+      isDefault: true,
+    },
+    {
+      id: "seed-address-verified-office",
+      email: "customer.verified@ecom.test",
+      name: "[TEST] Customer, verified phone",
+      phone: "+8801700000002",
+      division: "Dhaka",
+      district: "Gazipur",
+      upazila: "Tongi",
+      area: "Station Road",
+      line1: "Plot 5, Block B",
+      isDefault: false,
+    },
+    {
+      id: "seed-address-flagged-home",
+      email: "customer.flagged@ecom.test",
+      name: "[TEST] Customer, past refusals",
+      phone: "+8801700000003",
+      division: "Chattogram",
+      district: "Chattogram",
+      upazila: "Panchlaish",
+      area: "GEC Circle",
+      line1: "Flat 4A, Holding 22",
+      isDefault: true,
+    },
+  ];
+  for (const { id, email, ...data } of addresses) {
+    const user = await prisma.user.findUniqueOrThrow({ where: { email }, select: { id: true } });
+    await prisma.address.upsert({ where: { id }, update: data, create: { id, userId: user.id, ...data } });
+  }
+  console.info(`Seeded ${addresses.length} test addresses`);
+}
+
 async function main() {
   await seedUsers();
   await seedCatalog();
   await seedShops();
+  await seedAccounts();
 }
 
 main()

@@ -10,6 +10,7 @@ import { authorizeCredentials } from "@/features/auth/credentials";
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
+  pages: { signIn: "/login" },
   providers: [
     Credentials({
       credentials: {

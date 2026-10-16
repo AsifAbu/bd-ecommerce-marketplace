@@ -5,6 +5,7 @@
  */
 export interface OtpProvider {
   readonly name: string;
-  send(phone: string): Promise<void>;
+  /** `code` is the code the caller generated and stored (hashed); the test provider ignores it. */
+  send(phone: string, code?: string): Promise<void>;
   verify(phone: string, code: string): Promise<boolean>;
 }
