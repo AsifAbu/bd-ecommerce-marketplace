@@ -13,7 +13,7 @@ export function ApplyForm() {
   return (
     <ActionForm action={applyForShop} submitLabel="Submit application">
       <Field name="name" label="Shop name" required />
-      <Field name="slug" label="Shop link" hint="Lowercase letters, numbers and hyphens, e.g. dhaka-books" required />
+      <Field name="slug" label="Shop link" hint="Your storefront will be at /s/<shop link>. Lowercase letters, numbers and hyphens, e.g. dhaka-books" required />
       <Field
         as="select"
         name="type"

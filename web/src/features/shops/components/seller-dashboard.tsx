@@ -1,10 +1,12 @@
 import Link from "next/link";
 import type { ShopRole } from "@/generated/prisma/client";
 import { TIER_LIMITS } from "@/lib/shop-tiers";
+import { storefrontPath } from "@/lib/storefront-link";
 import { inviteStaff, removeStaff, requestUpgrade, updateProfile, uploadLicence } from "../actions";
 import * as repo from "../repo";
 import { REGISTRATION_TYPE_LABELS, REGISTRATION_TYPES, SHOP_TYPE_LABELS } from "../schemas";
 import { ActionForm, Field } from "./action-form";
+import { ShareStorefront } from "./share-storefront";
 
 const FILE_HINT = "PDF, JPG, PNG or WebP, up to 4 MB. In test mode any file is accepted.";
 const date = (d: Date) => d.toISOString().slice(0, 10);
@@ -38,7 +40,7 @@ export async function SellerDashboard({ shopId, role }: { shopId: string; role: 
       <header className="flex flex-col gap-1">
         <h1 className="text-3xl font-bold">{shop.name}</h1>
         <p>
-          {SHOP_TYPE_LABELS[shop.type]} shop · link: /{shop.slug} · your role: {role}
+          {SHOP_TYPE_LABELS[shop.type]} shop · storefront: {storefrontPath(shop.slug)} · your role: {role}
         </p>
         <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1">
           <dt className="font-medium">Status</dt>
@@ -62,8 +64,15 @@ export async function SellerDashboard({ shopId, role }: { shopId: string; role: 
           <Link className="text-blue-800 underline" href={`/seller/${shop.id}/products`}>
             Products
           </Link>
+          {shop.status === "approved" && (
+            <Link className="text-blue-800 underline" href={storefrontPath(shop.slug)}>
+              View storefront
+            </Link>
+          )}
         </nav>
       </header>
+
+      <ShareStorefront slug={shop.slug} status={shop.status} />
 
       {isOwner && shop.type === "medicine" && (
         <Section title="Drug licence">
