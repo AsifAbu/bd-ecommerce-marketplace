@@ -33,7 +33,7 @@ Seeded accounts (password `Test@12345`). Log in at `/api/auth/signin` with mobil
 | Account | Email | Mobile |
 | --- | --- | --- |
 | Platform Admin | admin@ecom.test | 01700000001 |
-| Customer, verified phone | customer.verified@ecom.test | 01700000002 |
+| Customer, verified phone and email | customer.verified@ecom.test | 01700000002 |
 | Customer, new | customer.new@ecom.test | (none) |
 | Customer, past COD refusals | customer.flagged@ecom.test | 01700000003 |
 

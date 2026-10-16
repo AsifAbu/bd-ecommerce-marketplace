@@ -31,7 +31,9 @@ async function seedUsers() {
     {
       email: "customer.verified@ecom.test",
       phone: "+8801700000002",
-      name: "[TEST] Customer, verified phone",
+      name: "[TEST] Customer, verified phone and email",
+      // Verified email too: the shops e2e test invites this account as staff, which needs it.
+      emailVerifiedAt: now,
       phoneVerifiedAt: now,
     },
     {

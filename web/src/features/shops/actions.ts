@@ -17,6 +17,8 @@ import {
   assertCanReviewUpgrade,
   assertCanSuspendShop,
   assertCanUploadLicence,
+  assertInviteEmailMatches,
+  assertInviteUsable,
   ShopRuleError,
 } from "./rules";
 import {
@@ -160,18 +162,14 @@ export async function removeStaff(_prev: ActionResult, formData: FormData): Prom
   });
 }
 
-/** US-013: the invited user accepts. The logged-in email must match the invite. */
+/** US-013: the invited user accepts. The logged-in account's email must match the invite and be verified. */
 export async function acceptInvite(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   let shopId = "";
   const result = await runAction(async () => {
     const user = await requireUser();
     const invite = await repo.findInviteByTokenHash(hashToken(formString(formData, "token")));
-    if (!invite || invite.acceptedAt || invite.expiresAt < new Date()) {
-      throw new ShopRuleError("This invite link is invalid or has expired");
-    }
-    if (invite.email !== user.email?.toLowerCase()) {
-      throw new ShopRuleError(`Log in as ${invite.email} to accept this invite`);
-    }
+    assertInviteUsable(invite, new Date());
+    assertInviteEmailMatches(invite.email, await repo.getAccountEmail(user.id));
     await repo.acceptInvite(user.id, invite);
     shopId = invite.shopId;
     return "Invite accepted";
