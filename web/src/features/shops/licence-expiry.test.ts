@@ -18,8 +18,7 @@ function deps(licences: ExpiryLicence[]) {
   return {
     findVerifiedLicences: vi.fn(async () => licences),
     findAdminEmails: vi.fn(async () => ["admin@ecom.test"]),
-    expire: vi.fn(async () => {}),
-    suspendMedicine: vi.fn(async () => {}),
+    expireShop: vi.fn(async () => {}),
     markWarned: vi.fn(async () => {}),
     notify: vi.fn(async () => {}),
   } satisfies ExpiryDeps;
@@ -29,8 +28,7 @@ describe("runLicenceExpiryCheck", () => {
   it("expires a lapsed licence, suspends medicine selling and notifies owner and admin", async () => {
     const d = deps([lic("1", "P", "2026-10-10")]);
     await expect(runLicenceExpiryCheck(now, d)).resolves.toEqual({ expired: 1, suspended: 1, warned: 0 });
-    expect(d.expire).toHaveBeenCalledWith(expect.objectContaining({ id: "1" }));
-    expect(d.suspendMedicine).toHaveBeenCalledWith("P");
+    expect(d.expireShop).toHaveBeenCalledWith("P", [expect.objectContaining({ id: "1" })], true);
     expect(d.notify).toHaveBeenCalledWith(
       expect.objectContaining({ to: ["owner.P@ecom.test", "admin@ecom.test"], subject: expect.stringMatching(/expired/) }),
     );
@@ -43,8 +41,7 @@ describe("runLicenceExpiryCheck", () => {
     expect(d.notify).toHaveBeenCalledWith(
       expect.objectContaining({ to: ["owner.Q@ecom.test", "admin@ecom.test"], subject: expect.stringMatching(/expires soon/) }),
     );
-    expect(d.expire).not.toHaveBeenCalled();
-    expect(d.suspendMedicine).not.toHaveBeenCalled();
+    expect(d.expireShop).not.toHaveBeenCalled();
   });
 
   it("does nothing for licences far from expiry", async () => {
@@ -52,5 +49,15 @@ describe("runLicenceExpiryCheck", () => {
     await expect(runLicenceExpiryCheck(now, d)).resolves.toEqual({ expired: 0, suspended: 0, warned: 0 });
     expect(d.notify).not.toHaveBeenCalled();
     expect(d.findAdminEmails).not.toHaveBeenCalled();
+  });
+
+  it("still expires and suspends every shop when an email fails", async () => {
+    const d = deps([lic("4", "S", "2026-10-01"), lic("5", "T", "2026-10-02")]);
+    d.notify.mockRejectedValue(new Error("smtp down"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await expect(runLicenceExpiryCheck(now, d)).resolves.toEqual({ expired: 2, suspended: 2, warned: 0 });
+    expect(d.expireShop).toHaveBeenCalledWith("S", [expect.objectContaining({ id: "4" })], true);
+    expect(d.expireShop).toHaveBeenCalledWith("T", [expect.objectContaining({ id: "5" })], true);
+    expect(d.notify).toHaveBeenCalledTimes(2);
   });
 });

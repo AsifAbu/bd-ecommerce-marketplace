@@ -11,9 +11,8 @@ export interface ExpiryLicence extends ExpiryCandidate {
 export interface ExpiryDeps {
   findVerifiedLicences: () => Promise<ExpiryLicence[]>;
   findAdminEmails: () => Promise<string[]>;
-  expire: (licence: ExpiryLicence) => Promise<void>;
-  /** Suspends the shop's medicine selling until a new licence is verified. */
-  suspendMedicine: (shopId: string) => Promise<void>;
+  /** In one transaction: expires the shop's lapsed licences and, if `suspend`, suspends its medicine selling. */
+  expireShop: (shopId: string, licences: ExpiryLicence[], suspend: boolean) => Promise<void>;
   markWarned: (licence: ExpiryLicence, at: Date) => Promise<void>;
   notify: (mail: Mail) => Promise<void>;
 }
@@ -27,11 +26,15 @@ export async function runLicenceExpiryCheck(now: Date, deps: ExpiryDeps) {
   const recipients = (l: ExpiryLicence) => [...(l.shop.owner.email ? [l.shop.owner.email] : []), ...admins];
   const date = (d: Date) => d.toISOString().slice(0, 10);
 
-  for (const l of toExpire) await deps.expire(l);
-  for (const shopId of shopsToSuspend) {
-    await deps.suspendMedicine(shopId);
-    const l = toExpire.find((x) => x.shopId === shopId)!;
-    await deps.notify({
+  // Database work first, mail afterwards: a failed email must never leave an expired shop unsuspended.
+  const mails: Mail[] = [];
+  for (const shopId of new Set(toExpire.map((l) => l.shopId))) {
+    const licences = toExpire.filter((l) => l.shopId === shopId);
+    const suspend = shopsToSuspend.includes(shopId);
+    await deps.expireShop(shopId, licences, suspend);
+    if (!suspend) continue;
+    const l = licences[0];
+    mails.push({
       to: recipients(l),
       subject: `Medicine licence expired: ${l.shop.name}`,
       text: `The drug licence ${l.licenceNo} of ${l.shop.name} expired on ${date(l.expiryDate)}.\nMedicine selling is suspended until a new certificate is uploaded and verified.`,
@@ -39,11 +42,18 @@ export async function runLicenceExpiryCheck(now: Date, deps: ExpiryDeps) {
   }
   for (const l of toWarn) {
     await deps.markWarned(l, now);
-    await deps.notify({
+    mails.push({
       to: recipients(l),
       subject: `Medicine licence expires soon: ${l.shop.name}`,
       text: `The drug licence ${l.licenceNo} of ${l.shop.name} expires on ${date(l.expiryDate)}.\nUpload a renewed certificate before then to keep selling medicine.`,
     });
+  }
+  for (const mail of mails) {
+    try {
+      await deps.notify(mail);
+    } catch (err) {
+      console.error(`licence-expiry: failed to send "${mail.subject}"`, err);
+    }
   }
   return result;
 }
@@ -58,18 +68,21 @@ export const prismaExpiryDeps: ExpiryDeps = {
     (await prisma.user.findMany({ where: { isPlatformAdmin: true, status: "active" }, select: { email: true } }))
       .map((u) => u.email)
       .filter((e): e is string => !!e),
-  expire: async (l) => {
+  expireShop: async (shopId, licences, suspend) => {
     await prisma.$transaction([
-      prisma.shopLicence.updateMany({ where: { id: l.id, status: "verified" }, data: { status: "expired" } }),
-      prisma.auditLog.create({
-        data: { action: "licence.expired", entity: "shop_licence", entityId: l.id, data: { shopId: l.shopId } },
+      prisma.shopLicence.updateMany({
+        where: { id: { in: licences.map((l) => l.id) }, status: "verified" },
+        data: { status: "expired" },
       }),
-    ]);
-  },
-  suspendMedicine: async (shopId) => {
-    await prisma.$transaction([
-      prisma.shop.update({ where: { id: shopId }, data: { medicineSuspended: true } }),
-      prisma.auditLog.create({ data: { action: "shop.medicine_suspended", entity: "shop", entityId: shopId } }),
+      ...licences.map((l) =>
+        prisma.auditLog.create({ data: { action: "licence.expired", entity: "shop_licence", entityId: l.id, data: { shopId } } }),
+      ),
+      ...(suspend
+        ? [
+            prisma.shop.update({ where: { id: shopId }, data: { medicineSuspended: true } }),
+            prisma.auditLog.create({ data: { action: "shop.medicine_suspended", entity: "shop", entityId: shopId } }),
+          ]
+        : []),
     ]);
   },
   markWarned: async (l, at) => {
