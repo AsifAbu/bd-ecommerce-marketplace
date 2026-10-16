@@ -6,6 +6,7 @@ import { z } from "zod";
  */
 export const queues = {
   "example.log": z.object({ message: z.string().min(1) }),
+  "shops.licence-expiry": z.object({}),
 } as const;
 
 export type QueueName = keyof typeof queues;

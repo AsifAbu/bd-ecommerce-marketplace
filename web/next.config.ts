@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  // Shop documents (owner photo + licence certificate, 4 MB each) are uploaded through server actions.
+  experimental: { serverActions: { bodySizeLimit: "10mb" } },
   turbopack: {
     rules: {
       "*.css": {

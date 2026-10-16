@@ -28,6 +28,12 @@ model User {
   categoryRequests        CategoryRequest[] @relation("CategoryRequestRequestedBy")
   categoryRequestsDecided CategoryRequest[] @relation("CategoryRequestDecidedBy")
 
+  // shops relations
+  ownedShops       Shop[]        @relation("ShopOwner")
+  shopMemberships  ShopMember[]
+  reviewedLicences ShopLicence[] @relation("LicenceReviewer")
+  shopInvites      ShopInvite[]  @relation("ShopInviter")
+
   @@map("user")
 }
 
