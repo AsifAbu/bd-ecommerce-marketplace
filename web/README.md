@@ -44,6 +44,13 @@ Shops pages: `/shops/apply` (apply), `/seller` (my shops), `/admin/shops` (Platf
 Uploaded documents go to the private MinIO bucket (`S3_BUCKET_PRIVATE`); in test mode any file is accepted.
 Staff invite emails land in Mailpit (http://localhost:8025). The worker runs the daily licence-expiry job.
 
+Policies and compliance (US-080, US-081): public pages at `/policies/<slug>` (terms, privacy, returns,
+delivery, seller, cookies; `?version=N` shows an earlier version), admin at `/admin/policies` (draft, publish,
+history) and `/admin/compliance` (DBID and 6-year record retention). Seeds publish version 1 of every policy
+with `[TEST]` wording. Sign-up requires accepting the Terms and Privacy Policy; `/account/policies` shows a
+user's acceptances. The footer shows `DBID` (test mode: a `TEST-DBID-…` placeholder); the app refuses to start
+in production without `DBID`. Records in `src/lib/retention.ts` are never hard-deleted.
+
 ## Scripts
 
 `dev`, `build`, `start`, `lint`, `typecheck`, `test` (Vitest), `test:e2e` (Playwright; first run
