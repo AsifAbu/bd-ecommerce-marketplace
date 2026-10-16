@@ -1,0 +1,73 @@
+// Users and the Auth.js tables.
+// A user has an email, a phone, or both (at least one is enforced in the app).
+// Phones are stored in E.164 form: +8801XXXXXXXXX.
+
+enum UserStatus {
+  active
+  suspended
+}
+
+model User {
+  id              String     @id @default(cuid())
+  email           String?    @unique
+  emailVerifiedAt DateTime?  @map("email_verified_at")
+  phone           String?    @unique
+  phoneVerifiedAt DateTime?  @map("phone_verified_at")
+  passwordHash    String?    @map("password_hash")
+  name            String?
+  isPlatformAdmin Boolean    @default(false) @map("is_platform_admin")
+  status          UserStatus @default(active)
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  accounts  Account[]
+  sessions  Session[]
+  auditLogs AuditLog[]
+
+  @@map("user")
+}
+
+// Auth.js: linked OAuth accounts (e.g. Google, later).
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("account")
+}
+
+// Auth.js: database sessions (unused while the credentials provider forces JWT sessions).
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+// Auth.js: email sign-in / verification tokens.
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_token")
+}

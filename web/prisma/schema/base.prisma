@@ -1,0 +1,11 @@
+// Generator and datasource only. Models live in one file per feature:
+// prisma/schema/<feature>.prisma (see .claude/knowledge/dev-conventions.md).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

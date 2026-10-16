@@ -1,0 +1,18 @@
+// Append-only audit trail. Kept 6 years. Never update or delete rows.
+
+model AuditLog {
+  id       String   @id @default(cuid())
+  actorId  String?  @map("actor_id")
+  action   String // e.g. "shop.approved", "order.cod_refused"
+  entity   String // e.g. "shop", "order", "user"
+  entityId String?  @map("entity_id")
+  data     Json?
+  at       DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entity, entityId])
+  @@index([actorId])
+  @@index([at])
+  @@map("audit_log")
+}
