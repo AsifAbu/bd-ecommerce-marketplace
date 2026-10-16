@@ -10,7 +10,12 @@ vi.mock("@/lib/auth", async () => {
     getSessionUserId: async () => sessionUser?.id,
     findUserById: async () => sessionUser,
   });
-  return { ...errors, ...guards };
+  const { createShopGuard } = await vi.importActual<typeof import("@/lib/auth/shop-guard-core")>("@/lib/auth/shop-guard-core");
+  const requireShopRole = createShopGuard({
+    requireUser: guards.requireUser,
+    findShopRole: async (shopId, userId) => (shopId === "s1" && userId === "c1" ? "staff" : null),
+  });
+  return { ...errors, ...guards, requireShopRole };
 });
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("./service", () => ({
@@ -119,18 +124,29 @@ describe("catalog admin actions", () => {
 });
 
 describe("category requests (sellers)", () => {
-  it("lets any logged-in user send a request, as themselves", async () => {
+  it("lets a member of the shop send a request for that shop", async () => {
     sessionUser = customer;
     const result = await actions.createCategoryRequestAction(
       null,
-      form({ kind: "enum_option", attributeId: "brand", name: "Team Group" }),
+      form({ kind: "enum_option", shopId: "s1", attributeId: "brand", name: "Team Group" }),
     );
     expect(result?.ok).toBeTruthy();
     expect(service.createCategoryRequest).toHaveBeenCalledWith("c1", {
       kind: "enum_option",
+      shopId: "s1",
       attributeId: "brand",
       name: "Team Group",
     });
+  });
+
+  it("returns 403 for a shop the user doesn't belong to", async () => {
+    sessionUser = customer;
+    const result = await actions.createCategoryRequestAction(
+      null,
+      form({ kind: "category", shopId: "other-shop", parentId: "p", name: "GPU" }),
+    );
+    expect(result?.error?.status).toBe(403);
+    expect(service.createCategoryRequest).not.toHaveBeenCalled();
   });
 
   it("returns 401 for a guest", async () => {

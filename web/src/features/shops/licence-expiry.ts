@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { sendMail, type Mail } from "./mail";
+import { sendMail, type Mail } from "@/lib/mail";
 import { classifyLicences, type ExpiryCandidate } from "./rules";
 
 /** US-016 daily job ("shops.licence-expiry"): warn 30 days before expiry, expire lapsed licences. */

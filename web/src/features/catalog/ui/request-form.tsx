@@ -1,3 +1,5 @@
+import { requireUser } from "@/lib/auth";
+import { listMyShops } from "@/features/shops/repo";
 import { createCategoryRequestAction } from "../actions";
 import { listAttributes, listCategories } from "../service";
 import { ActionForm, SubmitButton } from "./action-form";
@@ -6,8 +8,25 @@ import { inputClass, labelClass, sectionClass } from "./styles";
 
 /** US-022: a seller asks for a new category or a new enum option (answered within 24 hours). */
 export async function RequestForms() {
-  const [categories, attributes] = await Promise.all([listCategories(), listAttributes()]);
+  const user = await requireUser();
+  const [categories, attributes, memberships] = await Promise.all([listCategories(), listAttributes(), listMyShops(user.id)]);
   const enumAttributes = attributes.filter((a) => !a.archivedAt && (a.type === "enum" || a.type === "multi_enum"));
+  const shops = memberships.filter((m) => m.shop.status === "approved").map((m) => m.shop);
+  if (shops.length === 0) {
+    return <p role="status">Only approved shops can request categories. Open a shop at /shops/apply, or ask your shop owner to invite you.</p>;
+  }
+  const shopSelect = (
+    <label className={labelClass}>
+      For shop
+      <select name="shopId" required className={inputClass}>
+        {shops.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.name}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -17,6 +36,7 @@ export async function RequestForms() {
         </h2>
         <ActionForm action={createCategoryRequestAction} label="Request a new category">
           <input type="hidden" name="kind" value="category" />
+          {shopSelect}
           <label className={labelClass}>
             Under
             <select name="parentId" required className={inputClass}>
@@ -41,6 +61,7 @@ export async function RequestForms() {
         </h2>
         <ActionForm action={createCategoryRequestAction} label="Request a new option">
           <input type="hidden" name="kind" value="enum_option" />
+          {shopSelect}
           <label className={labelClass}>
             Attribute
             <select name="attributeId" required className={inputClass}>

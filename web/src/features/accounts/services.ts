@@ -4,7 +4,7 @@ import { createOtpProvider } from "@/lib/otp";
 import { requirePlatformAdmin } from "@/lib/auth";
 import { addressRepoFor } from "./address-repo";
 import { createAdminUsers } from "./admin-users";
-import { appUrl, sendEmail } from "./mailer";
+import { appUrl, sendMail } from "@/lib/mail";
 import { createOtpService, type OtpPurpose } from "./otp-service";
 import type { SignUpDeps } from "./signup";
 import { createTokenService, type TokenType } from "./tokens";
@@ -82,14 +82,14 @@ export async function sendTokenEmail(user: { id: string; email: string }, type: 
   const token = await tokenService.issue(user.id, type, user.email);
   if (type === "email_verify") {
     const link = appUrl(`/api/account/verify-email?token=${token}`);
-    await sendEmail(user.email, "Verify your email", `Open this link within 24 hours to verify your email:\n\n${link}\n`);
+    await sendMail({ to: [user.email], subject: "Verify your email", text: `Open this link within 24 hours to verify your email:\n\n${link}\n` });
   } else {
     const link = appUrl(`/reset-password?token=${token}`);
-    await sendEmail(
-      user.email,
-      "Reset your password",
-      `Open this link within 1 hour to choose a new password:\n\n${link}\n\nIf you did not ask for this, ignore this email.`,
-    );
+    await sendMail({
+      to: [user.email],
+      subject: "Reset your password",
+      text: `Open this link within 1 hour to choose a new password:\n\n${link}\n\nIf you did not ask for this, ignore this email.`,
+    });
   }
 }
 

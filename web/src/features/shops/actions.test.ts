@@ -28,7 +28,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/storage", () => ({
   getStorage: () => ({ putObject: vi.fn(async () => {}), getSignedUrl: vi.fn() }),
 }));
-vi.mock("./mail", () => ({ sendMail: vi.fn(async () => {}) }));
+vi.mock("@/lib/mail", () => ({ sendMail: vi.fn(async () => {}) }));
 vi.mock("./repo", () => ({
   getShop: vi.fn(),
   listLicences: vi.fn(async () => []),

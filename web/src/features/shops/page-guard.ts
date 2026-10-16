@@ -6,7 +6,7 @@ export async function guardPage<T>(callbackUrl: string, fn: () => Promise<T>): P
   try {
     return await fn();
   } catch (err) {
-    if (err instanceof UnauthorizedError) redirect(`/api/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+    if (err instanceof UnauthorizedError) redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
     if (err instanceof ForbiddenError) notFound();
     throw err;
   }

@@ -118,7 +118,7 @@ model CategoryRequest {
   id                String                @id @default(cuid())
   kind              CategoryRequestKind
   requestedByUserId String                @map("requested_by_user_id")
-  shopId            String?               @map("shop_id") // TODO link to Shop after merge
+  shopId            String?               @map("shop_id") // the requesting seller's shop
   parentId          String?               @map("parent_id")
   attributeId       String?               @map("attribute_id")
   optionId          String?               @map("option_id")
@@ -136,6 +136,7 @@ model CategoryRequest {
   parent      Category?        @relation(fields: [parentId], references: [id], onDelete: SetNull)
   attribute   Attribute?       @relation(fields: [attributeId], references: [id], onDelete: SetNull)
   option      AttributeOption? @relation(fields: [optionId], references: [id], onDelete: SetNull)
+  shop        Shop?            @relation(fields: [shopId], references: [id], onDelete: SetNull)
 
   @@index([status, dueAt])
   @@index([requestedByUserId])

@@ -87,6 +87,9 @@ model Shop {
   licences ShopLicence[]
   invites  ShopInvite[]
 
+  // catalog relations
+  categoryRequests CategoryRequest[]
+
   @@index([status])
   @@index([ownerId])
   @@map("shop")

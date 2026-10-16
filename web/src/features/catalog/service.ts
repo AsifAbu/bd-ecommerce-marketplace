@@ -295,8 +295,8 @@ export async function getCategorySchema(id: string): Promise<CategorySchema> {
 // ---------- Category requests (US-022) ----------
 
 export type NewCategoryRequest =
-  | { kind: "category"; parentId: string; name: string; reason?: string }
-  | { kind: "enum_option"; attributeId: string; name: string; reason?: string };
+  | { kind: "category"; shopId: string; parentId: string; name: string; reason?: string }
+  | { kind: "enum_option"; shopId: string; attributeId: string; name: string; reason?: string };
 
 /** A seller asks for a category or an enum option. Enum options are created as pending. */
 export function createCategoryRequest(userId: string, input: NewCategoryRequest) {
@@ -318,6 +318,7 @@ export function createCategoryRequest(userId: string, input: NewCategoryRequest)
       data: {
         kind: input.kind,
         requestedByUserId: userId,
+        shopId: input.shopId,
         parentId: input.kind === "category" ? input.parentId : null,
         attributeId: input.kind === "enum_option" ? input.attributeId : null,
         optionId,

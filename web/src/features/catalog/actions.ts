@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requirePlatformAdmin, requireUser, type GuardUser } from "@/lib/auth";
+import { requirePlatformAdmin, requireShopRole, requireUser, type GuardUser } from "@/lib/auth";
 import { CatalogError, toErrorBody, type ErrorBody } from "./errors";
 import * as catalog from "./service";
 
@@ -169,15 +169,16 @@ export const decideCategoryRequestAction = adminAction(async (admin, form) => {
   return input.decision === "approve" ? "Approved" : "Rejected";
 });
 
-// TODO after the shops merge: require shop membership and store the seller's shopId.
+// Only shop owners and staff can ask for categories or options; the request records their shop.
 export const createCategoryRequestAction = action(requireUser, async (user, form) => {
   const input = parse(
     z.discriminatedUnion("kind", [
-      z.object({ kind: z.literal("category"), parentId: id, name, reason: note }),
-      z.object({ kind: z.literal("enum_option"), attributeId: id, name, reason: note }),
+      z.object({ kind: z.literal("category"), shopId: id, parentId: id, name, reason: note }),
+      z.object({ kind: z.literal("enum_option"), shopId: id, attributeId: id, name, reason: note }),
     ]),
     form,
   );
+  await requireShopRole(input.shopId, ["owner", "staff"]);
   await catalog.createCategoryRequest(user.id, input);
   return "Request sent. An admin will answer within 24 hours.";
 });
