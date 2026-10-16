@@ -17,6 +17,7 @@ test("sign up with mobile, verify by OTP, save an address, log out", async ({ pa
   await page.getByLabel("Full name").fill("E2E Shopper");
   await page.getByLabel("Mobile number").fill(mobile);
   await page.getByLabel("Password").fill("Secret@123");
+  await page.getByLabel(/I have read and accept/).check();
   await page.getByRole("button", { name: "Create account" }).click();
 
   await expect(page.getByRole("heading", { name: "Verify your mobile number" })).toBeVisible();
@@ -29,6 +30,8 @@ test("sign up with mobile, verify by OTP, save an address, log out", async ({ pa
   await page.getByRole("link", { name: "My addresses" }).click();
   await page.getByLabel("Division").selectOption("Dhaka");
   await page.getByLabel("District").selectOption("Dhaka");
+  // The upazila list loads after the district is chosen (a text input until then).
+  await expect(page.getByRole("combobox", { name: "Upazila or thana" })).toBeVisible();
   await page.getByLabel("Upazila or thana").selectOption("Gulshan");
   await page.getByLabel("Area").fill("Gulshan 2");
   await page.getByLabel("Address line").fill("House 1, Road 90");
@@ -65,6 +68,7 @@ test("sign up with email, verify it by link, reset the password by email link", 
   await page.getByLabel("Full name").fill("E2E Email User");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill("Secret@123");
+  await page.getByLabel(/I have read and accept/).check();
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("heading", { name: "My account" })).toBeVisible();
 
@@ -90,6 +94,7 @@ test("reset the password by SMS code", async ({ page }) => {
   await page.getByLabel("Full name").fill("E2E SMS User");
   await page.getByLabel("Mobile number").fill(mobile);
   await page.getByLabel("Password").fill("Secret@123");
+  await page.getByLabel(/I have read and accept/).check();
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("heading", { name: "Verify your mobile number" })).toBeVisible();
   await page.context().clearCookies();
