@@ -61,7 +61,12 @@ export function ProductDetailView({
             {page.expiresOn && <p className="text-sm">Expiry date: {formatDate(page.expiresOn)}</p>}
           </div>
 
-          <PurchasePanel axes={page.axes} variants={page.variants} initialVariantId={initialVariantId}>
+          <PurchasePanel
+            key={`${page.id}:${initialVariantId ?? ""}`}
+            axes={page.axes}
+            variants={page.variants}
+            initialVariantId={initialVariantId}
+          >
             {wishlist}
           </PurchasePanel>
 

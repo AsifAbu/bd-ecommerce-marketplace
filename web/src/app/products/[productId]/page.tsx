@@ -13,6 +13,7 @@ import { WishlistButton } from "@/features/wishlist/ui/wishlist-button";
 const getPage = cache((productId: string) => loadProductPage(productId));
 
 export async function generateMetadata({ params }: PageProps<"/products/[productId]">): Promise<Metadata> {
+  await connection(); // liveness depends on today's date: request time
   const { productId } = await params;
   const page = await getPage(productId);
   if (!page) return { title: "Product not found" };
@@ -63,6 +64,9 @@ async function Content({
       notice={intent && <WishlistIntentNotice result={intent} />}
       wishlist={
         <WishlistButton
+          // Remount when the server's answer changes (e.g. saved after login): the router keeps
+          // client state of pages visited before.
+          key={`${user?.id ?? "guest"}:${saved.map((s) => s.id).join(",")}`}
           productId={page.id}
           loggedIn={user !== null}
           saved={saved}

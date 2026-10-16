@@ -99,6 +99,18 @@ describe("buildProductPage", () => {
     expect(page.inStock).toBe(true);
   });
 
+  it("orders axis options like the seller's variants and keeps values missing from the schema", () => {
+    const row = shirtRow({
+      variants: [
+        { id: "a", price: 1, stock: 1, options: { size: "xxl", colour: "white" }, position: 0 },
+        { id: "b", price: 1, stock: 1, options: { size: "s", colour: "black" }, position: 1 },
+      ],
+    });
+    const page = buildProductPage(row, shirtSchema(), trail);
+    expect(page.axes[0].options).toEqual([{ value: "xxl", label: "xxl" }, { value: "s", label: "S" }]);
+    expect(page.axes[1].options.map((o) => o.label)).toEqual(["White", "Black"]);
+  });
+
   it("is out of stock when every variant has 0 stock", () => {
     const row = shirtRow();
     const page = buildProductPage({ ...row, variants: row.variants.map((v) => ({ ...v, stock: 0 })) }, shirtSchema(), trail);

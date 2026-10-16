@@ -173,11 +173,11 @@ export function buildProductPage(
 
   const axes: AxisView[] = axisFields
     .map((f) => {
-      const used = new Set(variants.map((v) => v.options[f.key]).filter((x) => x !== undefined));
-      const known = f.options.filter((o) => used.has(o.value));
-      // Values no longer in the schema (e.g. an option archived later) still need a button.
-      const extra = [...used].filter((u) => !f.options.some((o) => o.value === u)).map((u) => ({ value: u, label: u }));
-      return { key: f.key, name: f.name, options: [...known, ...extra] };
+      // In the seller's variant order (S, M, L), not the schema's alphabetical option order.
+      const used = [...new Set(variants.map((v) => v.options[f.key]).filter((x) => x !== undefined))];
+      // A value no longer in the schema (e.g. an option archived later) keeps its raw value as label.
+      const options = used.map((value) => ({ value, label: f.options.find((o) => o.value === value)?.label ?? value }));
+      return { key: f.key, name: f.name, options };
     })
     .filter((a) => a.options.length > 0);
 
