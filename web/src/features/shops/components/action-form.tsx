@@ -1,14 +1,13 @@
 "use client";
 
 import { createContext, startTransition, use, useActionState, useId, type ReactNode } from "react";
-import type { ActionResult } from "../action-result";
+import type { ActionResult } from "@/lib/action-result";
+import { inputClass } from "@/components/form-styles";
 
 type Action = (prev: ActionResult, formData: FormData) => Promise<ActionResult>;
 
 const FieldErrors = createContext<Record<string, string>>({});
 
-export const inputClass =
-  "w-full rounded border border-gray-400 px-3 py-2 text-base focus:outline-2 focus:outline-offset-1 focus:outline-blue-700 aria-invalid:border-red-700";
 const buttonClass =
   "rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 disabled:opacity-60";
 

@@ -2,7 +2,8 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { saveAddressAction, type FormState } from "../actions";
-import { Field, FormMessage, inputClass, SubmitButton } from "./form-parts";
+import { inputClass } from "@/components/form-styles";
+import { Field, FormMessage, SubmitButton } from "./form-parts";
 
 export interface AddressDefaults {
   id?: string;

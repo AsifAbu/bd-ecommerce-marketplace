@@ -3,9 +3,8 @@
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import type { FormState } from "../actions";
+import { inputClass } from "@/components/form-styles";
 
-export const inputClass =
-  "w-full rounded border border-gray-400 px-3 py-2 text-base focus:outline-2 focus:outline-offset-1 focus:outline-blue-700 aria-invalid:border-red-700";
 
 /** Labelled input with its error message linked by aria-describedby. */
 export function Field({

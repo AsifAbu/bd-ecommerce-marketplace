@@ -3,26 +3,20 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requirePlatformAdmin, requireShopRole, requireUser, type GuardUser } from "@/lib/auth";
-import { CatalogError, toErrorBody, type ErrorBody } from "./errors";
+import { runAction, type ActionResult } from "@/lib/action-result";
+import { CatalogError } from "./errors";
 import * as catalog from "./service";
-
-/** Result shown by <ActionForm>. Errors use the standard error shape plus the HTTP status. */
-export type ActionState = { ok?: string; error?: ErrorBody["error"] & { status: number } } | null;
 
 type Handler = (user: GuardUser, form: Record<string, FormDataEntryValue>) => Promise<string>;
 
 function action(guard: () => Promise<GuardUser>, handler: Handler) {
-  return async (_prev: ActionState, formData: FormData): Promise<ActionState> => {
-    try {
+  return (_prev: ActionResult, formData: FormData): Promise<ActionResult> =>
+    runAction(async () => {
       const user = await guard(); // role check before any input is read
       const ok = await handler(user, Object.fromEntries(formData));
       revalidatePath("/", "layout");
-      return { ok };
-    } catch (err) {
-      const { status, body } = toErrorBody(err);
-      return { error: { ...body.error, status } };
-    }
-  };
+      return ok;
+    });
 }
 
 const adminAction = (handler: Handler) => action(requirePlatformAdmin, handler);

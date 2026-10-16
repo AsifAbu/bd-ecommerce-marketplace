@@ -15,7 +15,8 @@ const h = vi.hoisted(() => ({
     staffA: { isPlatformAdmin: false },
     ownerB: { isPlatformAdmin: false },
     customer: { isPlatformAdmin: false },
-  } as Record<string, { isPlatformAdmin: boolean }>,
+    unverified: { isPlatformAdmin: false, emailVerifiedAt: null },
+  } as Record<string, { isPlatformAdmin: boolean; emailVerifiedAt?: Date | null }>,
   roles: { "A:ownerA": "owner", "A:staffA": "staff", "B:ownerB": "owner" } as Record<string, string>,
 }));
 
@@ -54,7 +55,7 @@ vi.mock("@/lib/auth", async () => {
     getSessionUserId: async () => h.sessionUserId,
     findUserById: async (id) =>
       h.users[id]
-        ? { id, email: `${id}@ecom.test`, phone: null, name: id, status: "active", ...h.users[id] }
+        ? { id, email: `${id}@ecom.test`, emailVerifiedAt: new Date(), phone: null, name: id, status: "active", ...h.users[id] }
         : null,
   });
   const requireShopRole = createShopGuard({
@@ -210,6 +211,32 @@ describe("shop-scoped actions: no cross-shop access", () => {
     as("ownerA");
     await actions.removeStaff(undefined, form({ shopId: "A", memberId: "m-of-B" }));
     expect(repo.removeStaff).toHaveBeenCalledWith("A", "m-of-B", "ownerA");
+  });
+});
+
+describe("acceptInvite", () => {
+  const inviteFor = (email: string) => ({
+    id: "inv1",
+    shopId: "A",
+    email,
+    acceptedAt: null,
+    expiresAt: new Date(Date.now() + 86_400_000),
+  });
+
+  it("joins the shop when the logged-in email matches and is verified", async () => {
+    as("customer");
+    repo.findInviteByTokenHash.mockResolvedValue(inviteFor("customer@ecom.test") as never);
+    await expect(actions.acceptInvite(undefined, form({ token: "t" }))).rejects.toMatchObject({ url: "/seller/A" });
+    expect(repo.acceptInvite).toHaveBeenCalled();
+  });
+
+  it("refuses a matching but unverified email", async () => {
+    as("unverified");
+    repo.findInviteByTokenHash.mockResolvedValue(inviteFor("unverified@ecom.test") as never);
+    expect(await actions.acceptInvite(undefined, form({ token: "t" }))).toMatchObject({
+      error: { message: expect.stringMatching(/verify your email/i) },
+    });
+    expect(repo.acceptInvite).not.toHaveBeenCalled();
   });
 });
 

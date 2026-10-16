@@ -41,6 +41,7 @@ const service = await import("./service");
 const customer: GuardUser = {
   id: "c1",
   email: "c@ecom.test",
+  emailVerifiedAt: new Date(),
   phone: null,
   name: "Customer",
   isPlatformAdmin: false,
@@ -79,37 +80,37 @@ beforeEach(() => {
 describe("catalog admin actions", () => {
   it.each(adminCases)("%o returns 403 for a non-admin and changes nothing", async (action, data, call) => {
     sessionUser = customer;
-    const result = await action(null, form(data));
-    expect(result?.error).toMatchObject({ status: 403, code: "FORBIDDEN" });
+    const result = await action(undefined, form(data));
+    expect(result).toMatchObject({ error: { code: "FORBIDDEN" } });
     expect(call).not.toHaveBeenCalled();
   });
 
   it.each(adminCases)("%o returns 401 for a guest", async (action, data, call) => {
-    const result = await action(null, form(data));
-    expect(result?.error).toMatchObject({ status: 401 });
+    const result = await action(undefined, form(data));
+    expect(result).toMatchObject({ error: { code: "UNAUTHORIZED" } });
     expect(call).not.toHaveBeenCalled();
   });
 
   it.each(adminCases)("%o runs for the Platform Admin as the actor", async (action, data, call) => {
     sessionUser = admin;
-    const result = await action(null, form(data));
-    expect(result).toEqual({ ok: expect.any(String) });
+    const result = await action(undefined, form(data));
+    expect(result).toEqual({ ok: true, message: expect.any(String) });
     expect(call).toHaveBeenCalledOnce();
     expect(vi.mocked(call).mock.calls[0][0]).toBe("a1");
   });
 
   it("returns 422 with field messages for invalid input", async () => {
     sessionUser = admin;
-    const result = await actions.createAttributeAction(null, form({ key: "Bad Key", name: "", type: "enum" }));
-    expect(result?.error).toMatchObject({ status: 422, code: "VALIDATION" });
-    expect(Object.keys(result!.error!.fields!)).toEqual(expect.arrayContaining(["key", "name"]));
+    const result = await actions.createAttributeAction(undefined, form({ key: "Bad Key", name: "", type: "enum" }));
+    expect(result).toMatchObject({ error: { code: "VALIDATION" } });
+    expect(Object.keys(result && "error" in result ? result.error.fields! : {})).toEqual(expect.arrayContaining(["key", "name"]));
     expect(service.createAttribute).not.toHaveBeenCalled();
   });
 
   it("parses assignment settings from the form", async () => {
     sessionUser = admin;
     await actions.assignAttributeAction(
-      null,
+      undefined,
       form({ categoryId: "c", attributeId: "a", required: "on", filterable: "on", filterWidget: "checkbox_list", displayOrder: "2" }),
     );
     expect(service.assignAttribute).toHaveBeenCalledWith("a1", "c", {
@@ -127,10 +128,10 @@ describe("category requests (sellers)", () => {
   it("lets a member of the shop send a request for that shop", async () => {
     sessionUser = customer;
     const result = await actions.createCategoryRequestAction(
-      null,
+      undefined,
       form({ kind: "enum_option", shopId: "s1", attributeId: "brand", name: "Team Group" }),
     );
-    expect(result?.ok).toBeTruthy();
+    expect(result).toMatchObject({ ok: true });
     expect(service.createCategoryRequest).toHaveBeenCalledWith("c1", {
       kind: "enum_option",
       shopId: "s1",
@@ -142,16 +143,16 @@ describe("category requests (sellers)", () => {
   it("returns 403 for a shop the user doesn't belong to", async () => {
     sessionUser = customer;
     const result = await actions.createCategoryRequestAction(
-      null,
+      undefined,
       form({ kind: "category", shopId: "other-shop", parentId: "p", name: "GPU" }),
     );
-    expect(result?.error?.status).toBe(403);
+    expect(result).toMatchObject({ error: { code: "FORBIDDEN" } });
     expect(service.createCategoryRequest).not.toHaveBeenCalled();
   });
 
   it("returns 401 for a guest", async () => {
-    const result = await actions.createCategoryRequestAction(null, form({ kind: "category", parentId: "p", name: "GPU" }));
-    expect(result?.error?.status).toBe(401);
+    const result = await actions.createCategoryRequestAction(undefined, form({ kind: "category", parentId: "p", name: "GPU" }));
+    expect(result).toMatchObject({ error: { code: "UNAUTHORIZED" } });
     expect(service.createCategoryRequest).not.toHaveBeenCalled();
   });
 });

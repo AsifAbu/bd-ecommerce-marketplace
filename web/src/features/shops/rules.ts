@@ -1,11 +1,10 @@
+import { AppError } from "@/lib/errors";
 import type { LicenceStatus, ShopStatus, ShopTier, ShopType, UpgradeStatus } from "@/generated/prisma/client";
 
 /** A business-rule violation (409). Actions map it to the standard error shape. */
-export class ShopRuleError extends Error {
-  readonly status = 409;
-  readonly code = "CONFLICT";
+export class ShopRuleError extends AppError {
   constructor(message: string) {
-    super(message);
+    super(409, "CONFLICT", message);
     this.name = "ShopRuleError";
   }
 }

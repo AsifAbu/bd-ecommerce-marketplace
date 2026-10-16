@@ -6,7 +6,9 @@ import { redirect } from "next/navigation";
 import { requirePlatformAdmin, requireShopRole, requireUser } from "@/lib/auth";
 import { isTestMode } from "@/lib/config";
 import { getStorage } from "@/lib/storage";
-import { formString, parseForm, runAction, ValidationError, type ActionResult } from "./action-result";
+import { formString, runAction, type ActionResult } from "@/lib/action-result";
+import { ValidationError } from "@/lib/errors";
+import { parseForm } from "./action-result";
 import { sendMail } from "@/lib/mail";
 import * as repo from "./repo";
 import {
@@ -160,7 +162,7 @@ export async function removeStaff(_prev: ActionResult, formData: FormData): Prom
   });
 }
 
-/** US-013: the invited user accepts. The logged-in email must match the invite. */
+/** US-013: the invited user accepts. The logged-in email must match the invite and be verified. */
 export async function acceptInvite(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   let shopId = "";
   const result = await runAction(async () => {
@@ -171,6 +173,9 @@ export async function acceptInvite(_prev: ActionResult, formData: FormData): Pro
     }
     if (invite.email !== user.email?.toLowerCase()) {
       throw new ShopRuleError(`Log in as ${invite.email} to accept this invite`);
+    }
+    if (!user.emailVerifiedAt) {
+      throw new ShopRuleError("Verify your email address before accepting this invite");
     }
     await repo.acceptInvite(user.id, invite);
     shopId = invite.shopId;

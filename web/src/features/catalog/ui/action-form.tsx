@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, type ReactNode } from "react";
-import type { ActionState } from "../actions";
+import type { ActionResult } from "@/lib/action-result";
 
 /** A form bound to a catalog server action; shows its success or error message. */
 export function ActionForm({
@@ -10,21 +10,21 @@ export function ActionForm({
   className = "flex flex-wrap items-end gap-2",
   label,
 }: {
-  action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
+  action: (prev: ActionResult, formData: FormData) => Promise<ActionResult>;
   children: ReactNode;
   className?: string;
   label?: string;
 }) {
-  const [state, formAction, pending] = useActionState(action, null);
+  const [state, formAction, pending] = useActionState(action, undefined);
   return (
     <form action={formAction} className={className} aria-label={label} aria-busy={pending}>
       {children}
-      {state?.ok && (
+      {state && "ok" in state && (
         <p role="status" className="w-full text-sm text-green-800">
-          {state.ok}
+          {state.message}
         </p>
       )}
-      {state?.error && (
+      {state && "error" in state && (
         <div role="alert" className="w-full text-sm text-red-700">
           <p>{state.error.message}</p>
           {state.error.fields && (
