@@ -22,6 +22,9 @@ async function main() {
   }
   console.info(`[worker] started (${getConfig().appMode} mode): ${Object.keys(handlers).join(", ")}`);
 
+  // Daily jobs (cron in Bangladesh time).
+  await boss.schedule("shops.licence-expiry", "0 1 * * *", {}, { tz: "Asia/Dhaka" });
+
   if (process.argv.includes("--demo")) {
     await boss.send("example.log", { message: "hello from the worker demo" });
   }
