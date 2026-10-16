@@ -10,7 +10,8 @@
 
 ## Status (16 Oct 2026)
 
-- **Phase:** planning done, **no application code yet**. Plan **v2.4**, 55 user stories (all traced to use cases), 29-week roadmap: seller beta week 9, MVP test gate week 17, payments/courier/Bengali R2 weeks 18–23, try-on R3 weeks 24–29 after traction.
+- **Phase:** building. Plan **v2.4**, 55 user stories, 29-week roadmap (seller beta week 9, MVP test gate week 17, R2 weeks 18–23, try-on R3 after traction).
+- **Code (local git, `main`, app in `web/`):** Sprint 0 foundation + wave 1 merged on 16 Oct 2026: accounts (US-001–006), shops (US-010–013, 015–017), catalog schema (US-020–024). 241 unit tests + 8 e2e tests pass. How agents work: `.claude/knowledge/dev-conventions.md` (worktree per feature, `db:push` on branches, migrations on `main`, owner approves merges).
 - **Build approach:** testing first (dummy OTP 123456, test certificates accepted, seed data in 3 niches + a test pharmacy), then a pre-release checklist before real customers.
 - **Key decisions:** cash on delivery only in R1; English text for now; flat delivery Tk 70 / Tk 130 + Tk 20/kg; seller tiers Basic/Verified; medicine shops need a verified licence, no prescription upload; platform holds COD money in production. Full list: `knowledge/decisions.md`.
 
