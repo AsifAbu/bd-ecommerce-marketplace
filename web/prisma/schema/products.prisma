@@ -29,6 +29,9 @@ model Product {
   variants ProductVariant[]
   images   ProductImage[]
 
+  // wishlist relations
+  wishlistItems WishlistItem[]
+
   @@index([shopId, deletedAt])
   @@index([categoryId, status])
   @@map("product")
@@ -51,6 +54,9 @@ model ProductVariant {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // wishlist relations
+  wishlistItems WishlistItem[]
 
   @@unique([shopId, sku])
   @@unique([productId, optionKey])
