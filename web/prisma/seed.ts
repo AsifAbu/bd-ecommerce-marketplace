@@ -9,7 +9,12 @@ import { prisma } from "../src/lib/db";
 import { hashPassword } from "../src/features/auth/password";
 import { slugify } from "../src/features/catalog/tree";
 import type { AttributeType, FilterWidget } from "../src/generated/prisma/enums";
+import type { Prisma } from "../src/generated/prisma/client";
 import { getStorage } from "../src/lib/storage";
+import { getCategorySchema } from "../src/features/catalog";
+import { refreshLiveCounts } from "../src/features/products/live-counts";
+import { validateProductInput } from "../src/features/products/validation";
+import { dhakaToday } from "../src/features/shops";
 
 export const TEST_PASSWORD = "Test@12345";
 
@@ -442,11 +447,136 @@ async function seedAccounts() {
   console.info(`Seeded ${addresses.length} test addresses`);
 }
 
+/**
+ * Products (US-030 to US-034): two [TEST] listings per seeded shop, validated through the real
+ * category schema. No images (they need MinIO). Matched by shop + title, so re-running updates them;
+ * variants are upserted by their options, so their ids stay stable for carts.
+ */
+async function seedProducts() {
+  const common = { quantity: 1, quantity_unit: "pcs", weight_g: 250, return_eligibility: "eligible" };
+  const expiry = `${new Date().getUTCFullYear() + 1}-12-31`;
+  type SeedVariant = { sku: string; price: number; stock: number; options?: Record<string, string> };
+  type SeedProduct = { title: string; category: string; description: string; attributes: Record<string, unknown>; variants: SeedVariant[] };
+  const byShop: Record<string, SeedProduct[]> = {
+    "test-tech-shop": [
+      {
+        title: "[TEST] AMD Ryzen 5 7600 Processor",
+        category: "processor",
+        description: "6 cores, 12 threads, AM5 socket. Boxed with the Wraith Stealth cooler.",
+        attributes: { ...common, country_of_origin: "China", warranty: "3 years", brand: "amd", socket: "am5", core_count: 6, base_clock_ghz: 3.8, tdp_w: 65, integrated_graphics: true, model_number: "100-100001015BOX" },
+        variants: [{ sku: "TEST-R5-7600", price: 24500, stock: 12 }],
+      },
+      {
+        title: "[TEST] Corsair Vengeance 16GB DDR5 RAM",
+        category: "ram",
+        description: "16 GB DDR5 desktop memory, 5600 MHz.",
+        attributes: { ...common, country_of_origin: "Taiwan", warranty: "Lifetime", brand: "corsair", memory_type: "ddr5", capacity_gb: 16, speed_mhz: 5600, module_type: "dimm" },
+        variants: [{ sku: "TEST-CMK16GX5", price: 6800, stock: 25 }],
+      },
+    ],
+    "test-book-shop": [
+      {
+        title: "[TEST] Himu (paperback)",
+        category: "fiction",
+        description: "A Himu novel by Humayun Ahmed.",
+        attributes: { ...common, country_of_origin: "Bangladesh", brand: "Anyaprokash", author: "Humayun Ahmed", language: "bangla", format: "paperback", genre: "novel", page_count: 120 },
+        variants: [{ sku: "TEST-HIMU-PB", price: 250, stock: 40 }],
+      },
+      {
+        title: "[TEST] Engineering Mathematics",
+        category: "academic",
+        description: "Textbook for first-year engineering students.",
+        attributes: { ...common, country_of_origin: "Bangladesh", brand: "[TEST] Publisher", author: "[TEST] Author", language: "english", format: "hardcover", genre: "engineering" },
+        variants: [{ sku: "TEST-ENG-MATH", price: 650, stock: 8 }],
+      },
+    ],
+    "test-fashion-shop": [
+      {
+        title: "[TEST] Oxford cotton shirt",
+        category: "mens-shirts",
+        description: "Regular-fit long-sleeve Oxford shirt.",
+        attributes: { ...common, country_of_origin: "Bangladesh", brand: "yellow", fit: "regular", material: "cotton", tryon_eligible: true },
+        variants: ["S", "M", "L"].flatMap((size) =>
+          ["Black", "White"].map((colour) => ({
+            sku: `TEST-OX-${size}-${colour.toUpperCase()}`,
+            price: size === "L" ? 1950 : 1850,
+            stock: 6,
+            options: { size: size.toLowerCase(), colour: colour.toLowerCase() },
+          })),
+        ),
+      },
+      {
+        title: "[TEST] Slim denim pants",
+        category: "mens-pants",
+        description: "Slim-fit stretch denim.",
+        attributes: { ...common, country_of_origin: "Bangladesh", brand: "easy", fit: "slim", material: "denim" },
+        variants: ["30", "32", "34"].map((size) => ({ sku: `TEST-DENIM-${size}`, price: 2200, stock: 4, options: { size, colour: "blue" } })),
+      },
+    ],
+    "test-pharmacy": [
+      {
+        title: "[TEST] Paracetamol 500 mg tablets",
+        category: "pain-relief",
+        description: "Strip of 10 tablets.",
+        attributes: { ...common, quantity: 10, weight_g: 20, country_of_origin: "Bangladesh", brand: "square", generic_name: "paracetamol", dosage_form: "tablet", strength_mg: 500, pack_size: 10, otc: true, expiry_date: expiry },
+        variants: [{ sku: "TEST-PARA-500", price: 12, stock: 200 }],
+      },
+      {
+        title: "[TEST] Vitamin C 250 mg tablets",
+        category: "vitamins",
+        description: "Chewable, strip of 10.",
+        attributes: { ...common, quantity: 10, weight_g: 20, country_of_origin: "Bangladesh", brand: "beximco", generic_name: "vitamin-c", dosage_form: "tablet", strength_mg: 250, pack_size: 10, otc: true, expiry_date: expiry },
+        variants: [{ sku: "TEST-VITC-250", price: 25, stock: 150 }],
+      },
+    ],
+  };
+
+  const today = dhakaToday(new Date());
+  let count = 0;
+  for (const [shopSlug, products] of Object.entries(byShop)) {
+    const shop = await prisma.shop.findUniqueOrThrow({ where: { slug: shopSlug } });
+    const staff = await prisma.shopMember.findFirstOrThrow({ where: { shopId: shop.id, role: "staff" } });
+    for (const p of products) {
+      const category = await prisma.category.findUniqueOrThrow({ where: { slug: p.category } });
+      const input = validateProductInput(
+        await getCategorySchema(category.id),
+        { title: p.title, description: p.description, attributes: p.attributes, variants: p.variants.map((v) => ({ ...v, options: v.options ?? {} })) },
+        today,
+      );
+      const data = {
+        categoryId: category.id,
+        title: input.title,
+        description: input.description,
+        attributes: input.attributes as Prisma.InputJsonValue,
+        expiresOn: input.expiresOn,
+        status: "active" as const,
+        deletedAt: null,
+      };
+      const existing = await prisma.product.findFirst({ where: { shopId: shop.id, title: p.title } });
+      const product = existing
+        ? await prisma.product.update({ where: { id: existing.id }, data })
+        : await prisma.product.create({ data: { ...data, shopId: shop.id, createdById: staff.userId } });
+      for (const v of input.variants) {
+        const values = { sku: v.sku, price: v.price, stock: v.stock, options: v.options as Prisma.InputJsonValue, position: v.position };
+        await prisma.productVariant.upsert({
+          where: { productId_optionKey: { productId: product.id, optionKey: v.optionKey } },
+          update: values,
+          create: { ...values, productId: product.id, shopId: shop.id, optionKey: v.optionKey },
+        });
+      }
+      count++;
+    }
+  }
+  await refreshLiveCounts(new Date());
+  console.info(`Seeded ${count} test products (no images)`);
+}
+
 async function main() {
   await seedUsers();
   await seedCatalog();
   await seedShops();
   await seedAccounts();
+  await seedProducts();
 }
 
 main()
