@@ -67,6 +67,9 @@ export async function signUpAction(_prev: FormState, fd: FormData): Promise<Form
   return {};
 }
 
+const LOGIN_FAILED_MESSAGE =
+  "Wrong mobile number, email or password, or the account is suspended. After 5 wrong tries, login is paused for 15 minutes.";
+
 export async function loginAction(_prev: FormState, fd: FormData): Promise<FormState> {
   try {
     await signIn("credentials", {
@@ -77,7 +80,8 @@ export async function loginAction(_prev: FormState, fd: FormData): Promise<FormS
   } catch (err) {
     if (err instanceof AuthError) {
       return {
-        error: "Wrong mobile number, email or password, or the account is suspended.",
+        // One message for every failure, including a lockout, so it never reveals whether an account exists.
+        error: LOGIN_FAILED_MESSAGE,
         values: { identifier: str(fd, "identifier") },
       };
     }
