@@ -353,8 +353,8 @@ export function decideCategoryRequest(actorId: string, requestId: string, approv
       createdCategoryId = (await createCategoryTx(tx, actorId, { name: request.name, parentId: request.parentId })).id;
     } else if (request.kind === "enum_option" && request.optionId) {
       if (approve) await tx.attributeOption.update({ where: { id: request.optionId }, data: { status: "active" } });
-      // A rejected option was never active, so it is removed to free the value.
-      else await tx.attributeOption.delete({ where: { id: request.optionId } });
+      // A rejected option is removed to free the value, but only while still pending (an admin may have activated it).
+      else await tx.attributeOption.deleteMany({ where: { id: request.optionId, status: "pending" } });
     }
 
     await tx.categoryRequest.update({
