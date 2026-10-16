@@ -1,0 +1,12 @@
+{
+  "name": "ecom-plan-docs",
+  "private": true,
+  "description": "Rebuilds docs/Product-Plan.docx and docs/Use-Case-Diagrams.docx",
+  "scripts": {
+    "build": "node build-usecases.js ../../docs && node build-plan.js ../../docs plan-v2.4.md"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "docx": "^9.11.0"
+  }
+}
