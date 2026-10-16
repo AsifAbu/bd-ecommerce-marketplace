@@ -1,0 +1,148 @@
+// Shops: application, tiers, admin approval, staff and medicine licences (US-010 to US-017).
+// Files (owner photo, registration document, licence certificate) live in the private
+// bucket; only their storage keys are kept here.
+
+enum ShopType {
+  general
+  electronics
+  books
+  fashion
+  medicine
+}
+
+enum ShopTier {
+  basic
+  verified
+}
+
+enum ShopStatus {
+  pending
+  approved
+  rejected
+  suspended
+}
+
+enum RegistrationType {
+  trade_licence
+  vat
+  tin
+  ubid
+  pra
+  dbid
+}
+
+// Request to upgrade from Basic to Verified.
+enum UpgradeStatus {
+  none
+  pending
+  approved
+  rejected
+}
+
+enum ShopRole {
+  owner
+  staff
+}
+
+enum LicenceStatus {
+  pending
+  verified
+  rejected
+  expired
+}
+
+model Shop {
+  id            String     @id @default(cuid())
+  name          String
+  slug          String     @unique
+  type          ShopType
+  tier          ShopTier   @default(basic)
+  status        ShopStatus @default(pending)
+  statusReason  String?    @map("status_reason") // reject / suspend reason shown to the owner
+  ownerId       String     @map("owner_id")
+  ownerNid      String     @map("owner_nid")
+  ownerPhotoKey String     @map("owner_photo_key")
+
+  // Verified upgrade (US-017)
+  registrationType   RegistrationType? @map("registration_type")
+  registrationNo     String?           @map("registration_no")
+  registrationDocKey String?           @map("registration_doc_key")
+  upgradeStatus      UpgradeStatus     @default(none) @map("upgrade_status")
+  upgradeReason      String?           @map("upgrade_reason")
+
+  // Profile (US-012)
+  logoUrl     String? @map("logo_url")
+  bannerUrl   String? @map("banner_url")
+  description String?
+  policies    String?
+
+  // Set when the medicine licence lapses; cleared when a new licence is verified (US-016).
+  medicineSuspended Boolean @default(false) @map("medicine_suspended")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  owner    User          @relation("ShopOwner", fields: [ownerId], references: [id])
+  members  ShopMember[]
+  licences ShopLicence[]
+  invites  ShopInvite[]
+
+  @@index([status])
+  @@index([ownerId])
+  @@map("shop")
+}
+
+model ShopMember {
+  id          String   @id @default(cuid())
+  shopId      String   @map("shop_id")
+  userId      String   @map("user_id")
+  role        ShopRole
+  permissions Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, userId])
+  @@index([userId])
+  @@map("shop_member")
+}
+
+model ShopLicence {
+  id           String        @id @default(cuid())
+  shopId       String        @map("shop_id")
+  licenceNo    String        @map("licence_no")
+  expiryDate   DateTime      @map("expiry_date") @db.Date
+  documentKey  String        @map("document_key")
+  status       LicenceStatus @default(pending)
+  reviewedById String?       @map("reviewed_by")
+  reviewedAt   DateTime?     @map("reviewed_at")
+  reason       String?
+  warnedAt     DateTime?     @map("warned_at") // 30-day expiry warning sent
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  shop       Shop  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("LicenceReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([shopId])
+  @@index([status, expiryDate])
+  @@map("shop_licence")
+}
+
+// Staff invite (US-013). Only the SHA-256 hash of the token is stored.
+model ShopInvite {
+  id          String    @id @default(cuid())
+  shopId      String    @map("shop_id")
+  email       String
+  tokenHash   String    @unique @map("token_hash")
+  invitedById String    @map("invited_by")
+  expiresAt   DateTime  @map("expires_at")
+  acceptedAt  DateTime? @map("accepted_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  shop      Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  invitedBy User @relation("ShopInviter", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+  @@map("shop_invite")
+}

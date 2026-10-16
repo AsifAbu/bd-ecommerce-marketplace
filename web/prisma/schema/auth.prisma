@@ -24,6 +24,12 @@ model User {
   sessions  Session[]
   auditLogs AuditLog[]
 
+  // shops relations
+  ownedShops       Shop[]        @relation("ShopOwner")
+  shopMemberships  ShopMember[]
+  reviewedLicences ShopLicence[] @relation("LicenceReviewer")
+  shopInvites      ShopInvite[]  @relation("ShopInviter")
+
   @@map("user")
 }
 
