@@ -58,6 +58,11 @@ model User {
   reviewsHidden  Review[] @relation("ReviewHiddenBy")
   reviewsReplied Review[] @relation("ReviewReplyBy")
 
+  // returns and complaints relations
+  returnRequests    ReturnRequest[]
+  complaintTickets  ComplaintTicket[]
+  complaintMessages ComplaintMessage[]
+
   @@map("user")
 }
 

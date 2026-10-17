@@ -6,7 +6,9 @@ import { buildTimeline } from "@/features/orders/lifecycle";
 import { orderTimelines } from "@/features/orders/lifecycle/server";
 import { CustomerShopOrderLifecycle } from "@/features/orders/lifecycle/ui/customer-lifecycle";
 import { viewableOrder } from "@/features/orders/server";
+import { OrderComplaints } from "@/features/complaints/ui/order-complaints";
 import { OrderDetail } from "@/features/orders/ui/order-view";
+import { OrderReturns } from "@/features/returns/ui/order-returns";
 import { reviewService } from "@/features/reviews/server";
 import { ItemReview } from "@/features/reviews/ui/item-review";
 
@@ -35,7 +37,7 @@ async function Content({
 }) {
   await connection();
   const { orderNo } = await params;
-  const { placed } = await searchParams;
+  const { placed, return: returned, photos } = await searchParams;
   const order = await viewableOrder(decodeURIComponent(orderNo));
   if (!order) {
     const user = await currentUserOrNull();
@@ -93,6 +95,8 @@ async function Content({
           );
         }}
       />
+      <OrderReturns orderId={order.id} notice={returned === "requested" ? (photos === "unsaved" ? "requested-no-photos" : "requested") : undefined} />
+      <OrderComplaints orderId={order.id} orderNo={order.orderNo} />
     </>
   );
 }

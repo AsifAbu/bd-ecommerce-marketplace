@@ -1,0 +1,94 @@
+// Returns and refunds (US-070, US-071). A customer (account or guest with an order grant) asks to
+// return some units of one delivered order item within 7 days of delivery (Return and Refund
+// policy). The shop accepts or rejects within 48 h (shop_due_at); unanswered requests and
+// disputed rejections go to the Platform Admin (escalated), who approves or denies. The item is
+// collected or dropped off and inspected (received), then the refund is paid by hand in R1 and
+// recorded with its method and reference (refunded). Returns are 6-year business records
+// (src/lib/retention.ts): never hard-deleted, every relation uses Restrict.
+
+enum ReturnReason {
+  damaged // damaged, defective, incomplete or expired
+  wrong_item // wrong item, size or colour
+  not_as_described
+  change_of_mind // only when the listing allows it (return_eligibility = change_of_mind)
+  other
+}
+
+enum ReturnStatus {
+  requested // waiting for the shop (48 h)
+  accepted // by the shop
+  rejected // by the shop; the customer may ask the admin to decide
+  escalated // to the admin: no shop answer in 48 h, or a disputed rejection
+  approved // by the admin
+  denied // by the admin (final)
+  received // item back with the shop and inspected
+  refunded // refund paid and recorded (final)
+  cancelled // withdrawn by the customer before the shop answered (final)
+}
+
+enum RefundMethod {
+  bkash
+  nagad
+  bank
+  cash
+}
+
+model ReturnRequest {
+  id               String        @id @default(cuid())
+  orderId          String        @map("order_id")
+  shopOrderId      String        @map("shop_order_id")
+  orderItemId      String        @map("order_item_id")
+  shopId           String        @map("shop_id")
+  // The account that asked (null for a guest). Customer lists also follow order.user_id, so a
+  // guest request shows up once the order is linked to an account (US-009).
+  userId           String?       @map("user_id")
+  // The order's verified mobile (E.164): who gets the SMS, and who asked when it was a guest.
+  contactPhone     String        @map("contact_phone")
+  quantity         Int
+  reason           ReturnReason
+  details          String?
+  // Private-bucket keys (returns/<id>/...). Optional in test mode; decision in features/returns/photos.ts.
+  photoKeys        String[]      @default([]) @map("photo_keys")
+  // Return policy version the customer accepted with the order (from order.policy_versions).
+  policyVersion    Int?          @map("policy_version")
+  status           ReturnStatus  @default(requested)
+  statusChangedAt  DateTime      @default(now()) @map("status_changed_at")
+  // Requested + 48 h: the shop must accept or reject before this, else the job escalates it.
+  shopDueAt        DateTime      @map("shop_due_at")
+  shopRespondedAt  DateTime?     @map("shop_responded_at")
+  shopNote         String?       @map("shop_note")
+  escalatedAt      DateTime?     @map("escalated_at")
+  // "no_response" (the 48 h job) or "customer_dispute" (the customer disputed a rejection).
+  escalationReason String?       @map("escalation_reason")
+  disputeNote      String?       @map("dispute_note")
+  adminDecidedAt   DateTime?     @map("admin_decided_at")
+  adminDecidedById String?       @map("admin_decided_by_id")
+  adminNote        String?       @map("admin_note")
+  receivedAt       DateTime?     @map("received_at")
+  // Set once when the units went back into the variant's stock (never twice).
+  restockedAt      DateTime?     @map("restocked_at")
+  // Refund paid by hand (R1, cash on delivery): total, of which the delivery charge (shop at fault).
+  refundAmount     Decimal?      @map("refund_amount") @db.Decimal(12, 2)
+  refundDelivery   Decimal?      @map("refund_delivery") @db.Decimal(12, 2)
+  refundMethod     RefundMethod? @map("refund_method")
+  refundReference  String?       @map("refund_reference")
+  refundedAt       DateTime?     @map("refunded_at")
+  refundedById     String?       @map("refunded_by_id")
+  closedAt         DateTime?     @map("closed_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  shopOrder ShopOrder @relation(fields: [shopOrderId], references: [id], onDelete: Restrict)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([orderItemId, status])
+  @@index([shopId, status])
+  @@index([shopOrderId])
+  @@index([orderId])
+  @@index([userId])
+  @@index([status, shopDueAt])
+  @@map("return_request")
+}

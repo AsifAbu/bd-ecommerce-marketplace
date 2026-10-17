@@ -19,6 +19,19 @@ export const queues = {
   "orders.notify-overdue": z.object({ shopOrderId: z.string().min(1).max(64) }),
   // US-082: daily check of collections near or past the 10-day payout deadline.
   "payouts.due-check": z.object({}),
+  // Returns (US-070, US-071): unanswered requests to the admin after 48 h; SMS/email per status change.
+  "returns.escalate-overdue": z.object({}),
+  "returns.notify": z.object({
+    returnId: z.string().min(1).max(64),
+    event: z.enum(["requested", "accepted", "rejected", "escalated", "approved", "denied", "received", "refunded"]),
+  }),
+  // Complaints (US-072): the 72 h timer flags late tickets once; the customer is told of each change.
+  "complaints.flag-overdue": z.object({}),
+  "complaints.notify": z.object({
+    ticketId: z.string().min(1).max(64),
+    event: z.enum(["opened", "reply", "in_progress", "resolved", "closed", "overdue"]),
+    messageId: z.string().max(64).optional(),
+  }),
 } as const;
 
 export type QueueName = keyof typeof queues;

@@ -19,6 +19,7 @@ import { dhakaToday } from "../src/features/shops";
 import { indexer } from "../src/features/search/server";
 import { deliveryCharge } from "../src/lib/delivery";
 import { assertSeedAllowed } from "./seed-guard";
+import { seedReturnsAndComplaints } from "./seed-returns";
 import { POLICY_SLUGS, SIGNUP_POLICY_SLUGS, CHECKOUT_POLICY_SLUGS } from "../src/features/policies/catalog";
 import { SEED_POLICY_TEXT } from "../src/features/policies/seed-text";
 import * as reviewsRepo from "../src/features/reviews/repo";
@@ -1248,6 +1249,7 @@ async function main() {
   await seedOrders();
   await seedReviews();
   await seedOrderLifecycle();
+  await seedReturnsAndComplaints();
   await seedSearchIndex();
 }
 

@@ -10,7 +10,7 @@ import { Client } from "pg";
 const R7 = "[TEST] AMD Ryzen 7 7700X Processor";
 const RAM = "[TEST] Corsair Vengeance 16GB DDR5 RAM";
 const BUYER = "reviews.e2e@ecom.test";
-const BUYER_PHONE = "+8801710000301";
+const BUYER_PHONE = "+8801710000401";
 // Order-number characters (no look-alikes), so the test orders have valid numbers.
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTVWXYZ";
 const code = () => Array.from({ length: 5 }, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join("");

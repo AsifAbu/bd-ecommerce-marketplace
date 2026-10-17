@@ -17,7 +17,7 @@ function files(dir: string, ext: RegExp): string[] {
 describe("retention config (US-081)", () => {
   it("keeps orders, shops, complaints and audit logs for 6 years", () => {
     expect(RETENTION_YEARS).toBe(6);
-    for (const model of ["Order", "Shop", "ComplaintTicket", "AuditLog", "PolicyAcceptance", "Review"]) {
+    for (const model of ["Order", "Shop", "ReturnRequest", "ComplaintTicket", "ComplaintMessage", "AuditLog", "PolicyAcceptance", "Review"]) {
       expect(RETENTION_RULES.find((r) => r.model === model)?.years).toBe(6);
     }
   });
@@ -45,11 +45,11 @@ describe("retention config (US-081)", () => {
 describe("retained records are never hard-deleted", () => {
   const accessors = retainedModelAccessors();
   const call = new RegExp(`\\.(${accessors.join("|")})\\s*\\.\\s*(delete|deleteMany)\\s*\\(`);
-  const tables = ["order", "shop_order", "order_item", "shop_order_event", "cod_collection", "payout", "shop", "shop_licence", "complaint_ticket", "audit_log", "policy_document", "policy_acceptance", "review"];
+  const tables = ["order", "shop_order", "order_item", "shop_order_event", "cod_collection", "payout", "shop", "shop_licence", "complaint_ticket", "audit_log", "policy_document", "policy_acceptance", "review", "return_request", "complaint_message"];
   const rawSql = new RegExp(`DELETE\\s+FROM\\s+"?(${tables.join("|")})"?\\b`, "i");
 
-  it("has no Prisma delete or raw DELETE on a retained model in src/ or the seed", () => {
-    const sources = [...files(join(WEB, "src"), /\.(ts|tsx)$/), join(WEB, "prisma", "seed.ts")].filter(
+  it("has no Prisma delete or raw DELETE on a retained model in src/ or the seed files", () => {
+    const sources = [...files(join(WEB, "src"), /\.(ts|tsx)$/), ...files(join(WEB, "prisma"), /\.ts$/)].filter(
       (f) => !f.endsWith(".test.ts"),
     );
     const offenders = sources.filter((f) => {

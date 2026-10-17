@@ -76,6 +76,12 @@ export async function ProfilePage({ searchParams }: { searchParams: SearchParams
         <Link className="underline" href="/account/addresses">
           My addresses
         </Link>
+        <Link className="underline" href="/account/returns">
+          My returns
+        </Link>
+        <Link className="underline" href="/account/complaints">
+          My complaints
+        </Link>
         {user.isPlatformAdmin && (
           <Link className="underline" href="/admin/users">
             Manage users
