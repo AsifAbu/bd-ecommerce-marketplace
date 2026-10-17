@@ -85,6 +85,7 @@ async function insertProduct(tx: Tx, shopId: string, categoryId: string, input: 
       shopId,
       categoryId,
       title: input.title,
+      bengaliName: input.bengaliName,
       description: input.description,
       attributes: input.attributes as Prisma.InputJsonValue,
       expiresOn: input.expiresOn,
@@ -171,6 +172,7 @@ export function updateProduct(shopId: string, productId: string, input: ProductI
       where: { id: productId, shopId },
       data: {
         title: input.title,
+        bengaliName: input.bengaliName,
         description: input.description,
         attributes: input.attributes as Prisma.InputJsonValue,
         expiresOn: input.expiresOn,
