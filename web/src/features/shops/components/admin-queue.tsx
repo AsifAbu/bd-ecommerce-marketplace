@@ -1,4 +1,5 @@
 import { getStorage } from "@/lib/storage";
+import { storefrontPath, storefrontUrl } from "@/lib/storefront-link";
 import {
   approveShop,
   approveUpgrade,
@@ -145,6 +146,14 @@ export async function AdminQueue() {
               {s.name} · {s.status} · {s.tier}
               {s.medicineSuspended && " · medicine suspended (licence expired)"}
             </h3>
+            {s.status === "approved" && (
+              <p>
+                Storefront:{" "}
+                <a className="text-blue-800 underline" href={storefrontPath(s.slug)} target="_blank" rel="noreferrer">
+                  {storefrontUrl(s.slug)}
+                </a>
+              </p>
+            )}
             {s.status === "approved" ? (
               <ReasonForm action={suspendShop} label="Suspend" idName="shopId" id={s.id} />
             ) : (
