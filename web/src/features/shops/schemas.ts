@@ -115,12 +115,24 @@ const optionalHttpsUrl = z.preprocess(
 );
 const optionalText = (max: number) => z.preprocess(emptyToUndefined, z.string().trim().max(max).optional());
 
-/** US-012: shop profile. */
+/** Tk amount with at most 2 decimals; empty = none. */
+const optionalTk = z.preprocess(
+  (v) => (typeof v === "string" ? emptyToUndefined(v.trim().replace(/,/g, "")) : emptyToUndefined(v)),
+  z.coerce
+    .number({ message: "Enter an amount in Tk" })
+    .min(1, "Enter at least Tk 1, or leave it empty for no free delivery")
+    .max(1_000_000, "Enter at most Tk 1,000,000")
+    .refine((n) => Math.round(n * 100) === n * 100, "Use at most 2 decimals")
+    .optional(),
+);
+
+/** US-012: shop profile; US-058: the free-delivery threshold shown in the cart. */
 export const profileSchema = z.object({
   logoUrl: optionalHttpsUrl,
   bannerUrl: optionalHttpsUrl,
   description: optionalText(2000),
   policies: optionalText(5000),
+  freeDeliveryThreshold: optionalTk,
 });
 
 export const inviteSchema = z.object({
@@ -130,13 +142,3 @@ export const inviteSchema = z.object({
 export const reasonSchema = z.object({
   reason: z.string().trim().min(3, "Give a reason (at least 3 characters)").max(500),
 });
-
-/** First error message per field, for forms. */
-export function fieldErrors(error: z.ZodError): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const issue of error.issues) {
-    const key = String(issue.path[0] ?? "form");
-    out[key] ??= issue.message;
-  }
-  return out;
-}

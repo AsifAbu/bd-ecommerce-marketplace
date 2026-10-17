@@ -1,5 +1,6 @@
 import { hashPassword } from "@/features/auth/password";
-import { fieldErrors, signUpSchema, type SignUpInput } from "./schemas";
+import { fieldErrors } from "@/lib/actions";
+import { signUpSchema, type SignUpInput } from "./schemas";
 
 export interface SignUpDeps {
   /** True if an account already uses this email or phone. */

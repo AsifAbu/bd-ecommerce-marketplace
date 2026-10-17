@@ -3,13 +3,21 @@
  * Feature agents extend this file with their own seed blocks.
  * All accounts use the password TEST_PASSWORD and @ecom.test emails.
  * Remove all seed data before release (pre-release checklist).
+ * Refuses to run when APP_MODE is production or unset (see seed-guard.ts).
  */
 import "dotenv/config";
 import { prisma } from "../src/lib/db";
 import { hashPassword } from "../src/features/auth/password";
 import { slugify } from "../src/features/catalog/tree";
 import type { AttributeType, FilterWidget } from "../src/generated/prisma/enums";
+import type { Prisma } from "../src/generated/prisma/client";
 import { getStorage } from "../src/lib/storage";
+import { getCategorySchema } from "../src/features/catalog";
+import { refreshLiveCounts } from "../src/features/products/live-counts";
+import { validateProductInput } from "../src/features/products/validation";
+import { dhakaToday } from "../src/features/shops";
+import { indexer } from "../src/features/search/server";
+import { assertSeedAllowed } from "./seed-guard";
 import { POLICY_SLUGS, SIGNUP_POLICY_SLUGS, CHECKOUT_POLICY_SLUGS } from "../src/features/policies/catalog";
 import { SEED_POLICY_TEXT } from "../src/features/policies/seed-text";
 
@@ -31,7 +39,9 @@ async function seedUsers() {
     {
       email: "customer.verified@ecom.test",
       phone: "+8801700000002",
-      name: "[TEST] Customer, verified phone",
+      name: "[TEST] Customer, verified phone and email",
+      // Verified email too: the shops e2e test invites this account as staff, which needs it.
+      emailVerifiedAt: now,
       phoneVerifiedAt: now,
     },
     {
@@ -316,7 +326,8 @@ async function seedCatalog() {
 }
 
 /**
- * Shops (US-010 to US-017): Tech, Fashion and Pharmacy are Verified, Books is Basic. All approved.
+ * Shops (US-010 to US-017): Tech, Fashion and Pharmacy are Verified, Books is Basic; all approved.
+ * A fifth, Basic shop is suspended (hidden storefront and products).
  * Each has an owner and one staff user. The pharmacy has a dummy verified drug licence.
  */
 async function seedShops() {
@@ -336,6 +347,8 @@ async function seedShops() {
     { key: "books", name: "[TEST] Test Book Shop", slug: "test-book-shop", type: "books", verified: false },
     { key: "fashion", name: "[TEST] Test Fashion Shop", slug: "test-fashion-shop", type: "fashion", verified: true },
     { key: "pharmacy", name: "[TEST] Test Pharmacy", slug: "test-pharmacy", type: "medicine", verified: true },
+    // Suspended by the admin: its storefront is "not found" and its products are hidden (US-014, US-015).
+    { key: "suspended", name: "[TEST] Suspended Shop", slug: "test-suspended-shop", type: "general", verified: false, suspended: true },
   ] as const;
 
   for (const [i, s] of shops.entries()) {
@@ -350,8 +363,8 @@ async function seedShops() {
     const data = {
       name: s.name,
       type: s.type,
-      status: "approved",
-      statusReason: null,
+      status: "suspended" in s ? "suspended" : "approved",
+      statusReason: "suspended" in s ? "[TEST] Suspended for testing" : null,
       ownerId: owner.id,
       ownerNid: `199000000000${String(i + 1).padStart(5, "0")}`,
       ownerPhotoKey: docKey,
@@ -446,6 +459,243 @@ async function seedAccounts() {
 }
 
 /**
+ * Products (US-030 to US-034): two [TEST] listings per seeded shop, validated through the real
+ * category schema. No images (they need MinIO). Matched by shop + title, so re-running updates them;
+ * variants are upserted by their options, so their ids stay stable for carts.
+ */
+async function seedProducts() {
+  const common = { quantity: 1, quantity_unit: "pcs", weight_g: 250, return_eligibility: "eligible" };
+  const expiry = `${new Date().getUTCFullYear() + 1}-12-31`;
+  type SeedVariant = { sku: string; price: number; stock: number; options?: Record<string, string> };
+  type SeedProduct = {
+    title: string;
+    bengaliName?: string;
+    category: string;
+    description: string;
+    attributes: Record<string, unknown>;
+    variants: SeedVariant[];
+  };
+  const byShop: Record<string, SeedProduct[]> = {
+    "test-suspended-shop": [
+      {
+        title: "[TEST] Hidden: suspended shop's processor",
+        category: "processor",
+        description: "Listed by a suspended shop, so customers never see it.",
+        attributes: { ...common, country_of_origin: "China", brand: "intel", socket: "lga1700", core_count: 6, base_clock_ghz: 2.5 },
+        variants: [{ sku: "TEST-SUSP-CPU", price: 15000, stock: 3 }],
+      },
+    ],
+    "test-tech-shop": [
+      {
+        title: "[TEST] AMD Ryzen 5 7600 Processor",
+        category: "processor",
+        description: "6 cores, 12 threads, AM5 socket. Boxed with the Wraith Stealth cooler.",
+        attributes: { ...common, country_of_origin: "China", warranty: "3 years", brand: "amd", socket: "am5", core_count: 6, base_clock_ghz: 3.8, tdp_w: 65, integrated_graphics: true, model_number: "100-100001015BOX" },
+        variants: [{ sku: "TEST-R5-7600", price: 24500, stock: 12 }],
+      },
+      // Search (US-041, US-042): more processors so the Brand, Socket and core filters have choices.
+      {
+        title: "[TEST] AMD Ryzen 7 7700X Processor",
+        category: "processor",
+        description: "8 cores, 16 threads, AM5 socket. No cooler in the box.",
+        attributes: { ...common, country_of_origin: "China", warranty: "3 years", brand: "amd", socket: "am5", core_count: 8, base_clock_ghz: 4.5, tdp_w: 105, integrated_graphics: true, model_number: "100-100000591WOF" },
+        variants: [{ sku: "TEST-R7-7700X", price: 36500, stock: 4 }],
+      },
+      {
+        title: "[TEST] Intel Core i5-14400F Processor",
+        category: "processor",
+        description: "10 cores (6P + 4E), LGA1700 socket. Needs a graphics card.",
+        attributes: { ...common, country_of_origin: "Vietnam", warranty: "3 years", brand: "intel", socket: "lga1700", core_count: 10, base_clock_ghz: 2.5, tdp_w: 65, integrated_graphics: false, model_number: "BX8071514400F" },
+        variants: [{ sku: "TEST-I5-14400F", price: 21500, stock: 7 }],
+      },
+      {
+        // Out of stock: live but not searchable, so it never shows in results or counts.
+        title: "[TEST] Intel Core i3-12100 Processor",
+        category: "processor",
+        description: "4 cores, LGA1700 socket, Intel UHD 730 graphics.",
+        attributes: { ...common, country_of_origin: "Vietnam", warranty: "3 years", brand: "intel", socket: "lga1700", core_count: 4, base_clock_ghz: 3.3, tdp_w: 60, integrated_graphics: true },
+        variants: [{ sku: "TEST-I3-12100", price: 12500, stock: 0 }],
+      },
+      {
+        title: "[TEST] Corsair Vengeance 16GB DDR5 RAM",
+        category: "ram",
+        description: "16 GB DDR5 desktop memory, 5600 MHz.",
+        attributes: { ...common, country_of_origin: "Taiwan", warranty: "Lifetime", brand: "corsair", memory_type: "ddr5", capacity_gb: 16, speed_mhz: 5600, module_type: "dimm" },
+        variants: [{ sku: "TEST-CMK16GX5", price: 6800, stock: 25 }],
+      },
+    ],
+    "test-book-shop": [
+      {
+        title: "[TEST] Himu (paperback)",
+        bengaliName: "হিমু",
+        category: "fiction",
+        description: "A Himu novel by Humayun Ahmed.",
+        attributes: { ...common, country_of_origin: "Bangladesh", brand: "Anyaprokash", author: "Humayun Ahmed", language: "bangla", format: "paperback", genre: "novel", page_count: 120 },
+        variants: [{ sku: "TEST-HIMU-PB", price: 250, stock: 40 }],
+      },
+      {
+        title: "[TEST] Engineering Mathematics",
+        category: "academic",
+        description: "Textbook for first-year engineering students.",
+        attributes: { ...common, country_of_origin: "Bangladesh", brand: "[TEST] Publisher", author: "[TEST] Author", language: "english", format: "hardcover", genre: "engineering" },
+        variants: [{ sku: "TEST-ENG-MATH", price: 650, stock: 8 }],
+      },
+    ],
+    "test-fashion-shop": [
+      {
+        title: "[TEST] Oxford cotton shirt",
+        bengaliName: "অক্সফোর্ড সুতি শার্ট",
+        category: "mens-shirts",
+        description: "Regular-fit long-sleeve Oxford shirt.",
+        attributes: { ...common, country_of_origin: "Bangladesh", brand: "yellow", fit: "regular", material: "cotton", tryon_eligible: true },
+        variants: ["S", "M", "L"].flatMap((size) =>
+          ["Black", "White"].map((colour) => ({
+            sku: `TEST-OX-${size}-${colour.toUpperCase()}`,
+            price: size === "L" ? 1950 : 1850,
+            // L / White is sold out, so the product page shows a disabled option.
+            stock: size === "L" && colour === "White" ? 0 : 6,
+            options: { size: size.toLowerCase(), colour: colour.toLowerCase() },
+          })),
+        ),
+      },
+      {
+        title: "[TEST] Slim denim pants",
+        category: "mens-pants",
+        description: "Slim-fit stretch denim.",
+        attributes: { ...common, country_of_origin: "Bangladesh", brand: "easy", fit: "slim", material: "denim" },
+        variants: ["30", "32", "34"].map((size) => ({ sku: `TEST-DENIM-${size}`, price: 2200, stock: 4, options: { size, colour: "blue" } })),
+      },
+    ],
+    "test-pharmacy": [
+      {
+        title: "[TEST] Paracetamol 500 mg tablets",
+        category: "pain-relief",
+        description: "Strip of 10 tablets.",
+        attributes: { ...common, quantity: 10, weight_g: 20, country_of_origin: "Bangladesh", brand: "square", generic_name: "paracetamol", dosage_form: "tablet", strength_mg: 500, pack_size: 10, otc: true, expiry_date: expiry },
+        variants: [{ sku: "TEST-PARA-500", price: 12, stock: 200 }],
+      },
+      {
+        title: "[TEST] Vitamin C 250 mg tablets",
+        category: "vitamins",
+        description: "Chewable, strip of 10.",
+        attributes: { ...common, quantity: 10, weight_g: 20, country_of_origin: "Bangladesh", brand: "beximco", generic_name: "vitamin-c", dosage_form: "tablet", strength_mg: 250, pack_size: 10, otc: true, expiry_date: expiry },
+        variants: [{ sku: "TEST-VITC-250", price: 25, stock: 150 }],
+      },
+    ],
+  };
+
+  const today = dhakaToday(new Date());
+  let count = 0;
+  for (const [shopSlug, products] of Object.entries(byShop)) {
+    const shop = await prisma.shop.findUniqueOrThrow({ where: { slug: shopSlug } });
+    const staff = await prisma.shopMember.findFirstOrThrow({ where: { shopId: shop.id, role: "staff" } });
+    for (const p of products) {
+      const category = await prisma.category.findUniqueOrThrow({ where: { slug: p.category } });
+      const input = validateProductInput(
+        await getCategorySchema(category.id),
+        {
+          title: p.title,
+          bengaliName: p.bengaliName,
+          description: p.description,
+          attributes: p.attributes,
+          variants: p.variants.map((v) => ({ ...v, options: v.options ?? {} })),
+        },
+        today,
+      );
+      const data = {
+        categoryId: category.id,
+        title: input.title,
+        bengaliName: input.bengaliName,
+        description: input.description,
+        attributes: input.attributes as Prisma.InputJsonValue,
+        expiresOn: input.expiresOn,
+        status: "active" as const,
+        deletedAt: null,
+      };
+      const existing = await prisma.product.findFirst({ where: { shopId: shop.id, title: p.title } });
+      const product = existing
+        ? await prisma.product.update({ where: { id: existing.id }, data })
+        : await prisma.product.create({ data: { ...data, shopId: shop.id, createdById: staff.userId } });
+      for (const v of input.variants) {
+        const values = { sku: v.sku, price: v.price, stock: v.stock, options: v.options as Prisma.InputJsonValue, position: v.position };
+        await prisma.productVariant.upsert({
+          where: { productId_optionKey: { productId: product.id, optionKey: v.optionKey } },
+          update: values,
+          create: { ...values, productId: product.id, shopId: shop.id, optionKey: v.optionKey },
+        });
+      }
+      count++;
+    }
+  }
+  await refreshLiveCounts(new Date());
+  console.info(`Seeded ${count} test products (no images)`);
+}
+
+/** Search (US-041): builds the Meilisearch index when MEILI_URL is set; Postgres needs nothing. */
+async function seedSearchIndex() {
+  try {
+    const result = await indexer.reindexAll();
+    console.info(result.skipped ? "Search index: Meilisearch not configured, the Postgres adapter serves search" : `Search index built: ${result.indexed} products`);
+  } catch (err) {
+    console.warn(`Search index not built (is Meilisearch running?): ${err instanceof Error ? err.message : err}`);
+  }
+}
+
+/**
+ * Wishlist (US-057): the verified customer saved a book and a sold-out shirt variant, so
+ * /account/wishlist shows both "In stock" and "Out of stock". Idempotent.
+ */
+async function seedWishlist() {
+  const user = await prisma.user.findUniqueOrThrow({ where: { email: "customer.verified@ecom.test" } });
+  const picks: { title: string; optionKey: string }[] = [
+    { title: "[TEST] Himu (paperback)", optionKey: "" },
+    { title: "[TEST] Oxford cotton shirt", optionKey: "colour=white;size=l" },
+  ];
+  for (const pick of picks) {
+    const product = await prisma.product.findFirstOrThrow({ where: { title: pick.title, deletedAt: null } });
+    const variant = await prisma.productVariant.findUniqueOrThrow({
+      where: { productId_optionKey: { productId: product.id, optionKey: pick.optionKey } },
+    });
+    const existing = await prisma.wishlistItem.findFirst({ where: { userId: user.id, productId: product.id, variantId: variant.id } });
+    if (!existing) await prisma.wishlistItem.create({ data: { userId: user.id, productId: product.id, variantId: variant.id } });
+  }
+  console.info("Seeded 2 wishlist items for customer.verified@ecom.test");
+}
+
+/**
+ * Cart (US-050, US-056, US-058): the Test Tech Shop gives free delivery from Tk 10,000, and the
+ * verified customer's cart spans two shops: RAM (tech, "Add Tk 3,200 more for free delivery"),
+ * two Engineering Mathematics books added at Tk 600 (now Tk 650, so the cart shows a price
+ * notice and Checkout waits for "Accept new price"), and a shirt saved for later. Idempotent.
+ */
+async function seedCart() {
+  await prisma.shop.update({ where: { slug: "test-tech-shop" }, data: { freeDeliveryThreshold: "10000.00" } });
+  const user = await prisma.user.findUniqueOrThrow({ where: { email: "customer.verified@ecom.test" } });
+  const lines: { title: string; optionKey: string; quantity: number; priceAtAdd?: string; savedForLater?: boolean }[] = [
+    { title: "[TEST] Corsair Vengeance 16GB DDR5 RAM", optionKey: "", quantity: 1 },
+    { title: "[TEST] Engineering Mathematics", optionKey: "", quantity: 2, priceAtAdd: "600.00" },
+    { title: "[TEST] Oxford cotton shirt", optionKey: "colour=black;size=m", quantity: 1, savedForLater: true },
+  ];
+  for (const line of lines) {
+    const product = await prisma.product.findFirstOrThrow({ where: { title: line.title, deletedAt: null } });
+    const variant = await prisma.productVariant.findUniqueOrThrow({
+      where: { productId_optionKey: { productId: product.id, optionKey: line.optionKey } },
+    });
+    const data = {
+      quantity: line.quantity,
+      savedForLater: line.savedForLater ?? false,
+      priceAtAdd: line.priceAtAdd ?? variant.price.toFixed(2),
+    };
+    await prisma.cartItem.upsert({
+      where: { userId_variantId: { userId: user.id, variantId: variant.id } },
+      update: data,
+      create: { ...data, userId: user.id, productId: product.id, variantId: variant.id, shopId: product.shopId },
+    });
+  }
+  console.info(`Seeded a cart of ${lines.length} lines (2 shops + 1 saved) for customer.verified@ecom.test`);
+}
+
+/**
  * Policies (US-080): version 1 of every policy, published, with [TEST] wording. Published rows
  * are immutable, so an existing version 1 is left as it is. Every seeded user has accepted the
  * Terms and Privacy Policy v1 (as at sign-up); the verified customer also accepted Return and
@@ -498,11 +748,16 @@ async function seedPolicies() {
 }
 
 async function main() {
+  assertSeedAllowed();
   await seedUsers();
   await seedCatalog();
   await seedShops();
   await seedAccounts();
   await seedPolicies();
+  await seedProducts();
+  await seedWishlist();
+  await seedCart();
+  await seedSearchIndex();
 }
 
 main()

@@ -1,11 +1,10 @@
 import type { LicenceStatus, ShopStatus, ShopTier, ShopType, UpgradeStatus } from "@/generated/prisma/client";
+import { AppError } from "@/lib/errors";
 
 /** A business-rule violation (409). Actions map it to the standard error shape. */
-export class ShopRuleError extends Error {
-  readonly status = 409;
-  readonly code = "CONFLICT";
+export class ShopRuleError extends AppError {
   constructor(message: string) {
-    super(message);
+    super(409, "CONFLICT", message);
     this.name = "ShopRuleError";
   }
 }
@@ -76,6 +75,34 @@ export function assertCanUploadLicence(shop: ShopLike, licences: LicenceLike[]):
   if (licences.some((l) => l.status === "pending")) {
     throw new ShopRuleError("A licence is already waiting for review");
   }
+}
+
+/** US-013: an invite link can be used once, before it expires. */
+export function assertInviteUsable<T extends { acceptedAt: Date | null; expiresAt: Date }>(
+  invite: T | null,
+  now: Date,
+): asserts invite is T {
+  if (!invite || invite.acceptedAt || invite.expiresAt < now) {
+    throw new ShopRuleError("This invite link is invalid or has expired");
+  }
+}
+
+export const VERIFY_EMAIL_FOR_INVITE =
+  "Verify your email before accepting this invite: open the link we emailed you, or send a new one from your account page. Then open the invite link again.";
+
+/**
+ * US-013: only the owner of the invited email may accept. The account's email must match the
+ * invite (case-insensitive) and be verified, so nobody can claim an invite by typing someone
+ * else's address into their profile.
+ */
+export function assertInviteEmailMatches(
+  inviteEmail: string,
+  account: { email: string | null; emailVerifiedAt: Date | null } | null,
+): void {
+  if (!account?.email || account.email.trim().toLowerCase() !== inviteEmail.trim().toLowerCase()) {
+    throw new ShopRuleError(`Log in as ${inviteEmail} to accept this invite`);
+  }
+  if (!account.emailVerifiedAt) throw new ShopRuleError(VERIFY_EMAIL_FOR_INVITE);
 }
 
 export interface ExpiryCandidate {
