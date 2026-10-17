@@ -102,6 +102,9 @@ model Shop {
   // orders relations
   shopOrders ShopOrder[]
 
+  // reviews relations
+  reviews Review[]
+
   @@index([status])
   @@index([ownerId])
   @@map("shop")

@@ -37,6 +37,7 @@ export const RETENTION_RULES: readonly RetentionRule[] = [
   { model: "Shop", label: "Shops (owner identity, NID, registration number, status history)", years: RETENTION_YEARS, from: "shop closed or suspended", source: GUIDELINES, built: true },
   { model: "ShopLicence", label: "Medicine licences and their review", years: RETENTION_YEARS, from: "licence expiry", source: GUIDELINES, built: true },
   { model: "ComplaintTicket", label: "Complaints", years: RETENTION_YEARS, from: "complaint resolved", source: GUIDELINES, built: false },
+  { model: "Review", label: "Ratings and reviews (hidden with a logged reason, never deleted)", years: RETENTION_YEARS, from: "review written", source: GUIDELINES, built: true },
   { model: "AuditLog", label: "Audit log (admin and shop actions)", years: RETENTION_YEARS, from: "entry written", source: GUIDELINES, built: true },
   { model: "PolicyDocument", label: "Policy versions (published text)", years: RETENTION_YEARS, from: "superseded", source: GUIDELINES, built: true },
   { model: "PolicyAcceptance", label: "Policy acceptances (consent records)", years: RETENTION_YEARS, from: "accepted", source: PDPO, built: true },
