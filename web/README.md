@@ -64,6 +64,25 @@ automatically. JSON API: `/api/shops/<shopId>/products/...`; images are served b
 daily `products.refresh-counts` job recounts each category's live listings. The seed adds two `[TEST]`
 products per seeded shop (no images).
 
+## Search and categories (shopper)
+
+- **Header search box** → `/search?q=...`. Keywords match title, Bengali name, brand, attribute values and
+  category names; Banglish and Bengali spellings are expanded (`boi` → book/বই, `sharee` → saree/শাড়ি; dictionary
+  in `src/features/search/synonyms.ts`). Sellers can give a product an optional **Bengali name**.
+- **`/categories`** and the home page show only categories with at least one live, in-stock product (counts roll up
+  to parents); **`/c/<slug>`** lists a category's products. Empty categories are 404 for shoppers.
+- **Filters** come from the category's filterable attributes (leaf categories) plus price and shop; a search
+  across categories shows only those common filters and "Narrow by category". Facet counts are within the current
+  results; options with 0 results are hidden. The URL is the whole state: `category=`, `f.<key>=<option>`
+  (repeat for OR), `f.<key>.min=`/`.max=`, `f.<key>=1` (yes/no), `price_min=`, `price_max=`, `shop=<slug>`,
+  `sort=relevance|price_asc|price_desc|newest`, `page=` (24 per page).
+- **JSON**: `GET /api/search` (same parameters → `{ items, facets, total, page, perPage, totalPages, ... }`, header
+  `x-search-engine`) and `GET /api/categories?visible=true`.
+- **Engines**: Meilisearch when `MEILI_URL` is set and reachable; otherwise (or during an outage, retried every
+  30 s) a Postgres adapter that reads live, in-stock products directly (fine for dev and seed data, capped at 2,000
+  candidates). Product writes enqueue `search.reindex-product`; the worker runs `search.reindex-all` daily at
+  01:30 Dhaka time, and `npm run seed` builds the index when Meilisearch is up.
+
 ## Scripts
 
 `dev`, `build`, `start`, `lint`, `typecheck`, `test` (Vitest), `test:e2e` (Playwright; first run
