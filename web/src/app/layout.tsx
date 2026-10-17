@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { SiteHeader } from "@/components/site-header";
 import { TestModeBanner } from "@/components/test-mode-banner";
 import "./globals.css";
 
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={null}>
           <TestModeBanner />
         </Suspense>
+        <SiteHeader />
         {children}
       </body>
     </html>
