@@ -134,6 +134,13 @@ The seed adds `[TEST] Suspended Shop` (`/s/test-suspended-shop`, suspended, one 
   candidates). Product writes enqueue `search.reindex-product`; the worker runs `search.reindex-all` daily at
   01:30 Dhaka time, and `npm run seed` builds the index when Meilisearch is up.
 
+Policies and compliance (US-080, US-081): public pages at `/policies/<slug>` (terms, privacy, returns,
+delivery, seller, cookies; `?version=N` shows an earlier version), admin at `/admin/policies` (draft, publish,
+history) and `/admin/compliance` (DBID and 6-year record retention). Seeds publish version 1 of every policy
+with `[TEST]` wording. Sign-up requires accepting the Terms and Privacy Policy; `/account/policies` shows a
+user's acceptances. The footer shows `DBID` (test mode: a `TEST-DBID-…` placeholder); the app refuses to start
+in production without `DBID`. Records in `src/lib/retention.ts` are never hard-deleted.
+
 ## Scripts
 
 `dev`, `build`, `start`, `lint`, `typecheck`, `test` (Vitest), `test:e2e` (Playwright; first run

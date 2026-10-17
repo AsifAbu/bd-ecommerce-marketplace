@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { resultFields, resultValues } from "@/lib/actions";
 import { useActionState } from "react";
+import { PolicyConsent, SIGNUP_POLICY_SLUGS } from "@/features/policies/client";
 import {
   forgotPasswordAction,
   loginAction,
@@ -72,6 +73,7 @@ export function SignUpForm() {
         hint="At least 8 characters."
         error={f.password}
       />
+      <PolicyConsent slugs={SIGNUP_POLICY_SLUGS} error={f.acceptPolicies} />
       <SubmitButton>Create account</SubmitButton>
       <p className="text-sm">
         Already have an account?{" "}

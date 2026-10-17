@@ -14,6 +14,15 @@
 - Generated client: `@/generated/prisma/client` (git-ignored; `npm install` / `npx prisma generate`).
 - Extend `web/prisma/seed.ts` with an idempotent `seed<Feature>()` (upserts, `[TEST]` names, `@ecom.test` emails).
 
+## Record retention (US-081)
+- Business records are kept **6 years** (Guidelines 2021). The list lives in `web/src/lib/retention.ts` (`RETENTION_RULES`): orders, shop orders, order items, COD collections, returns, shops, shop licences, complaints, audit log, policy versions and policy acceptances.
+- **Never hard-delete these rows** (no `.delete()`/`.deleteMany()`/raw `DELETE`, also not in the seed). Close them with a status instead (`suspended`, `cancelled`, `resolved`, `hidden`). Relations from a retained model to a non-retained one use `onDelete: Restrict` or `SetNull`, never `Cascade`. User accounts linked to retained records are anonymised, not deleted.
+- Adding a retained model: add it to `RETENTION_RULES` (set `built: true` once the model exists). `src/lib/retention.test.ts` scans `src/` and `prisma/seed.ts` for deletes and the schema for cascades, and fails the build on a violation.
+- No purge job yet; one may only remove rows past `retainUntil()` and must be listed in `retention.ts` first.
+
+## Policies and consent (US-080)
+- Other features use `@/features/policies` (server) or `@/features/policies/client` (client components). Checkout: `getCurrentVersions(CHECKOUT_POLICY_SLUGS)` + `<PolicyConsent>` in the form, then `readPolicyConsent()` + `recordAcceptance({ userId | guestPhone, slugs, context: "checkout", shownVersions, ...await requestMeta() })`, and `assertAcceptedCurrent(userId, CHECKOUT_POLICY_SLUGS)` (422 `POLICY_ACCEPTANCE_REQUIRED`). Store the returned `{ slug, version }` list on the order.
+
 ## Shop-scoped data access (ADR-004)
 - Every shop-side query takes a `shopId` and filters by it: `getProduct(shopId, productId)` uses `where: { id: productId, shopId }`, never `findUnique({ where: { id } })`.
 - Repositories in `features/<feature>/repo.ts` take the scope (`shopId` or `userId`) as the first argument. Pages and actions call a guard first, then pass the checked `shopId`.

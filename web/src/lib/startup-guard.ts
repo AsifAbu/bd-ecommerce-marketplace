@@ -10,4 +10,9 @@ export function assertSafeStartup(config: AppConfig): void {
       "Refusing to start: APP_MODE=production with the dummy OTP enabled. Set OTP_DUMMY_ENABLED=false.",
     );
   }
+  if (config.appMode === "production" && !config.dbid) {
+    throw new Error(
+      "Refusing to start: APP_MODE=production without a DBID. Set DBID to the registered Digital Business ID (shown in the footer).",
+    );
+  }
 }

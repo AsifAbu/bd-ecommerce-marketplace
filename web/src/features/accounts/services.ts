@@ -3,6 +3,7 @@ import { ipFromHeaders } from "@/lib/client-ip";
 import { prisma } from "@/lib/db";
 import { createOtpProvider } from "@/lib/otp";
 import { requirePlatformAdmin } from "@/lib/auth";
+import { recordAcceptance, requestMeta, SIGNUP_POLICY_SLUGS } from "@/features/policies";
 import { addressRepoFor } from "./address-repo";
 import { createAdminUsers } from "./admin-users";
 import { appUrl, sendMail } from "@/lib/mail";
@@ -49,6 +50,14 @@ export const signUpDeps: SignUpDeps = {
   identifierTaken: async (kind, value) =>
     (await prisma.user.count({ where: kind === "email" ? { email: value } : { phone: value } })) > 0,
   createUser: (data) => prisma.user.create({ data, select: { id: true } }),
+  async recordConsent(userId) {
+    try {
+      await recordAcceptance({ userId, slugs: SIGNUP_POLICY_SLUGS, context: "signup", ...(await requestMeta()) });
+    } catch (err) {
+      // The account exists already; a missing policy version must not break sign-up. Logged for the admin.
+      console.error("[accounts] could not record sign-up policy acceptance", err);
+    }
+  },
 };
 
 export const adminUsers = createAdminUsers({

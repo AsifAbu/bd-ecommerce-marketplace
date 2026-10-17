@@ -23,8 +23,14 @@ const name = z.string().trim().min(2, "Enter your name").max(100);
 const optional = <T extends z.ZodType>(schema: T) =>
   z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), schema.optional());
 
+/** Consent checkbox (US-080): the current Terms and Privacy Policy, recorded at sign-up. */
+const acceptPolicies = z.preprocess(
+  (v) => v === true || v === "on" || v === "true",
+  z.boolean().refine((v) => v, "Accept the Terms and Conditions and the Privacy Policy to create an account"),
+);
+
 export const signUpSchema = z
-  .object({ name, phone: optional(bdMobile), email: optional(email), password })
+  .object({ name, phone: optional(bdMobile), email: optional(email), password, acceptPolicies })
   .refine((v) => v.phone || v.email, { message: "Enter a mobile number or an email", path: ["phone"] });
 export type SignUpInput = z.infer<typeof signUpSchema>;
 

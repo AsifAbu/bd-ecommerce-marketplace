@@ -45,6 +45,11 @@ model User {
   // cart relations
   cartItems CartItem[]
 
+  // policies relations
+  policiesCreated   PolicyDocument[]   @relation("PolicyCreatedBy")
+  policiesPublished PolicyDocument[]   @relation("PolicyPublishedBy")
+  policyAcceptances PolicyAcceptance[]
+
   @@map("user")
 }
 
