@@ -293,7 +293,7 @@ export function publicFindLiveProduct(productId: string, today: Date) {
       attributes: true,
       expiresOn: true,
       category: { select: { id: true, name: true, path: true } },
-      shop: { select: { id: true, name: true, slug: true, tier: true } },
+      shop: { select: { id: true, name: true, slug: true, tier: true, performanceScore: true } },
       variants: { ...variantOrder, select: { id: true, price: true, stock: true, options: true, position: true } },
       images: { orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: { id: true } },
     },

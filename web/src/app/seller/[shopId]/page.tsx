@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { requireShopRole } from "@/lib/auth";
+import { ScorePanel } from "@/features/metrics/ui/score-panel";
 import { SellerDashboard } from "@/features/shops/components/seller-dashboard";
 import { guardPage } from "@/features/shops/page-guard";
 
@@ -18,5 +19,10 @@ async function Dashboard({ params }: { params: Promise<{ shopId: string }> }) {
   await connection();
   const { shopId } = await params;
   const access = await guardPage(`/seller/${shopId}`, () => requireShopRole(shopId, ["owner", "staff"]));
-  return <SellerDashboard shopId={access.shopId} role={access.role} />;
+  return (
+    <>
+      <SellerDashboard shopId={access.shopId} role={access.role} />
+      <ScorePanel shopId={access.shopId} />
+    </>
+  );
 }

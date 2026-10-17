@@ -82,6 +82,11 @@ model Shop {
   // Set when the medicine licence lapses; cleared when a new licence is verified (US-016).
   medicineSuspended Boolean @default(false) @map("medicine_suspended")
 
+  // Seller performance score 0-100 (US-059, features/metrics). Null = "New seller": too few
+  // delivered orders. Rewritten by the shops.refresh-scores job and on demand.
+  performanceScore     Int?      @map("performance_score")
+  performanceUpdatedAt DateTime? @map("performance_updated_at")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

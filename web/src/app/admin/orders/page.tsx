@@ -39,6 +39,10 @@ async function Content({ searchParams }: { searchParams: Promise<Record<string, 
         <Link className="text-blue-800 underline" href="/admin/payouts">
           Payouts and COD collections
         </Link>
+        {" · "}
+        <Link className="text-blue-800 underline" href="/admin/metrics">
+          Marketplace metrics
+        </Link>
       </p>
       <section aria-labelledby="rate-heading" className="rounded border border-gray-300 p-4">
         <h2 id="rate-heading" className="font-semibold">
