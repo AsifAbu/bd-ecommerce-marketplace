@@ -83,6 +83,20 @@ model Session {
   @@map("session")
 }
 
+// Failed logins, for the login lockout (src/features/auth/login-throttle.ts). Stored in Postgres so
+// the limit holds across app instances. A successful login deletes the identifier's rows.
+// `identifier` is the normalised login ("email:a@b.c" or "phone:+8801..."), whether or not a user has it.
+model LoginFailure {
+  id         String   @id @default(cuid())
+  identifier String
+  ip         String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([identifier, createdAt])
+  @@index([ip, createdAt])
+  @@map("login_failure")
+}
+
 // Auth.js: email sign-in / verification tokens.
 model VerificationToken {
   identifier String

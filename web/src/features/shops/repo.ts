@@ -1,5 +1,6 @@
 import type { Prisma, RegistrationType, ShopType } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
+import { assertInviteEmailMatches } from "./rules";
 
 /**
  * Shops data access (ADR-004). Shop-side functions take the guard-checked `shopId` first and
@@ -147,9 +148,19 @@ export function findInviteByTokenHash(tokenHash: string) {
   return prisma.shopInvite.findUnique({ where: { tokenHash }, include: { shop: { select: { name: true } } } });
 }
 
-/** Adds the user as staff and marks the invite used. */
-export async function acceptInvite(userId: string, invite: { id: string; shopId: string }) {
+/** The user's own email and whether it is verified (for invite acceptance). */
+export function getAccountEmail(userId: string) {
+  return prisma.user.findUnique({ where: { id: userId }, select: { email: true, emailVerifiedAt: true } });
+}
+
+/**
+ * Adds the user as staff and marks the invite used. The account email is checked again inside
+ * the transaction (verified and equal to the invite email), so a caller can't skip the check.
+ */
+export async function acceptInvite(userId: string, invite: { id: string; shopId: string; email: string }) {
   await prisma.$transaction(async (tx) => {
+    const account = await tx.user.findUnique({ where: { id: userId }, select: { email: true, emailVerifiedAt: true } });
+    assertInviteEmailMatches(invite.email, account);
     const used = await tx.shopInvite.updateMany({
       where: { id: invite.id, acceptedAt: null },
       data: { acceptedAt: new Date() },

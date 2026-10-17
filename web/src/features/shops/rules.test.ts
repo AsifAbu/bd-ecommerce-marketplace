@@ -7,7 +7,10 @@ import {
   assertCanReviewUpgrade,
   assertCanSuspendShop,
   assertCanUploadLicence,
+  assertInviteEmailMatches,
+  assertInviteUsable,
   classifyLicences,
+  VERIFY_EMAIL_FOR_INVITE,
   dhakaToday,
   ShopRuleError,
 } from "./rules";
@@ -96,6 +99,32 @@ describe("licence upload and review", () => {
   it("only pending licences can be reviewed", () => {
     expect(() => assertCanReviewLicence({ status: "pending", expiryDate: d("2027-01-01") })).not.toThrow();
     expect(() => assertCanReviewLicence({ status: "verified", expiryDate: d("2027-01-01") })).toThrow();
+  });
+});
+
+describe("staff invite acceptance", () => {
+  it("an invite is usable once, before it expires", () => {
+    expect(() => assertInviteUsable({ acceptedAt: null, expiresAt: d("2026-10-20") }, now)).not.toThrow();
+    for (const invite of [null, { acceptedAt: now, expiresAt: d("2026-10-20") }, { acceptedAt: null, expiresAt: d("2026-10-15") }]) {
+      expect(() => assertInviteUsable(invite, now)).toThrow("This invite link is invalid or has expired");
+    }
+  });
+
+  it("accepts a verified account whose email matches, ignoring case", () => {
+    expect(() => assertInviteEmailMatches("staff@ecom.test", { email: "Staff@Ecom.Test", emailVerifiedAt: now })).not.toThrow();
+  });
+
+  it("rejects an unverified email, with the verify-email path", () => {
+    expect(() => assertInviteEmailMatches("staff@ecom.test", { email: "staff@ecom.test", emailVerifiedAt: null })).toThrow(
+      VERIFY_EMAIL_FOR_INVITE,
+    );
+    expect(VERIFY_EMAIL_FOR_INVITE).toMatch(/account page/);
+  });
+
+  it("rejects a different, missing or unknown account email", () => {
+    for (const account of [{ email: "other@ecom.test", emailVerifiedAt: now }, { email: null, emailVerifiedAt: null }, null]) {
+      expect(() => assertInviteEmailMatches("staff@ecom.test", account)).toThrow("Log in as staff@ecom.test to accept this invite");
+    }
   });
 });
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { applyForShop } from "../actions";
 import { SHOP_TYPE_LABELS, SHOP_TYPES } from "../schemas";
-import { ActionForm, Field } from "./action-form";
+import { ActionForm, Field } from "@/components/action-form";
 
 const FILE_HINT = "PDF, JPG, PNG or WebP, up to 4 MB. In test mode any file is accepted.";
 
@@ -13,7 +13,7 @@ export function ApplyForm() {
   return (
     <ActionForm action={applyForShop} submitLabel="Submit application">
       <Field name="name" label="Shop name" required />
-      <Field name="slug" label="Shop link" hint="Lowercase letters, numbers and hyphens, e.g. dhaka-books" required />
+      <Field name="slug" label="Shop link" hint="Your storefront will be at /s/<shop link>. Lowercase letters, numbers and hyphens, e.g. dhaka-books" required />
       <Field
         as="select"
         name="type"
