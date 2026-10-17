@@ -17,6 +17,7 @@ import { refreshLiveCounts } from "../src/features/products/live-counts";
 import { validateProductInput } from "../src/features/products/validation";
 import { dhakaToday } from "../src/features/shops";
 import { indexer } from "../src/features/search/server";
+import { deliveryCharge } from "../src/lib/delivery";
 import { assertSeedAllowed } from "./seed-guard";
 import { POLICY_SLUGS, SIGNUP_POLICY_SLUGS, CHECKOUT_POLICY_SLUGS } from "../src/features/policies/catalog";
 import { SEED_POLICY_TEXT } from "../src/features/policies/seed-text";
@@ -65,19 +66,9 @@ async function seedUsers() {
     });
   }
 
-  // Past COD refusals for the flagged customer. Recorded as audit entries until the
-  // orders feature exists; the checkout agent should replace these with refused orders.
-  const flagged = await prisma.user.findUniqueOrThrow({ where: { email: "customer.flagged@ecom.test" } });
-  // The audit log is append-only (6-year records, src/lib/retention.ts): add only missing rows.
-  const existing = await prisma.auditLog.count({ where: { action: "order.cod_refused", entityId: flagged.id } });
-  await prisma.auditLog.createMany({
-    data: ["TEST-ORDER-0001", "TEST-ORDER-0002"].slice(existing).map((orderNo) => ({
-      action: "order.cod_refused",
-      entity: "user",
-      entityId: flagged.id,
-      data: { orderNo, phone: flagged.phone, seed: true },
-    })),
-  });
+  // The flagged customer's 2 refused COD deliveries are real refused shop orders now (seedOrders).
+  // Older databases also hold two "order.cod_refused" audit stand-ins; the audit log is
+  // append-only, so they stay, and no new ones are written.
 
   console.info(`Seeded ${users.length} test users (password: ${TEST_PASSWORD})`);
 }
@@ -747,6 +738,198 @@ async function seedPolicies() {
   console.info(`Seeded version 1 of ${v1.size} policies; added ${added} acceptance records`);
 }
 
+/**
+ * Orders (US-051, US-052, US-007 to US-009): placed orders as checkout writes them, with fixed
+ * order numbers (created once, never changed or deleted: 6-year records). Stock is not touched.
+ * - customer.verified: one delivered order (Test Tech Shop) and one open order (Test Book Shop).
+ * - a guest order for mobile 01700000009 (no account), to try tracking at /track with code 123456.
+ * - customer.flagged: 2 refused shop orders, so cash on delivery is blocked for 01700000003 (D8).
+ */
+async function seedOrders() {
+  const policyVersions = [
+    { slug: "returns", version: 1 },
+    { slug: "delivery", version: 1 },
+  ];
+  type SeedLine = { title: string; optionKey?: string; quantity: number };
+  type SeedShopOrder = { shopSlug: string; status: "placed" | "confirmed" | "delivered" | "refused"; lines: SeedLine[] };
+  type SeedOrder = {
+    orderNo: string;
+    placedAt: string;
+    userEmail: string | null;
+    contact: { name: string; phone: string; email: string | null };
+    address: { name: string; phone: string; division: string; district: string; upazila: string; area: string; line1: string };
+    shopOrders: SeedShopOrder[];
+  };
+  const verifiedHome = {
+    name: "[TEST] Customer, verified phone",
+    phone: "+8801700000002",
+    division: "Dhaka",
+    district: "Dhaka",
+    upazila: "Dhanmondi",
+    area: "Dhanmondi 27",
+    line1: "House 10, Road 27",
+  };
+  const flaggedHome = {
+    name: "[TEST] Customer, past refusals",
+    phone: "+8801700000003",
+    division: "Chattogram",
+    district: "Chattogram",
+    upazila: "Panchlaish",
+    area: "GEC Circle",
+    line1: "Flat 4A, Holding 22",
+  };
+  const orders: SeedOrder[] = [
+    {
+      orderNo: "BD-261005-SEEDA",
+      placedAt: "2026-10-05T11:00:00+06:00",
+      userEmail: "customer.verified@ecom.test",
+      contact: { name: "[TEST] Customer, verified phone and email", phone: "+8801700000002", email: "customer.verified@ecom.test" },
+      address: verifiedHome,
+      shopOrders: [{ shopSlug: "test-tech-shop", status: "delivered", lines: [{ title: "[TEST] Corsair Vengeance 16GB DDR5 RAM", quantity: 1 }] }],
+    },
+    {
+      orderNo: "BD-261015-SEEDB",
+      placedAt: "2026-10-15T18:30:00+06:00",
+      userEmail: "customer.verified@ecom.test",
+      contact: { name: "[TEST] Customer, verified phone and email", phone: "+8801700000002", email: "customer.verified@ecom.test" },
+      address: verifiedHome,
+      shopOrders: [{ shopSlug: "test-book-shop", status: "confirmed", lines: [{ title: "[TEST] Himu (paperback)", quantity: 2 }] }],
+    },
+    {
+      orderNo: "BD-261016-SEEDC",
+      placedAt: "2026-10-16T09:15:00+06:00",
+      userEmail: null,
+      contact: { name: "[TEST] Guest shopper", phone: "+8801700000009", email: "guest.shopper@ecom.test" },
+      address: {
+        name: "[TEST] Guest shopper",
+        phone: "+8801700000009",
+        division: "Sylhet",
+        district: "Sylhet",
+        upazila: "Sylhet Sadar",
+        area: "Zindabazar",
+        line1: "House 3, Lane 2",
+      },
+      shopOrders: [{ shopSlug: "test-fashion-shop", status: "placed", lines: [{ title: "[TEST] Oxford cotton shirt", optionKey: "colour=black;size=m", quantity: 1 }] }],
+    },
+    {
+      orderNo: "BD-260920-SEEDF",
+      placedAt: "2026-09-20T12:00:00+06:00",
+      userEmail: "customer.flagged@ecom.test",
+      contact: { name: "[TEST] Customer, past refusals", phone: "+8801700000003", email: "customer.flagged@ecom.test" },
+      address: flaggedHome,
+      shopOrders: [{ shopSlug: "test-book-shop", status: "refused", lines: [{ title: "[TEST] Engineering Mathematics", quantity: 1 }] }],
+    },
+    {
+      orderNo: "BD-260925-SEEDG",
+      placedAt: "2026-09-25T12:00:00+06:00",
+      userEmail: "customer.flagged@ecom.test",
+      contact: { name: "[TEST] Customer, past refusals", phone: "+8801700000003", email: "customer.flagged@ecom.test" },
+      address: flaggedHome,
+      shopOrders: [{ shopSlug: "test-fashion-shop", status: "refused", lines: [{ title: "[TEST] Slim denim pants", optionKey: "colour=blue;size=32", quantity: 1 }] }],
+    },
+  ];
+
+  const money = (paisa: number) => (paisa / 100).toFixed(2);
+  let created = 0;
+  for (const o of orders) {
+    if (await prisma.order.findUnique({ where: { orderNo: o.orderNo }, select: { id: true } })) continue;
+    const placedAt = new Date(o.placedAt);
+    const user = o.userEmail ? await prisma.user.findUniqueOrThrow({ where: { email: o.userEmail }, select: { id: true } }) : null;
+    const insideDhaka = o.address.district === "Dhaka";
+    let itemsPaisa = 0;
+    let deliveryPaisa = 0;
+    const shopOrders = [];
+    for (const [i, so] of o.shopOrders.entries()) {
+      const shop = await prisma.shop.findUniqueOrThrow({ where: { slug: so.shopSlug } });
+      let subtotal = 0;
+      let weight = 0;
+      let commission = 0;
+      const items = [];
+      for (const line of so.lines) {
+        const product = await prisma.product.findFirstOrThrow({
+          where: { title: line.title, shopId: shop.id, deletedAt: null },
+          include: { category: { select: { commissionRate: true } } },
+        });
+        const variant = await prisma.productVariant.findUniqueOrThrow({
+          where: { productId_optionKey: { productId: product.id, optionKey: line.optionKey ?? "" } },
+        });
+        const attrs = product.attributes as Record<string, unknown>;
+        const unit = Math.round(Number(variant.price) * 100);
+        const rate = Number(product.category.commissionRate);
+        const unitWeight = typeof attrs.weight_g === "number" ? attrs.weight_g : 0;
+        subtotal += unit * line.quantity;
+        weight += unitWeight * line.quantity;
+        commission += Math.round((unit * line.quantity * rate) / 100);
+        const options = variant.options as Record<string, string>;
+        items.push({
+          productId: product.id,
+          variantId: variant.id,
+          categoryId: product.categoryId,
+          title: product.title,
+          variantLabel: Object.keys(options).length ? Object.entries(options).map(([k, v]) => `${k}: ${v}`).join(", ") : null,
+          sku: variant.sku,
+          unitPrice: money(unit),
+          quantity: line.quantity,
+          lineTotal: money(unit * line.quantity),
+          unitWeightGrams: unitWeight,
+          warranty: typeof attrs.warranty === "string" ? attrs.warranty : null,
+          commissionRate: rate.toFixed(2),
+        });
+      }
+      const threshold = shop.freeDeliveryThreshold === null ? null : Math.round(Number(shop.freeDeliveryThreshold) * 100);
+      const free = threshold !== null && subtotal >= threshold;
+      const delivery = free ? 0 : deliveryCharge({ insideDhaka, weightGrams: weight }) * 100;
+      itemsPaisa += subtotal;
+      deliveryPaisa += delivery;
+      shopOrders.push({
+        shopId: shop.id,
+        seq: i + 1,
+        status: so.status,
+        statusChangedAt: placedAt,
+        shopName: shop.name,
+        shopRegistration: shop.tier === "verified" && shop.registrationNo ? `Trade licence ${shop.registrationNo}` : null,
+        itemsSubtotal: money(subtotal),
+        weightGrams: weight,
+        deliveryCharge: money(delivery),
+        freeDelivery: free,
+        total: money(subtotal + delivery),
+        vatRate: "0.00",
+        vatAmount: "0.00",
+        commissionAmount: money(commission),
+        launchOffer: false,
+        handoverDueAt: new Date(placedAt.getTime() + 48 * 3_600_000),
+        deliveredAt: so.status === "delivered" ? new Date(placedAt.getTime() + 3 * 24 * 3_600_000) : null,
+        items: { create: items },
+      });
+    }
+    await prisma.order.create({
+      data: {
+        orderNo: o.orderNo,
+        userId: user?.id ?? null,
+        contactName: o.contact.name,
+        contactPhone: o.contact.phone,
+        phoneVerifiedAt: placedAt,
+        contactEmail: o.contact.email,
+        address: o.address,
+        zone: insideDhaka ? "inside_dhaka" : "outside_dhaka",
+        itemsSubtotal: money(itemsPaisa),
+        deliveryTotal: money(deliveryPaisa),
+        grandTotal: money(itemsPaisa + deliveryPaisa),
+        paymentMethod: "cod",
+        policyVersions: o.userEmail ? policyVersions : [...policyVersions, { slug: "privacy", version: 1 }],
+        idempotencyKey: `seed:${o.orderNo}`,
+        placedAt,
+        // Seeded: no SMS or email to send.
+        smsSentAt: placedAt,
+        emailSentAt: placedAt,
+        shopOrders: { create: shopOrders },
+      },
+    });
+    created++;
+  }
+  console.info(`Seeded ${created} new test orders (${orders.length} in the seed; guest order tracking: BD-261016-SEEDC, mobile 01700000009)`);
+}
+
 async function main() {
   assertSeedAllowed();
   await seedUsers();
@@ -757,6 +940,7 @@ async function main() {
   await seedProducts();
   await seedWishlist();
   await seedCart();
+  await seedOrders();
   await seedSearchIndex();
 }
 
