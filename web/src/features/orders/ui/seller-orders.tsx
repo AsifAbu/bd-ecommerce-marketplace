@@ -44,9 +44,8 @@ export function SellerOrders({ orders }: { orders: SellerShopOrderRow[] }) {
             ) : null}
             <p className="text-sm">
               <Link className="text-blue-800 underline" href={`/orders/${so.order.orderNo}/invoice/${so.id}`}>
-                Print invoice
+                Print invoice<span className="sr-only"> for {no}</span>
               </Link>
-              <span className="sr-only"> for {no}</span>
             </p>
           </li>
         );

@@ -128,9 +128,11 @@ test("guest cart from two shops: grouped with delivery per shop, stock cap, save
   const cookies = await page.context().cookies();
   expect(cookies.find((c) => c.name === "cart_guest")).toBeUndefined();
 
-  // No price changes: Checkout continues (to the placeholder until US-051).
+  // No price changes: Checkout continues (US-051; this shopper has no mobile yet, so checkout asks for one).
   await page.getByRole("link", { name: "Checkout" }).click();
-  await expect(page.getByText("Checkout is coming in the next update.")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Checkout" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Review your order" })).toBeVisible();
+  await expect(page.getByText("Cash on delivery needs a verified mobile number.")).toBeVisible();
 });
 
 test("a changed price shows a notice and Checkout waits until it is accepted", async ({ page }) => {

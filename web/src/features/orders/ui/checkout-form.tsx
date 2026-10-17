@@ -189,7 +189,7 @@ export function CheckoutForm(props: CheckoutFormProps) {
         {review.leftOut.length > 0 && (
           <p className="text-sm text-amber-900">Not ordered (not available now): {review.leftOut.join(", ")}.</p>
         )}
-        <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 rounded border-2 border-gray-400 p-4" aria-label="Order total">
+        <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 rounded border-2 border-gray-400 p-4" aria-label="Checkout total">
           <dt>Items ({review.itemCount})</dt>
           <dd className="text-right">{tk(review.subtotal)}</dd>
           <dt>Delivery charges ({review.shops.length} {review.shops.length === 1 ? "shop" : "shops"})</dt>
