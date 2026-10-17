@@ -1,0 +1,27 @@
+// Order lifecycle (US-053): every status change of a shop order, with who made it and why.
+// The customer's order timeline and the audit trail read this. A 6-year business record
+// (src/lib/retention.ts): append-only, never updated or deleted.
+
+model ShopOrderEvent {
+  id          String          @id @default(cuid())
+  shopOrderId String          @map("shop_order_id")
+  // confirm, pack, hand_over, deliver, refuse, cancel, mark_returned
+  action      String
+  fromStatus  ShopOrderStatus @map("from_status")
+  toStatus    ShopOrderStatus @map("to_status")
+  // Who did it: a user id (no foreign key: users are anonymised, never deleted), null for jobs.
+  actorId     String?         @map("actor_id")
+  // shop_owner, shop_staff, customer, admin or system
+  actorRole   String          @map("actor_role")
+  // Cancel reason, refusal note, or "Courier: X, tracking: Y".
+  note        String?
+  // Did this change put the items back into stock?
+  restocked   Boolean         @default(false)
+  at          DateTime        @default(now())
+
+  shopOrder ShopOrder @relation(fields: [shopOrderId], references: [id], onDelete: Restrict)
+
+  @@index([shopOrderId, at])
+  @@index([at])
+  @@map("shop_order_event")
+}

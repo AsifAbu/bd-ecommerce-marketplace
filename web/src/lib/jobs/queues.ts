@@ -13,6 +13,12 @@ export const queues = {
   "search.reindex-all": z.object({}),
   // One SMS + one email invoice for a placed order (US-051); retried until both are sent.
   "orders.notify-placed": z.object({ orderId: z.string().min(1).max(64) }),
+  // US-053: marks shop orders past the 48 h handover deadline once and queues their alerts.
+  "orders.handover-check": z.object({}),
+  // Overdue alert for one shop order (shop owner/staff email + SMS, admins email); retried.
+  "orders.notify-overdue": z.object({ shopOrderId: z.string().min(1).max(64) }),
+  // US-082: daily check of collections near or past the 10-day payout deadline.
+  "payouts.due-check": z.object({}),
 } as const;
 
 export type QueueName = keyof typeof queues;

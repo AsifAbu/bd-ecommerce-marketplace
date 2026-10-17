@@ -105,6 +105,10 @@ model Shop {
   // reviews relations
   reviews Review[]
 
+  // payouts relations
+  codCollections CodCollection[]
+  payouts        Payout[]
+
   @@index([status])
   @@index([ownerId])
   @@map("shop")

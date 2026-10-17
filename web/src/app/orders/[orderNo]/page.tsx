@@ -2,6 +2,9 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { currentUserOrNull } from "@/features/cart/server";
+import { buildTimeline } from "@/features/orders/lifecycle";
+import { orderTimelines } from "@/features/orders/lifecycle/server";
+import { CustomerShopOrderLifecycle } from "@/features/orders/lifecycle/ui/customer-lifecycle";
 import { viewableOrder } from "@/features/orders/server";
 import { OrderDetail } from "@/features/orders/ui/order-view";
 import { reviewService } from "@/features/reviews/server";
@@ -66,10 +69,30 @@ async function Content({
   const itemIds = order.shopOrders.flatMap((so) => so.items.map((i) => i.id));
   const states = user ? await reviewService.itemStates(user.id, itemIds) : {};
   const itemExtras = Object.fromEntries(Object.entries(states).map(([id, state]) => [id, <ItemReview key={id} orderItemId={id} state={state} />]));
+  // US-053: each shop order's timeline, courier and tracking, and Cancel before confirmation.
+  const timelines = new Map((await orderTimelines(order.id)).map((t) => [t.id, t]));
   return (
     <>
       <h1 className="text-3xl font-bold">Order {order.orderNo}</h1>
-      <OrderDetail order={order} placed={placed === "1"} itemExtras={itemExtras} />
+      <OrderDetail
+        order={order}
+        placed={placed === "1"}
+        itemExtras={itemExtras}
+        shopOrderExtra={(so) => {
+          const t = timelines.get(so.id);
+          if (!t) return null;
+          return (
+            <CustomerShopOrderLifecycle
+              orderNo={order.orderNo}
+              shopOrderId={so.id}
+              shopOrderNo={so.shopOrderNo}
+              status={t.status}
+              timeline={buildTimeline({ status: t.status, statusChangedAt: t.statusChangedAt, placedAt: new Date(order.placedAt) }, t.events)}
+              courier={t.courierName ? { name: t.courierName, trackingNo: t.trackingNo } : null}
+            />
+          );
+        }}
+      />
     </>
   );
 }

@@ -45,7 +45,7 @@ describe("retention config (US-081)", () => {
 describe("retained records are never hard-deleted", () => {
   const accessors = retainedModelAccessors();
   const call = new RegExp(`\\.(${accessors.join("|")})\\s*\\.\\s*(delete|deleteMany)\\s*\\(`);
-  const tables = ["order", "shop_order", "order_item", "shop", "shop_licence", "complaint_ticket", "audit_log", "policy_document", "policy_acceptance", "review"];
+  const tables = ["order", "shop_order", "order_item", "shop_order_event", "cod_collection", "payout", "shop", "shop_licence", "complaint_ticket", "audit_log", "policy_document", "policy_acceptance", "review"];
   const rawSql = new RegExp(`DELETE\\s+FROM\\s+"?(${tables.join("|")})"?\\b`, "i");
 
   it("has no Prisma delete or raw DELETE on a retained model in src/ or the seed", () => {
