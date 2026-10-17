@@ -10,11 +10,10 @@
   --color-foreground: var(--foreground);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* The whole interface is designed for a light background (white cards, tinted panels).
+   Keep it light even when the browser is in dark mode, so text is never light-on-light. */
+:root {
+  color-scheme: light;
 }
 
 body {
