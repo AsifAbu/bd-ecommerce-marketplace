@@ -50,6 +50,8 @@ export function CartView({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, { text: string; error: boolean }>>({});
   const [status, setStatus] = useState("");
+  // The radio follows the click at once; the charges follow when the refreshed cart arrives.
+  const [chosenZone, setChosenZone] = useState(zone.zone);
 
   async function run(lineId: string, url: string, method: string, body?: unknown) {
     setBusyId(lineId);
@@ -65,6 +67,7 @@ export function CartView({
   const remove = (line: CartLine) => run(line.id, `/api/cart/items/${encodeURIComponent(line.id)}`, "DELETE");
 
   function chooseZone(next: DeliveryZone) {
+    setChosenZone(next);
     startTransition(async () => {
       await setDeliveryZoneAction(next);
       setStatus(`Delivery charges now for ${ZONE_LABELS[next]}.`);
@@ -90,7 +93,7 @@ export function CartView({
                 type="radio"
                 name="delivery-zone"
                 value={z}
-                checked={zone.zone === z}
+                checked={chosenZone === z}
                 onChange={() => chooseZone(z)}
                 disabled={pending}
                 className="accent-blue-700"
@@ -217,6 +220,9 @@ function LineItem({ line, busy, messages, patch, remove }: { line: CartLine } & 
       setQty(String(line.quantity));
       return;
     }
+    // Show the capped value at once (the server caps too and says why); a capped value that
+    // equals the stored one doesn't remount the line, so the field must not keep the typed number.
+    setQty(String(Math.min(value, max)));
     if (value !== line.quantity) patch(line, { quantity: value });
   }
 
