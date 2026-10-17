@@ -203,6 +203,28 @@ The seed adds `[TEST] Suspended Shop` (`/s/test-suspended-shop`, suspended, one 
 - **Seed**: the RAM has two reviews (from `customer.verified`, order BD-261005-SEEDA, and `customer.new`, order
   BD-261008-SEEDR); `customer.new`'s Himu review is hidden with a reason.
 
+## Marketplace metrics and seller score (US-083, US-059)
+
+- **Dashboard**: `/admin/metrics?days=7|30|90` (Platform Admin only; guests go to login, other users see 404) and
+  `GET /api/admin/metrics?days=` (401 / 403 with the standard error shape). Tiles show a value, the plan target and
+  "Target met / not met / No data yet / Tracked, no target yet", then GMV by day (SVG bars + a table), top shops by GMV
+  and "Needs attention" (overdue handovers, escalated returns, overdue complaints). Days are Asia/Dhaka calendar days.
+- **Definitions** (`features/metrics`, targets in `config.ts`): GMV = delivered shop-order totals by delivery day;
+  orders are shop orders; COD delivery success = delivered / (delivered + refused); refusal rate = refused / placed;
+  active shops = approved shops with an order in the last 30 days; repeat buyers = share of buyers (verified phone)
+  with 2+ delivered orders in the last 90 days; seller retention = shops with an order in both of the last two
+  30-day windows / shops with an order in the earlier one; handover, complaints, rating and returns come from their
+  features. **Cart-to-order is a proxy** (cart lines are deleted at checkout): customer orders / (orders + open carts
+  started in the window).
+- **Seller score** (0 to 100, last 90 days): handed over within 48 h 30, parcels not refused 20 (0 points at 25%
+  refused), orders without a return 20 (0 points at 20% returned), complaints closed in 72 h 10, average rating 20
+  (1 star = 0, 5 = full). A measure without data is left out and the others scale up. Fewer than 5 delivered shop
+  orders: no score, shown as "New seller". Badges: Excellent 85+, Good 70+, Fair 50+, else Needs work.
+- **Where it shows**: storefront header, product page seller line and "About the seller", and the seller dashboard
+  (`/seller/<shopId>`) with the breakdown. Stored in `shop.performance_score` / `performance_updated_at`; the worker
+  job `shops.refresh-scores` recomputes every approved shop at 02:00 Dhaka (`metricsService.refreshShop(shopId)` does one
+  shop on demand; the seller dashboard always shows the live value).
+
 Policies and compliance (US-080, US-081): public pages at `/policies/<slug>` (terms, privacy, returns,
 delivery, seller, cookies; `?version=N` shows an earlier version), admin at `/admin/policies` (draft, publish,
 history) and `/admin/compliance` (DBID and 6-year record retention). Seeds publish version 1 of every policy
