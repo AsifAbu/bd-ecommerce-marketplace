@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { cache, Suspense } from "react";
+import { AddToCartButton } from "@/features/cart/ui/add-to-cart-button";
 import { loadProductPage } from "@/features/products/server";
 import { ProductDetailView } from "@/features/products/ui/product-page";
 import { applyWishlistIntent, parseWishlistIntent } from "@/features/wishlist";
@@ -62,6 +63,13 @@ async function Content({
       page={page}
       initialVariantId={initialVariantId}
       notice={intent && <WishlistIntentNotice result={intent} />}
+      cart={
+        <AddToCartButton
+          variants={page.variants.map((v) => ({ id: v.id, stock: v.stock }))}
+          defaultVariantId={onlyVariant}
+          chooseHint={`Choose ${page.axes.map((a) => a.name.toLowerCase()).join(" and ") || "an option"} first.`}
+        />
+      }
       wishlist={
         <WishlistButton
           // Remount when the server's answer changes (e.g. saved after login): the router keeps

@@ -1,4 +1,5 @@
 import type { Job } from "pg-boss";
+import { purgeStaleGuestCarts } from "@/features/cart/purge";
 import { refreshLiveCounts } from "@/features/products/live-counts";
 import { indexer } from "@/features/search/server";
 import { hasStateFailures, prismaExpiryDeps, runLicenceExpiryCheck } from "@/features/shops/licence-expiry";
@@ -25,6 +26,10 @@ export const handlers: Handlers = {
   "products.refresh-counts": async () => {
     const result = await refreshLiveCounts(new Date());
     console.info("[worker] products.refresh-counts", result);
+  },
+  "cart.purge-guest-carts": async () => {
+    const removed = await purgeStaleGuestCarts(new Date());
+    console.info("[worker] cart.purge-guest-carts", { removed });
   },
   "search.reindex-product": async (jobs) => {
     for (const job of jobs) {

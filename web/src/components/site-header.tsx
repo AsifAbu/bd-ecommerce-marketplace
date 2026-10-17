@@ -2,11 +2,12 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { auth } from "@/auth";
+import { CartLink } from "@/features/cart/ui/cart-link";
 import { SiteSearch } from "./site-search";
 
 /**
- * Site header: the marketplace name, the categories link and search box (Sprint 5), and for
- * logged-in users a link to their wishlist.
+ * Site header: the marketplace name, the categories link and search box (Sprint 5), for
+ * logged-in users a link to their wishlist, and the cart with its item count (guests too).
  */
 export function SiteHeader() {
   return (
@@ -19,6 +20,15 @@ export function SiteHeader() {
         <nav aria-label="Your links" className="ml-auto flex gap-4 text-sm">
           <Suspense fallback={null}>
             <UserLinks />
+          </Suspense>
+          <Suspense
+            fallback={
+              <Link className="underline" href="/cart">
+                Cart
+              </Link>
+            }
+          >
+            <CartLink />
           </Suspense>
         </nav>
       </div>

@@ -39,6 +39,8 @@ export interface ProfileInput {
   bannerUrl?: string;
   description?: string;
   policies?: string;
+  /** Tk; undefined = no free delivery. */
+  freeDeliveryThreshold?: number;
 }
 
 export async function updateProfile(shopId: string, data: ProfileInput, actorId: string) {
@@ -47,6 +49,7 @@ export async function updateProfile(shopId: string, data: ProfileInput, actorId:
     bannerUrl: data.bannerUrl ?? null,
     description: data.description ?? null,
     policies: data.policies ?? null,
+    freeDeliveryThreshold: data.freeDeliveryThreshold === undefined ? null : data.freeDeliveryThreshold.toFixed(2),
   };
   await prisma.$transaction([
     prisma.shop.updateMany({ where: { id: shopId }, data: values }),

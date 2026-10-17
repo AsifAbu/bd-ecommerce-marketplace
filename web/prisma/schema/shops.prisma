@@ -76,6 +76,9 @@ model Shop {
   description String?
   policies    String?
 
+  // Free delivery for a shop order whose subtotal reaches this amount (Tk); null = none (US-058).
+  freeDeliveryThreshold Decimal? @map("free_delivery_threshold") @db.Decimal(12, 2)
+
   // Set when the medicine licence lapses; cleared when a new licence is verified (US-016).
   medicineSuspended Boolean @default(false) @map("medicine_suspended")
 
@@ -92,6 +95,9 @@ model Shop {
 
   // products relations
   products Product[]
+
+  // cart relations
+  cartItems CartItem[]
 
   @@index([status])
   @@index([ownerId])

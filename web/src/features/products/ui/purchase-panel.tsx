@@ -7,18 +7,22 @@ import { findVariant, optionAvailable, stockText, type Selection } from "../vari
 
 /**
  * Price, variant picker and stock for the product page (US-044). The chosen variant is kept in
- * the URL (?variant=id, replaced without a navigation) so it can be shared and so the wishlist
- * button (passed as children) saves the same variant. Out-of-stock options are disabled.
+ * the URL (?variant=id, replaced without a navigation) so it can be shared and so the cart
+ * and wishlist buttons (passed as `cart` and children) use the same variant. Out-of-stock
+ * options are disabled.
  */
 export function PurchasePanel({
   axes,
   variants,
   initialVariantId,
+  cart,
   children,
 }: {
   axes: AxisView[];
   variants: VariantView[];
   initialVariantId: string | null;
+  /** The cart feature's "Add to cart" control. */
+  cart?: ReactNode;
   children?: ReactNode;
 }) {
   const initial = variants.find((v) => v.id === initialVariantId);
@@ -80,20 +84,8 @@ export function PurchasePanel({
         {stock}
       </p>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          disabled
-          aria-describedby="cart-soon"
-          className="rounded bg-blue-700 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Add to cart
-        </button>
-        {children}
-      </div>
-      <p id="cart-soon" className="text-sm text-gray-700">
-        Ordering opens soon. Save it to your wishlist for now.
-      </p>
+      {cart}
+      <div className="flex flex-wrap items-center gap-3">{children}</div>
     </div>
   );
 }

@@ -69,7 +69,7 @@ test("product page: specs, delivery, variants; guest wishlist saved after login,
   await expect(page.getByText("Tk 1,850")).toBeVisible();
   await expect(page.getByText("In stock: 6 available")).toBeVisible();
   await expect(page).toHaveURL(/variant=/);
-  await expect(page.getByRole("button", { name: "Add to cart" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Add to cart" })).toBeEnabled();
 
   // Guest taps the heart: asked to log in, then the item is saved and the intent cleared.
   await page.getByRole("button", { name: "Save to wishlist" }).click();
@@ -80,15 +80,14 @@ test("product page: specs, delivery, variants; guest wishlist saved after login,
   await expect(page).not.toHaveURL(/wishlist=add/);
   await expect(page.getByText("In stock: 6 available")).toBeVisible(); // the chosen variant is kept
 
-  // The wishlist lists it with the variant, price and stock; Move to cart waits for the cart.
+  // The wishlist lists it with the variant, price and stock; it can be moved to the cart.
   await page.getByRole("navigation", { name: "Your links" }).getByRole("link", { name: "Wishlist" }).click();
   await expect(page.getByRole("heading", { name: "My wishlist" })).toBeVisible();
   const item = page.getByRole("listitem").filter({ hasText: SHIRT });
   await expect(item).toContainText("Size: M, Colour: Black");
   await expect(item).toContainText("Tk 1,850");
   await expect(item).toContainText("In stock");
-  await expect(item.getByRole("button", { name: "Move to cart" })).toBeDisabled();
-  await expect(item).toContainText("Cart coming soon");
+  await expect(item.getByRole("button", { name: "Move to cart" })).toBeEnabled();
 
   await item.getByRole("button", { name: `Remove ${SHIRT} from wishlist` }).click();
   await expect(page.getByRole("listitem").filter({ hasText: SHIRT })).toHaveCount(0);
