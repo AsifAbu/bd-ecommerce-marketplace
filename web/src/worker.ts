@@ -26,6 +26,8 @@ async function main() {
   await boss.schedule("shops.licence-expiry", "0 1 * * *", {}, { tz: "Asia/Dhaka" });
   // After the licence check (medicine suspensions) and just after midnight's expiry changes.
   await boss.schedule("products.refresh-counts", "15 1 * * *", {}, { tz: "Asia/Dhaka" });
+  // Full search re-index after the liveness changes above (no-op without Meilisearch).
+  await boss.schedule("search.reindex-all", "30 1 * * *", {}, { tz: "Asia/Dhaka" });
 
   if (process.argv.includes("--demo")) {
     await boss.send("example.log", { message: "hello from the worker demo" });

@@ -1,4 +1,5 @@
 import { getCategorySchema } from "@/features/catalog";
+import { notifyProductsChanged } from "@/features/search";
 import { requireShopRole } from "@/lib/auth";
 import { getStorage } from "@/lib/storage";
 import * as repo from "./repo";
@@ -11,4 +12,5 @@ export const productService = createProductService({
   repo,
   storage: getStorage,
   now: () => new Date(),
+  onProductsChanged: notifyProductsChanged,
 });

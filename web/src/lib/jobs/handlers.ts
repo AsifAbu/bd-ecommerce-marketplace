@@ -1,5 +1,6 @@
 import type { Job } from "pg-boss";
 import { refreshLiveCounts } from "@/features/products/live-counts";
+import { indexer } from "@/features/search/server";
 import { prismaExpiryDeps, runLicenceExpiryCheck } from "@/features/shops/licence-expiry";
 import { queues, type JobData, type QueueName } from "./queues";
 
@@ -19,5 +20,16 @@ export const handlers: Handlers = {
   "products.refresh-counts": async () => {
     const result = await refreshLiveCounts(new Date());
     console.info("[worker] products.refresh-counts", result);
+  },
+  "search.reindex-product": async (jobs) => {
+    for (const job of jobs) {
+      const { productIds } = queues["search.reindex-product"].parse(job.data);
+      const result = await indexer.reindexProducts(productIds);
+      console.info("[worker] search.reindex-product", result);
+    }
+  },
+  "search.reindex-all": async () => {
+    const result = await indexer.reindexAll();
+    console.info("[worker] search.reindex-all", result);
   },
 };
