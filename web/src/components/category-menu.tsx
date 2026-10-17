@@ -16,7 +16,7 @@ export async function CategoryMenu() {
   }
   if (tree.length === 0) return <CategoryLink />;
   return (
-    <nav aria-label="Category menu" className="relative">
+    <nav aria-label="Shop menu" className="relative">
       <details className="group">
         <summary className="flex cursor-pointer list-none items-center gap-1 rounded bg-blue-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 [&::-webkit-details-marker]:hidden">
           Browse categories
