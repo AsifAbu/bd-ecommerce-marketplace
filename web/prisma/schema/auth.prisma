@@ -42,6 +42,9 @@ model User {
   // wishlist relations
   wishlistItems WishlistItem[]
 
+  // cart relations
+  cartItems CartItem[]
+
   @@map("user")
 }
 

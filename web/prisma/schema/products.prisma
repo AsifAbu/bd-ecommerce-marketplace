@@ -32,6 +32,9 @@ model Product {
   // wishlist relations
   wishlistItems WishlistItem[]
 
+  // cart relations
+  cartItems CartItem[]
+
   @@index([shopId, deletedAt])
   @@index([categoryId, status])
   @@map("product")
@@ -57,6 +60,9 @@ model ProductVariant {
 
   // wishlist relations
   wishlistItems WishlistItem[]
+
+  // cart relations
+  cartItems CartItem[]
 
   @@unique([shopId, sku])
   @@unique([productId, optionKey])
