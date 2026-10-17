@@ -99,6 +99,9 @@ model Shop {
   // cart relations
   cartItems CartItem[]
 
+  // orders relations
+  shopOrders ShopOrder[]
+
   @@index([status])
   @@index([ownerId])
   @@map("shop")

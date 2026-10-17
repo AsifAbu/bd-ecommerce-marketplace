@@ -29,9 +29,9 @@ const GUIDELINES = "Digital Commerce Operation Guidelines 2021 (6-year records)"
 const PDPO = "Personal Data Protection Ordinance 2025 (consent records); kept with the business records";
 
 export const RETENTION_RULES: readonly RetentionRule[] = [
-  { model: "Order", label: "Orders (customer, contact, address snapshot, policy versions)", years: RETENTION_YEARS, from: "order placed", source: GUIDELINES, built: false },
-  { model: "ShopOrder", label: "Shop orders (per-shop split, handover, cancellation)", years: RETENTION_YEARS, from: "order placed", source: GUIDELINES, built: false },
-  { model: "OrderItem", label: "Order items (price and title snapshot)", years: RETENTION_YEARS, from: "order placed", source: GUIDELINES, built: false },
+  { model: "Order", label: "Orders (customer, contact, address snapshot, policy versions)", years: RETENTION_YEARS, from: "order placed", source: GUIDELINES, built: true },
+  { model: "ShopOrder", label: "Shop orders (per-shop split, handover, cancellation)", years: RETENTION_YEARS, from: "order placed", source: GUIDELINES, built: true },
+  { model: "OrderItem", label: "Order items (price and title snapshot)", years: RETENTION_YEARS, from: "order placed", source: GUIDELINES, built: true },
   { model: "CodCollection", label: "Cash-on-delivery collections and payouts", years: RETENTION_YEARS, from: "payout", source: GUIDELINES, built: false },
   { model: "ReturnRequest", label: "Returns and refunds", years: RETENTION_YEARS, from: "refund or closure", source: GUIDELINES, built: false },
   { model: "Shop", label: "Shops (owner identity, NID, registration number, status history)", years: RETENTION_YEARS, from: "shop closed or suspended", source: GUIDELINES, built: true },

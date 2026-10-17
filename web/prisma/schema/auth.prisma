@@ -50,6 +50,9 @@ model User {
   policiesPublished PolicyDocument[]   @relation("PolicyPublishedBy")
   policyAcceptances PolicyAcceptance[]
 
+  // orders relations
+  orders Order[]
+
   @@map("user")
 }
 

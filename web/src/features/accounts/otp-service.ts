@@ -2,7 +2,8 @@ import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import type { OtpProvider } from "@/lib/otp";
 import { TEST_OTP_CODE } from "@/lib/otp";
 
-export type OtpPurpose = "phone_verify" | "password_reset";
+/** checkout_verify and order_track are used by the orders feature (guest checkout and tracking). */
+export type OtpPurpose = "phone_verify" | "password_reset" | "checkout_verify" | "order_track";
 
 /** Testing values; final values are decided before release. */
 export const OTP_RULES = {
