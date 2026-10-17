@@ -23,6 +23,10 @@ async function main() {
   console.info(`[worker] started (${getConfig().appMode} mode): ${Object.keys(handlers).join(", ")}`);
 
   // Daily jobs (cron in Bangladesh time).
+  // US-053: the 48 h handover timer, every 15 minutes.
+  await boss.schedule("orders.handover-check", "*/15 * * * *", {}, { tz: "Asia/Dhaka" });
+  // US-082: collections near or past the 10-day payout deadline, every morning.
+  await boss.schedule("payouts.due-check", "0 9 * * *", {}, { tz: "Asia/Dhaka" });
   await boss.schedule("shops.licence-expiry", "0 1 * * *", {}, { tz: "Asia/Dhaka" });
   // After the licence check (medicine suspensions) and just after midnight's expiry changes.
   await boss.schedule("products.refresh-counts", "15 1 * * *", {}, { tz: "Asia/Dhaka" });

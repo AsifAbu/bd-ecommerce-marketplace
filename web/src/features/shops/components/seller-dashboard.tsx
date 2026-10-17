@@ -70,6 +70,11 @@ export async function SellerDashboard({ shopId, role }: { shopId: string; role: 
           <Link className="text-blue-800 underline" href={`/seller/${shop.id}/reviews`}>
             Reviews
           </Link>
+          {isOwner && (
+            <Link className="text-blue-800 underline" href={`/seller/${shop.id}/payouts`}>
+              Payouts
+            </Link>
+          )}
           <Link className="text-blue-800 underline" href={`/seller/${shop.id}/returns`}>
             Returns
           </Link>

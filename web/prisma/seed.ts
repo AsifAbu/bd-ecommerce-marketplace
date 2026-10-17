@@ -986,6 +986,256 @@ async function seedReviews() {
   console.info(`Seeded ${created} new reviews (${picks.length} in the seed, 1 hidden by the admin)`);
 }
 
+/**
+ * Order lifecycle and payouts (US-053, US-082): one shop order in every lifecycle state for
+ * customer.verified, in the Tech and Fashion shops, with its status events, plus COD collections
+ * and one paid payout. Times are relative to the first seed run; each order is created once
+ * (found again by its idempotency key) and never changed or deleted. Stock is not touched.
+ * - BD-…-LCJ (Fashion, placed 60 h ago) is overdue: the orders.handover-check job alerts it.
+ * - LCP (Tech, delivered 2 days ago) has an unpaid collection; LCW (Fashion, delivered 9 days
+ *   ago) is due soon; LCQ + LCR are in the paid payout seed-payout-tech-1.
+ */
+async function seedOrderLifecycle() {
+  const HOUR = 3_600_000;
+  const now = Date.now();
+  const at = (hoursAgo: number) => new Date(now - hoursAgo * HOUR);
+  type Step = "confirm" | "pack" | "hand_over" | "deliver" | "refuse" | "cancel" | "mark_returned";
+  type SeedLifecycleOrder = {
+    key: string;
+    shopSlug: string;
+    title: string;
+    optionKey?: string;
+    placedHoursAgo: number;
+    // Each step and how many hours ago it happened.
+    steps: [Step, number][];
+  };
+  const STEP_TO: Record<Step, "confirmed" | "packed" | "handed_over" | "delivered" | "refused" | "cancelled" | "returned"> = {
+    confirm: "confirmed",
+    pack: "packed",
+    hand_over: "handed_over",
+    deliver: "delivered",
+    refuse: "refused",
+    cancel: "cancelled",
+    mark_returned: "returned",
+  };
+  const RYZEN = "[TEST] AMD Ryzen 5 7600 Processor";
+  const RAM = "[TEST] Corsair Vengeance 16GB DDR5 RAM";
+  const SHIRT = "[TEST] Oxford cotton shirt";
+  const orders: SeedLifecycleOrder[] = [
+    { key: "LCH", shopSlug: "test-tech-shop", title: RAM, placedHoursAgo: 2, steps: [] },
+    { key: "LCJ", shopSlug: "test-fashion-shop", title: SHIRT, optionKey: "colour=white;size=m", placedHoursAgo: 60, steps: [] },
+    { key: "LCK", shopSlug: "test-tech-shop", title: RAM, placedHoursAgo: 20, steps: [["confirm", 18]] },
+    { key: "LCM", shopSlug: "test-fashion-shop", title: SHIRT, optionKey: "colour=black;size=s", placedHoursAgo: 30, steps: [["confirm", 28], ["pack", 6]] },
+    { key: "LCN", shopSlug: "test-tech-shop", title: RYZEN, placedHoursAgo: 26, steps: [["confirm", 24], ["pack", 10], ["hand_over", 4]] },
+    { key: "LCP", shopSlug: "test-tech-shop", title: RAM, placedHoursAgo: 96, steps: [["confirm", 94], ["pack", 80], ["hand_over", 72], ["deliver", 48]] },
+    { key: "LCQ", shopSlug: "test-tech-shop", title: RYZEN, placedHoursAgo: 14 * 24, steps: [["confirm", 14 * 24 - 2], ["pack", 13 * 24], ["hand_over", 13 * 24 - 4], ["deliver", 12 * 24]] },
+    { key: "LCR", shopSlug: "test-tech-shop", title: RAM, placedHoursAgo: 13 * 24, steps: [["confirm", 13 * 24 - 1], ["pack", 12 * 24], ["hand_over", 12 * 24 - 2], ["deliver", 11 * 24]] },
+    { key: "LCS", shopSlug: "test-fashion-shop", title: SHIRT, optionKey: "colour=black;size=l", placedHoursAgo: 5 * 24, steps: [["confirm", 5 * 24 - 2], ["cancel", 4 * 24]] },
+    { key: "LCT", shopSlug: "test-fashion-shop", title: "[TEST] Slim denim pants", optionKey: "colour=blue;size=34", placedHoursAgo: 7 * 24, steps: [["confirm", 7 * 24 - 3], ["pack", 6 * 24], ["hand_over", 6 * 24 - 2], ["refuse", 4 * 24]] },
+    { key: "LCV", shopSlug: "test-tech-shop", title: RAM, placedHoursAgo: 9 * 24, steps: [["confirm", 9 * 24 - 1], ["pack", 8 * 24], ["hand_over", 8 * 24 - 3], ["refuse", 6 * 24], ["mark_returned", 3 * 24]] },
+    { key: "LCW", shopSlug: "test-fashion-shop", title: SHIRT, optionKey: "colour=white;size=s", placedHoursAgo: 11 * 24, steps: [["confirm", 11 * 24 - 2], ["pack", 10 * 24 + 6], ["hand_over", 10 * 24], ["deliver", 9 * 24]] },
+  ];
+
+  const customer = await prisma.user.findUniqueOrThrow({ where: { email: "customer.verified@ecom.test" }, select: { id: true } });
+  const address = {
+    name: "[TEST] Customer, verified phone",
+    phone: "+8801700000002",
+    division: "Dhaka",
+    district: "Dhaka",
+    upazila: "Dhanmondi",
+    area: "Dhanmondi 27",
+    line1: "House 10, Road 27",
+  };
+  const money = (paisa: number) => (paisa / 100).toFixed(2);
+  const dhakaDate = (d: Date) => new Date(d.getTime() + 6 * HOUR).toISOString().slice(2, 10).replace(/-/g, "");
+  let created = 0;
+  for (const o of orders) {
+    const idempotencyKey = `seed:lifecycle:${o.key}`;
+    if (await prisma.order.findUnique({ where: { idempotencyKey }, select: { id: true } })) continue;
+    const placedAt = at(o.placedHoursAgo);
+    const shop = await prisma.shop.findUniqueOrThrow({ where: { slug: o.shopSlug } });
+    const product = await prisma.product.findFirstOrThrow({
+      where: { title: o.title, shopId: shop.id, deletedAt: null },
+      include: { category: { select: { commissionRate: true } } },
+    });
+    const variant = await prisma.productVariant.findUniqueOrThrow({ where: { productId_optionKey: { productId: product.id, optionKey: o.optionKey ?? "" } } });
+    const attrs = product.attributes as Record<string, unknown>;
+    const unit = Math.round(Number(variant.price) * 100);
+    const rate = Number(product.category.commissionRate);
+    const weight = typeof attrs.weight_g === "number" ? attrs.weight_g : 0;
+    const delivery = deliveryCharge({ insideDhaka: true, weightGrams: weight }) * 100;
+    const commission = Math.round((unit * rate) / 100);
+    const options = variant.options as Record<string, string>;
+    const stepAt = (s: Step) => {
+      const step = o.steps.find(([name]) => name === s);
+      return step ? at(step[1]) : null;
+    };
+    const last = o.steps.at(-1);
+    const status = last ? STEP_TO[last[0]] : "placed";
+    const handedOver = o.steps.some(([s]) => s === "hand_over");
+    await prisma.order.create({
+      data: {
+        orderNo: `BD-${dhakaDate(placedAt)}-${o.key}`,
+        userId: customer.id,
+        contactName: "[TEST] Customer, verified phone and email",
+        contactPhone: "+8801700000002",
+        phoneVerifiedAt: placedAt,
+        contactEmail: "customer.verified@ecom.test",
+        address,
+        zone: "inside_dhaka",
+        itemsSubtotal: money(unit),
+        deliveryTotal: money(delivery),
+        grandTotal: money(unit + delivery),
+        paymentMethod: "cod",
+        policyVersions: [
+          { slug: "returns", version: 1 },
+          { slug: "delivery", version: 1 },
+        ],
+        idempotencyKey,
+        placedAt,
+        smsSentAt: placedAt,
+        emailSentAt: placedAt,
+        shopOrders: {
+          create: [
+            {
+              shopId: shop.id,
+              seq: 1,
+              status,
+              statusChangedAt: last ? at(last[1]) : placedAt,
+              shopName: shop.name,
+              shopRegistration: shop.tier === "verified" && shop.registrationNo ? `Trade licence ${shop.registrationNo}` : null,
+              itemsSubtotal: money(unit),
+              weightGrams: weight,
+              deliveryCharge: money(delivery),
+              freeDelivery: false,
+              total: money(unit + delivery),
+              vatRate: "0.00",
+              vatAmount: "0.00",
+              commissionAmount: money(commission),
+              launchOffer: false,
+              handoverDueAt: new Date(placedAt.getTime() + 48 * HOUR),
+              confirmedAt: stepAt("confirm"),
+              packedAt: stepAt("pack"),
+              handedOverAt: stepAt("hand_over"),
+              courierName: handedOver ? "[TEST] RedX" : null,
+              trackingNo: handedOver ? `RX-${o.key}` : null,
+              deliveredAt: stepAt("deliver"),
+              refusedAt: stepAt("refuse"),
+              refusalNote: stepAt("refuse") ? "[TEST] Customer refused at the door" : null,
+              cancelledAt: stepAt("cancel"),
+              cancelledBy: stepAt("cancel") ? "shop" : null,
+              cancelReason: stepAt("cancel") ? "[TEST] Size no longer available" : null,
+              returnedAt: stepAt("mark_returned"),
+              restockedAt: stepAt("cancel") ?? stepAt("mark_returned"),
+              items: {
+                create: [
+                  {
+                    productId: product.id,
+                    variantId: variant.id,
+                    categoryId: product.categoryId,
+                    title: product.title,
+                    variantLabel: Object.keys(options).length ? Object.entries(options).map(([k, v]) => `${k}: ${v}`).join(", ") : null,
+                    sku: variant.sku,
+                    unitPrice: money(unit),
+                    quantity: 1,
+                    lineTotal: money(unit),
+                    unitWeightGrams: weight,
+                    warranty: typeof attrs.warranty === "string" ? attrs.warranty : null,
+                    commissionRate: rate.toFixed(2),
+                  },
+                ],
+              },
+              events: {
+                create: o.steps.map(([s, hoursAgo], i) => ({
+                  action: s,
+                  fromStatus: i === 0 ? "placed" : STEP_TO[o.steps[i - 1][0]],
+                  toStatus: STEP_TO[s],
+                  actorRole: "shop_staff",
+                  note:
+                    s === "hand_over"
+                      ? `Courier: [TEST] RedX, tracking: RX-${o.key}`
+                      : s === "cancel"
+                        ? "[TEST] Size no longer available"
+                        : s === "refuse"
+                          ? "[TEST] Customer refused at the door"
+                          : null,
+                  restocked: s === "cancel" || s === "mark_returned",
+                  at: at(hoursAgo),
+                })),
+              },
+            },
+          ],
+        },
+      },
+    });
+    created++;
+  }
+
+  // COD collections for the delivered ones (as the lifecycle records them), then one paid payout.
+  let collections = 0;
+  for (const key of ["LCP", "LCQ", "LCR", "LCW"]) {
+    const so = await prisma.shopOrder.findFirst({
+      where: { order: { idempotencyKey: `seed:lifecycle:${key}` }, status: "delivered" },
+      select: { id: true, shopId: true, total: true, itemsSubtotal: true, commissionAmount: true, deliveredAt: true },
+    });
+    if (!so?.deliveredAt || (await prisma.codCollection.findUnique({ where: { shopOrderId: so.id } }))) continue;
+    const totalPaisa = Math.round(Number(so.total) * 100);
+    const itemsPaisa = Math.round(Number(so.itemsSubtotal) * 100);
+    await prisma.codCollection.create({
+      data: {
+        shopOrderId: so.id,
+        shopId: so.shopId,
+        amount: money(totalPaisa),
+        itemsAmount: money(itemsPaisa),
+        deliveryCharge: money(totalPaisa - itemsPaisa),
+        commission: so.commissionAmount,
+        collectedAt: so.deliveredAt,
+        source: "auto_on_delivery",
+        payoutDueAt: new Date(so.deliveredAt.getTime() + 10 * 24 * HOUR),
+      },
+    });
+    collections++;
+  }
+
+  const payoutId = "seed-payout-tech-1";
+  if (!(await prisma.payout.findUnique({ where: { id: payoutId } }))) {
+    const admin = await prisma.user.findUniqueOrThrow({ where: { email: "admin@ecom.test" }, select: { id: true } });
+    const paidRows = await prisma.codCollection.findMany({
+      where: { shopOrder: { order: { idempotencyKey: { in: ["seed:lifecycle:LCQ", "seed:lifecycle:LCR"] } } }, payoutId: null },
+    });
+    if (paidRows.length) {
+      const sum = (pick: (r: (typeof paidRows)[number]) => unknown) => paidRows.reduce((a, r) => a + Math.round(Number(pick(r)) * 100), 0);
+      const gross = sum((r) => r.amount);
+      const commission = sum((r) => r.commission);
+      const times = paidRows.map((r) => r.collectedAt.getTime());
+      const paidAt = new Date(Math.max(...times) + 3 * 24 * HOUR);
+      await prisma.payout.create({
+        data: {
+          id: payoutId,
+          shopId: paidRows[0].shopId,
+          periodStart: new Date(Math.min(...times)),
+          periodEnd: new Date(Math.max(...times)),
+          collectionCount: paidRows.length,
+          gross: money(gross),
+          commission: money(commission),
+          deliveryCharges: money(sum((r) => r.deliveryCharge)),
+          deliveryChargesTo: "shop",
+          net: money(gross - commission),
+          status: "paid",
+          dueAt: new Date(Math.min(...paidRows.map((r) => r.payoutDueAt.getTime()))),
+          createdById: admin.id,
+          paidAt,
+          method: "bank_transfer",
+          reference: "[TEST] BEFTN-0001",
+          recordedById: admin.id,
+        },
+      });
+      await prisma.codCollection.updateMany({ where: { id: { in: paidRows.map((r) => r.id) } }, data: { payoutId, paidOutAt: paidAt } });
+    }
+  }
+  console.info(`Seeded ${created} new lifecycle orders (${orders.length} in the seed, overdue: LCJ), ${collections} COD collections and the paid payout ${payoutId}`);
+}
+
 async function main() {
   assertSeedAllowed();
   await seedUsers();
@@ -998,6 +1248,7 @@ async function main() {
   await seedCart();
   await seedOrders();
   await seedReviews();
+  await seedOrderLifecycle();
   await seedReturnsAndComplaints();
   await seedSearchIndex();
 }

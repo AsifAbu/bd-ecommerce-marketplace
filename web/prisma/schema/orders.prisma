@@ -100,6 +100,22 @@ model ShopOrder {
   handoverDueAt    DateTime        @map("handover_due_at")
   cancelReason     String?         @map("cancel_reason")
   deliveredAt      DateTime?       @map("delivered_at")
+  // Order lifecycle (US-053, order-lifecycle.prisma): when each step happened, the courier and
+  // tracking number recorded at handover, who cancelled, and when the overdue alert went out.
+  confirmedAt      DateTime?       @map("confirmed_at")
+  packedAt         DateTime?       @map("packed_at")
+  handedOverAt     DateTime?       @map("handed_over_at")
+  courierName      String?         @map("courier_name")
+  trackingNo       String?         @map("tracking_no")
+  cancelledAt      DateTime?       @map("cancelled_at")
+  cancelledBy      String?         @map("cancelled_by") // shop | customer | admin
+  refusedAt        DateTime?       @map("refused_at")
+  refusalNote      String?         @map("refusal_note")
+  returnedAt       DateTime?       @map("returned_at")
+  // Set when the items went back into stock (cancel, or a refused parcel back at the shop).
+  restockedAt      DateTime?       @map("restocked_at")
+  // Set once when the 48 h deadline passed and the alerts were queued (orders.handover-check).
+  overdueNotifiedAt DateTime?      @map("overdue_notified_at")
   createdAt        DateTime        @default(now()) @map("created_at")
   updatedAt        DateTime        @updatedAt @map("updated_at")
 
@@ -107,6 +123,11 @@ model ShopOrder {
   shop  Shop        @relation(fields: [shopId], references: [id], onDelete: Restrict)
   items OrderItem[]
 
+  // order lifecycle relations
+  events ShopOrderEvent[]
+
+  // payouts relations
+  codCollection CodCollection?
   // returns and complaints relations
   returnRequests   ReturnRequest[]
   complaintTickets ComplaintTicket[]
@@ -115,6 +136,7 @@ model ShopOrder {
   @@index([shopId, status])
   @@index([shopId, createdAt])
   @@index([status, handoverDueAt])
+  @@index([status, overdueNotifiedAt])
   @@map("shop_order")
 }
 

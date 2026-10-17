@@ -1,8 +1,10 @@
 import type { Job } from "pg-boss";
 import { purgeStaleGuestCarts } from "@/features/cart/purge";
-import { flagOverdueComplaints, notifyComplaint } from "@/features/complaints/server";
+import { checkHandovers, notifyOverdue } from "@/features/orders/lifecycle/server";
 import { notifyOrderPlaced } from "@/features/orders/server";
 import { refreshLiveCounts } from "@/features/products/live-counts";
+import { checkPayoutsDue } from "@/features/payouts/server";
+import { flagOverdueComplaints, notifyComplaint } from "@/features/complaints/server";
 import { escalateOverdueReturns, notifyReturn } from "@/features/returns/server";
 import { indexer } from "@/features/search/server";
 import { hasStateFailures, prismaExpiryDeps, runLicenceExpiryCheck } from "@/features/shops/licence-expiry";
@@ -52,6 +54,24 @@ export const handlers: Handlers = {
       const result = await notifyOrderPlaced(orderId);
       console.info("[worker] orders.notify-placed", orderId, result);
     }
+  },
+  // Failures (alert not queued) fail the job; the next run picks those shop orders up again.
+  "orders.handover-check": async () => {
+    const result = await checkHandovers(new Date());
+    console.info("[worker] orders.handover-check", JSON.stringify(result));
+    if (result.failures.length) throw new Error(`orders.handover-check: ${result.failures.length} alert(s) not queued`);
+  },
+  // Throws when a channel failed, so pg-boss retries.
+  "orders.notify-overdue": async (jobs) => {
+    for (const job of jobs) {
+      const { shopOrderId } = queues["orders.notify-overdue"].parse(job.data);
+      const result = await notifyOverdue(shopOrderId);
+      console.info("[worker] orders.notify-overdue", shopOrderId, result);
+    }
+  },
+  "payouts.due-check": async () => {
+    const result = await checkPayoutsDue(new Date());
+    console.info("[worker] payouts.due-check", result);
   },
   // US-071: requests the shop left unanswered for 48 h go to the admin (every 15 minutes).
   "returns.escalate-overdue": async () => {

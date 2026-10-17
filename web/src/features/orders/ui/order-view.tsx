@@ -8,7 +8,18 @@ import { formatAddress, formatDhakaTime, formatTk, type OrderView, type ShopOrde
  * request a return and report a problem (US-070, US-072). `itemExtras` adds content under an item by order
  * item id (the reviews feature's "Write a review", US-055).
  */
-export function OrderDetail({ order, placed, itemExtras }: { order: OrderView; placed?: boolean; itemExtras?: Record<string, ReactNode> }) {
+export function OrderDetail({
+  order,
+  placed,
+  itemExtras,
+  shopOrderExtra,
+}: {
+  order: OrderView;
+  placed?: boolean;
+  itemExtras?: Record<string, ReactNode>;
+  /** Extra content per shop order (US-053 timeline and cancel; later returns and complaints). */
+  shopOrderExtra?: (so: ShopOrderView) => ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-6">
       {placed && (
@@ -42,7 +53,7 @@ export function OrderDetail({ order, placed, itemExtras }: { order: OrderView; p
       </section>
 
       {order.shopOrders.map((so) => (
-        <ShopOrderCard key={so.id} orderNo={order.orderNo} shopOrder={so} itemExtras={itemExtras} />
+        <ShopOrderCard key={so.id} orderNo={order.orderNo} shopOrder={so} itemExtras={itemExtras} extra={shopOrderExtra?.(so)} />
       ))}
 
       <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 rounded border-2 border-gray-400 p-4" aria-label="Order total">
@@ -61,10 +72,12 @@ function ShopOrderCard({
   orderNo,
   shopOrder: so,
   itemExtras,
+  extra,
 }: {
   orderNo: string;
   shopOrder: ShopOrderView;
   itemExtras?: Record<string, ReactNode>;
+  extra?: ReactNode;
 }) {
   const headingId = `shop-order-${so.id}`;
   return (
@@ -140,6 +153,7 @@ function ShopOrderCard({
           Report a problem<span className="sr-only"> with {so.shopOrderNo}</span>
         </Link>
       </div>
+      {extra}
     </section>
   );
 }
