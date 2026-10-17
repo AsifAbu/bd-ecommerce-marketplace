@@ -277,7 +277,8 @@ Seeded shops cover both tiers: the Test Book Shop is Basic, the others are Verif
 
 - [ ] Replace guideline timings and policy text with the official Digital Commerce Operation Guidelines 2021 text, and add Bengali terms.
 - [ ] Register the DBID and show it in the footer. Name a compliance officer.
-- [ ] Connect the real SMS provider and disable the dummy OTP.
+- [ ] Connect the real SMS provider and disable the dummy OTP (order confirmation SMS too: the test SMS adapter only logs).
+- [ ] Set the VAT rate printed on invoices (VAT_RATE_PERCENT, 0% while testing) and the launch-offer end date (COMMISSION_LAUNCH_OFFER_UNTIL).
 - [ ] Switch medicine verification to the production procedure.
 - [ ] Decide the final fake-order limits and commission rates.
 - [ ] Remove all seed data and test accounts.
