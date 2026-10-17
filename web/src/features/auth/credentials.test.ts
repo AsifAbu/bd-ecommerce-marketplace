@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { authorizeCredentials, type FindUserByIdentifier } from "./credentials";
+import { fakeThrottleDeps } from "./fake-login-store";
 import { normalizeBdPhone, parseLoginIdentifier } from "./identifier";
+import { createLoginThrottle } from "./login-throttle";
 import { hashPassword } from "./password";
 
 describe("login identifiers", () => {
@@ -43,5 +45,49 @@ describe("authorizeCredentials", async () => {
     await expect(authorizeCredentials({ identifier: 5 }, find)).resolves.toBeNull();
     const suspended: FindUserByIdentifier = async () => ({ ...user, status: "suspended" });
     await expect(authorizeCredentials({ identifier: "c@ecom.test", password: "Test@12345" }, suspended)).resolves.toBeNull();
+  });
+
+  describe("with the login lockout", () => {
+    const login = (identifier: string, password: string, deps: ReturnType<typeof fakeThrottleDeps>, ip: string | null = "1.1.1.1") =>
+      authorizeCredentials({ identifier, password }, find, { throttle: createLoginThrottle(deps), ip });
+
+    it("5 wrong passwords lock the account for 15 minutes, even with the right password", async () => {
+      const deps = fakeThrottleDeps();
+      for (let i = 0; i < 5; i++) await expect(login("c@ecom.test", "wrong", deps)).resolves.toBeNull();
+      await expect(login("c@ecom.test", "Test@12345", deps)).resolves.toBeNull();
+      // The same lock whichever way the identifier is written (mobile or other case).
+      await expect(login("C@Ecom.Test", "Test@12345", deps)).resolves.toBeNull();
+      deps.advance(15 * 60_000);
+      await expect(login("c@ecom.test", "Test@12345", deps)).resolves.toMatchObject({ id: "u1" });
+    });
+
+    it("a locked login is not recorded, so retrying does not extend the lock", async () => {
+      const deps = fakeThrottleDeps();
+      for (let i = 0; i < 5; i++) await login("c@ecom.test", "wrong", deps);
+      await login("c@ecom.test", "wrong", deps);
+      expect(deps.rows).toHaveLength(5);
+    });
+
+    it("unknown accounts are counted and locked the same way (no account probing)", async () => {
+      const deps = fakeThrottleDeps();
+      for (let i = 0; i < 5; i++) await login("nobody@ecom.test", "x", deps);
+      expect(deps.rows.map((r) => r.identifier)).toEqual(Array(5).fill("email:nobody@ecom.test"));
+      expect(deps.rows[0].ip).toBe("1.1.1.1");
+    });
+
+    it("a successful login clears earlier failures", async () => {
+      const deps = fakeThrottleDeps();
+      for (let i = 0; i < 4; i++) await login("01700000002", "wrong", deps);
+      await expect(login("01700000002", "Test@12345", deps)).resolves.toMatchObject({ id: "u1" });
+      expect(deps.rows).toEqual([]);
+      for (let i = 0; i < 4; i++) await login("01700000002", "wrong", deps);
+      await expect(login("01700000002", "Test@12345", deps)).resolves.toMatchObject({ id: "u1" });
+    });
+
+    it("invalid input is rejected without touching the store", async () => {
+      const deps = fakeThrottleDeps();
+      await expect(login("not-an-id", "x", deps)).resolves.toBeNull();
+      expect(deps.rows).toEqual([]);
+    });
   });
 });

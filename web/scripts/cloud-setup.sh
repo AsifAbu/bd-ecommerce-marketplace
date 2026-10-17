@@ -8,6 +8,8 @@ cd "$(dirname "$0")/.."            # web/
 BIN="$HOME/.local/bin"; mkdir -p "$BIN" /tmp/svc
 export PATH="$BIN:$PATH"
 SUDO=""; [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null && SUDO="sudo"
+# Run a command as the postgres OS user (root has no sudo in cloud sessions: use runuser).
+if [ "$(id -u)" -eq 0 ]; then AS_PG="runuser -u postgres --"; else AS_PG="sudo -u postgres"; fi
 warn() { echo "WARN: $*" >&2; }
 
 # Postgres (required for db:push, migrations, seed, e2e)
@@ -15,10 +17,10 @@ if ! command -v psql >/dev/null; then
   $SUDO apt-get update -qq && $SUDO apt-get install -y -qq postgresql >/dev/null || warn "could not install Postgres"
 fi
 $SUDO service postgresql start >/dev/null 2>&1 || warn "could not start Postgres"
-$SUDO -u postgres psql -qtc "SELECT 1 FROM pg_roles WHERE rolname='ecom'" | grep -q 1 \
-  || $SUDO -u postgres psql -qc "CREATE ROLE ecom LOGIN SUPERUSER PASSWORD 'ecom'" || true
-$SUDO -u postgres psql -qtc "SELECT 1 FROM pg_database WHERE datname='ecom'" | grep -q 1 \
-  || $SUDO -u postgres createdb -O ecom ecom || true
+$AS_PG psql -qtc "SELECT 1 FROM pg_roles WHERE rolname='ecom'" | grep -q 1 \
+  || $AS_PG psql -qc "CREATE ROLE ecom LOGIN SUPERUSER PASSWORD 'ecom'" || true
+$AS_PG psql -qtc "SELECT 1 FROM pg_database WHERE datname='ecom'" | grep -q 1 \
+  || $AS_PG createdb -O ecom ecom || true
 
 # Meilisearch (search; used from Sprint 5)
 if [ ! -x "$BIN/meilisearch" ]; then

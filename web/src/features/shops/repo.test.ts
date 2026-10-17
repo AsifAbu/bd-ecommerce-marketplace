@@ -82,3 +82,33 @@ describe("shop-scoped repo", () => {
     expect(db.shopMember.rows.map((m) => m.id)).toEqual(["mA-owner", "mB-staff"]);
   });
 });
+
+describe("acceptInvite (user-scoped)", () => {
+  const invite = { id: "iA", shopId: "A", email: "a@ecom.test" };
+  const addUser = (email: string | null, emailVerifiedAt: Date | null) =>
+    db.user.rows.push({ id: "u1", email, emailVerifiedAt });
+
+  it("adds a verified, matching user as staff of the invite's shop and marks the invite used", async () => {
+    addUser("A@ecom.test", new Date());
+    await repo.acceptInvite("u1", invite);
+    expect(db.shopMember.rows).toContainEqual(expect.objectContaining({ shopId: "A", userId: "u1", role: "staff" }));
+    expect(db.shopInvite.rows.find((i) => i.id === "iA")?.acceptedAt).toBeInstanceOf(Date);
+    expect(db.shopInvite.rows.find((i) => i.id === "iB")?.acceptedAt).toBeNull();
+  });
+
+  it("re-checks the email inside the transaction: unverified or different emails change nothing", async () => {
+    addUser("a@ecom.test", null);
+    await expect(repo.acceptInvite("u1", invite)).rejects.toThrow(/Verify your email/);
+    db.user.rows[0].email = "other@ecom.test";
+    db.user.rows[0].emailVerifiedAt = new Date();
+    await expect(repo.acceptInvite("u1", invite)).rejects.toThrow("Log in as a@ecom.test to accept this invite");
+    expect(db.shopMember.rows.some((m) => m.userId === "u1")).toBe(false);
+    expect(db.shopInvite.rows.find((i) => i.id === "iA")?.acceptedAt).toBeNull();
+  });
+
+  it("getAccountEmail reads only the given user", async () => {
+    addUser("a@ecom.test", null);
+    expect(await repo.getAccountEmail("u1")).toMatchObject({ email: "a@ecom.test" });
+    expect(await repo.getAccountEmail("u2")).toBeNull();
+  });
+});

@@ -110,6 +110,27 @@ test("reset the password by SMS code", async ({ page }) => {
   await expect(page.getByText(`Mobile ${mobile}`)).toContainText("Verified");
 });
 
+test("5 wrong passwords lock the login for 15 minutes, with the same generic error", async ({ page }) => {
+  const mobile = randomMobile();
+  await page.goto("/signup");
+  await page.getByLabel("Full name").fill("E2E Lockout User");
+  await page.getByLabel("Mobile number").fill(mobile);
+  await page.getByLabel("Password").fill("Secret@123");
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("heading", { name: "Verify your mobile number" })).toBeVisible();
+  await page.context().clearCookies();
+
+  const attempt = async (password: string) => {
+    await page.goto("/login");
+    await page.getByLabel("Mobile number or email").fill(mobile);
+    await page.getByLabel("Password").fill(password);
+    await page.getByRole("button", { name: "Log in" }).click();
+    await expect(page.getByText("Wrong mobile number, email or password")).toBeVisible();
+  };
+  for (let i = 0; i < 5; i++) await attempt("Wrong@1234");
+  await attempt("Secret@123"); // right password, but locked
+});
+
 test("a customer cannot use admin user management", async ({ page }) => {
   await login(page, "customer.new@ecom.test");
   const res = await page.request.get("/api/admin/users");

@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { ipFromHeaders } from "@/lib/client-ip";
 import { prisma } from "@/lib/db";
 import { createOtpProvider } from "@/lib/otp";
 import { requirePlatformAdmin } from "@/lib/auth";
@@ -95,6 +96,5 @@ export async function sendTokenEmail(user: { id: string; email: string }, type: 
 
 /** Client IP for rate limits (first X-Forwarded-For hop set by the host's proxy). */
 export async function clientIp(): Promise<string | null> {
-  const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || null;
+  return ipFromHeaders(await headers());
 }

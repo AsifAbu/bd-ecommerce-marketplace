@@ -3,6 +3,7 @@
  * Feature agents extend this file with their own seed blocks.
  * All accounts use the password TEST_PASSWORD and @ecom.test emails.
  * Remove all seed data before release (pre-release checklist).
+ * Refuses to run when APP_MODE is production or unset (see seed-guard.ts).
  */
 import "dotenv/config";
 import { prisma } from "../src/lib/db";
@@ -10,6 +11,7 @@ import { hashPassword } from "../src/features/auth/password";
 import { slugify } from "../src/features/catalog/tree";
 import type { AttributeType, FilterWidget } from "../src/generated/prisma/enums";
 import { getStorage } from "../src/lib/storage";
+import { assertSeedAllowed } from "./seed-guard";
 
 export const TEST_PASSWORD = "Test@12345";
 
@@ -29,7 +31,9 @@ async function seedUsers() {
     {
       email: "customer.verified@ecom.test",
       phone: "+8801700000002",
-      name: "[TEST] Customer, verified phone",
+      name: "[TEST] Customer, verified phone and email",
+      // Verified email too: the shops e2e test invites this account as staff, which needs it.
+      emailVerifiedAt: now,
       phoneVerifiedAt: now,
     },
     {
@@ -443,6 +447,7 @@ async function seedAccounts() {
 }
 
 async function main() {
+  assertSeedAllowed();
   await seedUsers();
   await seedCatalog();
   await seedShops();
