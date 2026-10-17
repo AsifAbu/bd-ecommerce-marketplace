@@ -1,18 +1,16 @@
-/** Thrown by guards. Route handlers map these to 401 / 403 with the standard error shape. */
-export class UnauthorizedError extends Error {
-  readonly status = 401;
-  readonly code = "UNAUTHORIZED";
+import { AppError } from "@/lib/errors";
+
+/** Thrown by guards. Route handlers and server actions map these to 401 / 403 with the standard error shape. */
+export class UnauthorizedError extends AppError {
   constructor(message = "Login required") {
-    super(message);
+    super(401, "UNAUTHORIZED", message);
     this.name = "UnauthorizedError";
   }
 }
 
-export class ForbiddenError extends Error {
-  readonly status = 403;
-  readonly code = "FORBIDDEN";
+export class ForbiddenError extends AppError {
   constructor(message = "Not allowed") {
-    super(message);
+    super(403, "FORBIDDEN", message);
     this.name = "ForbiddenError";
   }
 }

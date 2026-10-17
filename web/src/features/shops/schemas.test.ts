@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { applicationSchema, fieldErrors, nidSchema, upgradeSchema, type SchemaContext } from "./schemas";
+import { fieldErrors } from "@/lib/actions";
+import { applicationSchema, nidSchema, upgradeSchema, type SchemaContext } from "./schemas";
 
 const now = new Date("2026-10-16T06:00:00Z");
 const prod: SchemaContext = { testMode: false, now };

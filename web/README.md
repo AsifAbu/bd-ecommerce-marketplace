@@ -26,13 +26,14 @@ Change host ports in `.env` if any are busy.
 
 `APP_MODE=test` shows a "Test mode" banner on every page. No SMS is sent: the OTP code is always **123456**.
 The app refuses to start with `APP_MODE=production` and the dummy OTP enabled.
+`npm run seed` refuses to run unless `APP_MODE=test` (an unset `APP_MODE` means production); set `ALLOW_PRODUCTION_SEED=true` only to seed a production-mode database on purpose.
 
 Seeded accounts (password `Test@12345`). Log in at `/api/auth/signin` with mobile or email:
 
 | Account | Email | Mobile |
 | --- | --- | --- |
 | Platform Admin | admin@ecom.test | 01700000001 |
-| Customer, verified phone | customer.verified@ecom.test | 01700000002 |
+| Customer, verified phone and email | customer.verified@ecom.test | 01700000002 |
 | Customer, new | customer.new@ecom.test | (none) |
 | Customer, past COD refusals | customer.flagged@ecom.test | 01700000003 |
 

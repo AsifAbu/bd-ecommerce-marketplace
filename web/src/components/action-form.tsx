@@ -1,62 +1,87 @@
 "use client";
 
 import { createContext, startTransition, use, useActionState, useId, type ReactNode } from "react";
-import type { ActionResult } from "../action-result";
+import { resultFields, type ActionResult } from "@/lib/actions";
+import { buttonClass, dangerButtonClass, inputClass } from "./form-styles";
 
 type Action = (prev: ActionResult, formData: FormData) => Promise<ActionResult>;
 
 const FieldErrors = createContext<Record<string, string>>({});
 
-export const inputClass =
-  "w-full rounded border border-gray-400 px-3 py-2 text-base focus:outline-2 focus:outline-offset-1 focus:outline-blue-700 aria-invalid:border-red-700";
-const buttonClass =
-  "rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 disabled:opacity-60";
-
-/** A form bound to a shops server action, with a status message and per-field errors. */
+/**
+ * A form bound to a server action that returns an ActionResult (see @/lib/actions), with a status
+ * message and per-field errors (shown by <Field>, or as a list with `listFieldErrors`).
+ */
 export function ActionForm({
   action,
   submitLabel,
   children,
   className = "flex flex-col gap-3",
   variant = "primary",
+  label,
+  listFieldErrors = false,
+  resetOnSubmit = false,
+  nativeValidation = false,
 }: {
   action: Action;
-  submitLabel: string;
+  /** Renders the submit button. Leave it out when the children have their own buttons. */
+  submitLabel?: string;
   children?: ReactNode;
   className?: string;
   variant?: "primary" | "danger";
+  /** Accessible name of the form. */
+  label?: string;
+  /** List field errors under the message (for forms without <Field>). */
+  listFieldErrors?: boolean;
+  /** Let React reset the fields after each submit (default: keep what was typed). */
+  resetOnSubmit?: boolean;
+  /** Let the browser check `required` etc. before submitting (default: the server validates). */
+  nativeValidation?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
-  const fields = state && "error" in state ? (state.error.fields ?? {}) : {};
+  const fields = resultFields(state);
   return (
     <form
       action={formAction}
       // Submit manually so React does not reset the fields after an error.
-      onSubmit={(e) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        startTransition(() => formAction(formData));
-      }}
+      onSubmit={
+        resetOnSubmit
+          ? undefined
+          : (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget, (e.nativeEvent as SubmitEvent).submitter);
+              startTransition(() => formAction(formData));
+            }
+      }
       className={className}
-      noValidate
+      aria-label={label}
+      aria-busy={pending}
+      noValidate={!nativeValidation}
     >
       <FieldErrors value={fields}>{children}</FieldErrors>
-      <div>
-        <button
-          type="submit"
-          disabled={pending}
-          className={variant === "danger" ? buttonClass.replace(/blue-(700|800)/g, "red-$1") : buttonClass}
-        >
-          {pending ? "Please wait…" : submitLabel}
-        </button>
-      </div>
+      {submitLabel && (
+        <div>
+          <button type="submit" disabled={pending} className={variant === "danger" ? dangerButtonClass : buttonClass}>
+            {pending ? "Please wait…" : submitLabel}
+          </button>
+        </div>
+      )}
       {state && "error" in state && (
-        <p role="alert" className="text-sm font-medium text-red-700">
-          {state.error.message}
-        </p>
+        <div role="alert" className="w-full text-sm font-medium text-red-700">
+          <p>{state.error.message}</p>
+          {listFieldErrors && Object.keys(fields).length > 0 && (
+            <ul className="list-disc pl-5 font-normal">
+              {Object.entries(fields).map(([field, message]) => (
+                <li key={field}>
+                  {field}: {message}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
       {state && "ok" in state && (
-        <p role="status" className="text-sm font-medium text-green-800">
+        <p role="status" className="w-full text-sm font-medium text-green-800">
           {state.message}
         </p>
       )}
@@ -75,7 +100,7 @@ type FieldProps = {
   | { as: "select"; options: { value: string; label: string }[]; defaultValue?: string; onChange?: (v: string) => void }
 );
 
-/** Labelled input with its error message (aria-invalid / aria-describedby). */
+/** Labelled input inside an <ActionForm>, with its error message (aria-invalid / aria-describedby). */
 export function Field(props: FieldProps) {
   const id = useId();
   const error = use(FieldErrors)[props.name];

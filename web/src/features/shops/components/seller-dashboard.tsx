@@ -5,7 +5,7 @@ import { storefrontPath } from "@/lib/storefront-link";
 import { inviteStaff, removeStaff, requestUpgrade, updateProfile, uploadLicence } from "../actions";
 import * as repo from "../repo";
 import { REGISTRATION_TYPE_LABELS, REGISTRATION_TYPES, SHOP_TYPE_LABELS } from "../schemas";
-import { ActionForm, Field } from "./action-form";
+import { ActionForm, Field } from "@/components/action-form";
 import { ShareStorefront } from "./share-storefront";
 
 const FILE_HINT = "PDF, JPG, PNG or WebP, up to 4 MB. In test mode any file is accepted.";

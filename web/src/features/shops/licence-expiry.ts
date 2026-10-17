@@ -18,32 +18,97 @@ export interface ExpiryDeps {
   notify: (mail: Mail) => Promise<void>;
 }
 
-export async function runLicenceExpiryCheck(now: Date, deps: ExpiryDeps) {
+/** A step that failed for one licence or shop ("suspend" ids are shop ids, "admins" has no id). */
+export interface ExpiryFailure {
+  step: "suspend" | "expire" | "warn" | "admins" | "notify";
+  id: string;
+  error: string;
+}
+
+export interface ExpiryResult {
+  /** Counts of state changes that were saved. */
+  expired: number;
+  suspended: number;
+  warned: number;
+  /** Emails sent. */
+  notified: number;
+  failures: ExpiryFailure[];
+}
+
+/** State-change failures (as opposed to email failures): the job should be retried. */
+export const hasStateFailures = (result: ExpiryResult) => result.failures.some((f) => f.step !== "notify" && f.step !== "admins");
+
+/**
+ * Two phases, so a failed email can never leave a lapsed shop selling medicine:
+ *  1. State changes, each on its own (one failure does not stop the others):
+ *     suspend shops first, then expire licences. A licence whose shop could not be suspended stays
+ *     "verified", so the next run picks it up and tries the suspension again.
+ *  2. Emails, only for changes that were saved. A failed email is logged and reported, not retried.
+ */
+export async function runLicenceExpiryCheck(
+  now: Date,
+  deps: ExpiryDeps,
+  logError: (message: string, err: unknown) => void = console.error,
+): Promise<ExpiryResult> {
   const { toExpire, toWarn, shopsToSuspend } = classifyLicences(await deps.findVerifiedLicences(), now);
-  const result = { expired: toExpire.length, suspended: shopsToSuspend.length, warned: toWarn.length };
+  const result: ExpiryResult = { expired: 0, suspended: 0, warned: 0, notified: 0, failures: [] };
   if (toExpire.length === 0 && toWarn.length === 0) return result;
 
-  const admins = await deps.findAdminEmails();
+  const attempt = async (step: ExpiryFailure["step"], id: string, fn: () => Promise<unknown>) => {
+    try {
+      await fn();
+      return true;
+    } catch (err) {
+      result.failures.push({ step, id, error: err instanceof Error ? err.message : String(err) });
+      logError(`[shops.licence-expiry] ${step} failed${id ? ` for ${id}` : ""}`, err);
+      return false;
+    }
+  };
+
+  // Phase 1: state changes.
+  const suspended: string[] = [];
+  for (const shopId of shopsToSuspend) {
+    if (await attempt("suspend", shopId, () => deps.suspendMedicine(shopId))) suspended.push(shopId);
+  }
+  const notSuspended = new Set(shopsToSuspend.filter((id) => !suspended.includes(id)));
+  for (const l of toExpire) {
+    if (notSuspended.has(l.shopId)) continue; // retried next run, together with the suspension
+    if (await attempt("expire", l.id, () => deps.expire(l))) result.expired++;
+  }
+  result.suspended = suspended.length;
+  const warned: ExpiryLicence[] = [];
+  for (const l of toWarn) {
+    if (await attempt("warn", l.id, () => deps.markWarned(l, now))) warned.push(l);
+  }
+  result.warned = warned.length;
+
+  // Phase 2: emails.
+  let admins: string[] = [];
+  await attempt("admins", "", async () => {
+    admins = await deps.findAdminEmails();
+  });
   const recipients = (l: ExpiryLicence) => [...(l.shop.owner.email ? [l.shop.owner.email] : []), ...admins];
   const date = (d: Date) => d.toISOString().slice(0, 10);
+  const send = async (l: ExpiryLicence, subject: string, text: string) => {
+    const to = recipients(l);
+    if (to.length === 0) return;
+    if (await attempt("notify", l.id, () => deps.notify({ to, subject, text }))) result.notified++;
+  };
 
-  for (const l of toExpire) await deps.expire(l);
-  for (const shopId of shopsToSuspend) {
-    await deps.suspendMedicine(shopId);
+  for (const shopId of suspended) {
     const l = toExpire.find((x) => x.shopId === shopId)!;
-    await deps.notify({
-      to: recipients(l),
-      subject: `Medicine licence expired: ${l.shop.name}`,
-      text: `The drug licence ${l.licenceNo} of ${l.shop.name} expired on ${date(l.expiryDate)}.\nMedicine selling is suspended until a new certificate is uploaded and verified.`,
-    });
+    await send(
+      l,
+      `Medicine licence expired: ${l.shop.name}`,
+      `The drug licence ${l.licenceNo} of ${l.shop.name} expired on ${date(l.expiryDate)}.\nMedicine selling is suspended until a new certificate is uploaded and verified.`,
+    );
   }
-  for (const l of toWarn) {
-    await deps.markWarned(l, now);
-    await deps.notify({
-      to: recipients(l),
-      subject: `Medicine licence expires soon: ${l.shop.name}`,
-      text: `The drug licence ${l.licenceNo} of ${l.shop.name} expires on ${date(l.expiryDate)}.\nUpload a renewed certificate before then to keep selling medicine.`,
-    });
+  for (const l of warned) {
+    await send(
+      l,
+      `Medicine licence expires soon: ${l.shop.name}`,
+      `The drug licence ${l.licenceNo} of ${l.shop.name} expires on ${date(l.expiryDate)}.\nUpload a renewed certificate before then to keep selling medicine.`,
+    );
   }
   return result;
 }

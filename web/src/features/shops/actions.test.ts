@@ -40,6 +40,7 @@ vi.mock("./repo", () => ({
   isSlugTaken: vi.fn(async () => false),
   createShopApplication: vi.fn(async () => ({ id: "new-shop" })),
   findInviteByTokenHash: vi.fn(),
+  getAccountEmail: vi.fn(),
   acceptInvite: vi.fn(),
   adminGetShop: vi.fn(),
   adminGetLicence: vi.fn(),
@@ -265,5 +266,54 @@ describe("application and upgrade", () => {
     repo.getShop.mockResolvedValue(shopRow({ tier: "verified" }));
     const fd = form({ shopId: "A", registrationType: "tin", registrationNo: "TL-1", registrationDoc: pdf() });
     expect(await actions.requestUpgrade(undefined, fd)).toMatchObject({ error: { code: "CONFLICT" } });
+  });
+});
+
+describe("acceptInvite (US-013)", () => {
+  const invite = { id: "i1", shopId: "A", email: "staff.new@ecom.test", acceptedAt: null, expiresAt: new Date("2099-01-01") };
+  const verifiedAt = new Date("2026-10-01");
+
+  beforeEach(() => {
+    as("customer");
+    repo.findInviteByTokenHash.mockResolvedValue(invite as never);
+  });
+
+  it("a verified account with the invited email joins the shop", async () => {
+    repo.getAccountEmail.mockResolvedValue({ email: "Staff.New@ecom.test", emailVerifiedAt: verifiedAt });
+    await expect(actions.acceptInvite(undefined, form({ token: "t" }))).rejects.toMatchObject({ url: "/seller/A" });
+    expect(repo.getAccountEmail).toHaveBeenCalledWith("customer");
+    expect(repo.acceptInvite).toHaveBeenCalledWith("customer", invite);
+  });
+
+  it("an unverified email is rejected with the verify-email path", async () => {
+    repo.getAccountEmail.mockResolvedValue({ email: "staff.new@ecom.test", emailVerifiedAt: null });
+    expect(await actions.acceptInvite(undefined, form({ token: "t" }))).toEqual({
+      error: { code: "CONFLICT", message: expect.stringMatching(/^Verify your email.*account page/) },
+    });
+    expect(repo.acceptInvite).not.toHaveBeenCalled();
+  });
+
+  it("another account's email is rejected", async () => {
+    repo.getAccountEmail.mockResolvedValue({ email: "someone.else@ecom.test", emailVerifiedAt: verifiedAt });
+    expect(await actions.acceptInvite(undefined, form({ token: "t" }))).toEqual({
+      error: { code: "CONFLICT", message: "Log in as staff.new@ecom.test to accept this invite" },
+    });
+    expect(repo.acceptInvite).not.toHaveBeenCalled();
+  });
+
+  it("a used or expired invite is rejected", async () => {
+    repo.getAccountEmail.mockResolvedValue({ email: invite.email, emailVerifiedAt: verifiedAt });
+    repo.findInviteByTokenHash.mockResolvedValue({ ...invite, expiresAt: new Date("2020-01-01") } as never);
+    expect(await actions.acceptInvite(undefined, form({ token: "t" }))).toMatchObject({
+      error: { message: "This invite link is invalid or has expired" },
+    });
+    repo.findInviteByTokenHash.mockResolvedValue(null);
+    expect(await actions.acceptInvite(undefined, form({ token: "t" }))).toMatchObject({ error: { code: "CONFLICT" } });
+    expect(repo.acceptInvite).not.toHaveBeenCalled();
+  });
+
+  it("a guest is asked to log in", async () => {
+    as(null);
+    expect(await actions.acceptInvite(undefined, form({ token: "t" }))).toMatchObject({ error: { code: "UNAUTHORIZED" } });
   });
 });
