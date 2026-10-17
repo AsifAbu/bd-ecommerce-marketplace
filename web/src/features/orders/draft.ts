@@ -27,6 +27,8 @@ export interface ItemFacts {
   categoryId: string;
   /** Category commission rate in percent (D10). */
   commissionRate: number;
+  /** The listing's return_eligibility (eligible, change_of_mind, excluded), kept for returns (US-070). */
+  returnEligibility?: string | null;
 }
 
 export interface ShopFacts {
@@ -51,6 +53,7 @@ export interface DraftItem {
   unitWeightGrams: number;
   warranty: string | null;
   commissionRate: string;
+  returnEligibility?: string | null;
 }
 
 export interface DraftShopOrder {
@@ -165,6 +168,7 @@ export function buildOrderDraft(input: DraftInput): OrderDraft {
         unitWeightGrams: Math.round(line.unitWeightGrams),
         warranty: facts.warranty,
         commissionRate: rate.toFixed(2),
+        returnEligibility: facts.returnEligibility,
       };
     });
     const delivery = toPaisa(group.deliveryCharge);

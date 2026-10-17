@@ -4,8 +4,8 @@ import { formatAddress, formatDhakaTime, formatTk, type OrderView, type ShopOrde
 
 /**
  * One customer order (confirmation, My orders detail, guest tracking): every shop order with its
- * status, items, delivery charge and total, a printable invoice per shop order, and the places
- * reserved for returns and complaints (Sprint 7). `itemExtras` adds content under an item by order
+ * status, items, delivery charge and total, a printable invoice per shop order, and the links to
+ * request a return and report a problem (US-070, US-072). `itemExtras` adds content under an item by order
  * item id (the reviews feature's "Write a review", US-055).
  */
 export function OrderDetail({ order, placed, itemExtras }: { order: OrderView; placed?: boolean; itemExtras?: Record<string, ReactNode> }) {
@@ -130,13 +130,15 @@ function ShopOrderCard({
         <Link className="text-blue-800 underline" href={`/orders/${orderNo}/invoice/${so.id}`}>
           Print invoice
         </Link>
-        {/* Sprint 7 (US-070, US-072): returns and complaints from the order page. */}
-        <span className="text-gray-700" aria-disabled="true">
-          Request a return (coming soon)
-        </span>
-        <span className="text-gray-700" aria-disabled="true">
-          Raise a complaint (coming soon)
-        </span>
+        {/* US-070 and US-072: returns (delivered shop orders, 7 days) and complaints, also for guests with the order open. */}
+        {so.status === "delivered" && (
+          <Link className="text-blue-800 underline" href={`/orders/${orderNo}/return?shopOrder=${so.id}`}>
+            Request a return<span className="sr-only"> from {so.shopOrderNo}</span>
+          </Link>
+        )}
+        <Link className="text-blue-800 underline" href={`/orders/${orderNo}/complaint?shopOrder=${so.id}`}>
+          Report a problem<span className="sr-only"> with {so.shopOrderNo}</span>
+        </Link>
       </div>
     </section>
   );

@@ -76,6 +76,7 @@ export async function itemFacts(variantIds: string[]): Promise<Map<string, ItemF
   return new Map(
     rows.map((v) => {
       const warranty = isRecord(v.product.attributes) ? v.product.attributes.warranty : undefined;
+      const returns = isRecord(v.product.attributes) ? v.product.attributes.return_eligibility : undefined;
       return [
         v.id,
         {
@@ -83,6 +84,7 @@ export async function itemFacts(variantIds: string[]): Promise<Map<string, ItemF
           warranty: typeof warranty === "string" && warranty.trim() ? warranty.trim() : null,
           categoryId: v.product.categoryId,
           commissionRate: Number(v.product.category.commissionRate.toString()),
+          returnEligibility: typeof returns === "string" ? returns : null,
         },
       ];
     }),
@@ -166,6 +168,7 @@ export async function place(draft: OrderDraft, owner: CartOwner, cartItemIds: st
                   unitWeightGrams: i.unitWeightGrams,
                   warranty: i.warranty,
                   commissionRate: i.commissionRate,
+                  returnEligibility: i.returnEligibility ?? null,
                 })),
               },
             })),

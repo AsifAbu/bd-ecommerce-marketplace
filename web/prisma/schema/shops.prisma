@@ -105,6 +105,10 @@ model Shop {
   // reviews relations
   reviews Review[]
 
+  // returns and complaints relations
+  returnRequests   ReturnRequest[]
+  complaintTickets ComplaintTicket[]
+
   @@index([status])
   @@index([ownerId])
   @@map("shop")

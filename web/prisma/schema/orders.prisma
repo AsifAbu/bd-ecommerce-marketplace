@@ -62,6 +62,10 @@ model Order {
   user       User?       @relation(fields: [userId], references: [id], onDelete: Restrict)
   shopOrders ShopOrder[]
 
+  // returns and complaints relations
+  returnRequests   ReturnRequest[]
+  complaintTickets ComplaintTicket[]
+
   @@index([userId, placedAt])
   @@index([contactPhone])
   @@index([contactEmail])
@@ -103,6 +107,10 @@ model ShopOrder {
   shop  Shop        @relation(fields: [shopId], references: [id], onDelete: Restrict)
   items OrderItem[]
 
+  // returns and complaints relations
+  returnRequests   ReturnRequest[]
+  complaintTickets ComplaintTicket[]
+
   @@unique([orderId, shopId])
   @@index([shopId, status])
   @@index([shopId, createdAt])
@@ -129,12 +137,19 @@ model OrderItem {
   commissionRate  Decimal  @map("commission_rate") @db.Decimal(5, 2)
   createdAt       DateTime @default(now()) @map("created_at")
 
+  // The listing's return_eligibility when it was bought (eligible, change_of_mind, excluded), so a
+  // later listing edit never changes the return rules of an order (US-070). Null on older rows.
+  returnEligibility String? @map("return_eligibility")
+
   shopOrder ShopOrder       @relation(fields: [shopOrderId], references: [id], onDelete: Restrict)
   product   Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
   variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
 
   // reviews relations
   review Review?
+
+  // returns relations
+  returnRequests ReturnRequest[]
 
   @@index([shopOrderId])
   @@index([productId])
