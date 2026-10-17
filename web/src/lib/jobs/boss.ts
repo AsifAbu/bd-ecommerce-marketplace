@@ -27,9 +27,18 @@ function getSender(): Promise<PgBoss> {
   return globalForBoss.bossReady;
 }
 
+/** Retry settings a job may pass (pg-boss defaults: 2 retries, no delay). */
+export interface JobRetryOptions {
+  retryLimit?: number;
+  /** Seconds before the first retry. */
+  retryDelay?: number;
+  /** Double the delay on each retry. */
+  retryBackoff?: boolean;
+}
+
 /** Enqueue a job with a validated payload. Returns the job id. */
-export async function sendJob<Q extends QueueName>(name: Q, data: JobData<Q>): Promise<string | null> {
+export async function sendJob<Q extends QueueName>(name: Q, data: JobData<Q>, options?: JobRetryOptions): Promise<string | null> {
   const payload = queues[name].parse(data);
   const boss = await getSender();
-  return boss.send(name, payload);
+  return options ? boss.send(name, payload, options) : boss.send(name, payload);
 }

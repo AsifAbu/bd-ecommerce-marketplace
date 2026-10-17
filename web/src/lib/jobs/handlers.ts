@@ -1,5 +1,6 @@
 import type { Job } from "pg-boss";
 import { purgeStaleGuestCarts } from "@/features/cart/purge";
+import { notifyOrderPlaced } from "@/features/orders/server";
 import { refreshLiveCounts } from "@/features/products/live-counts";
 import { indexer } from "@/features/search/server";
 import { hasStateFailures, prismaExpiryDeps, runLicenceExpiryCheck } from "@/features/shops/licence-expiry";
@@ -41,5 +42,13 @@ export const handlers: Handlers = {
   "search.reindex-all": async () => {
     const result = await indexer.reindexAll();
     console.info("[worker] search.reindex-all", result);
+  },
+  // Throws when the SMS or email failed, so pg-boss retries; channels already sent are skipped.
+  "orders.notify-placed": async (jobs) => {
+    for (const job of jobs) {
+      const { orderId } = queues["orders.notify-placed"].parse(job.data);
+      const result = await notifyOrderPlaced(orderId);
+      console.info("[worker] orders.notify-placed", orderId, result);
+    }
   },
 };

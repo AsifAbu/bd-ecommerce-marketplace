@@ -1,3 +1,4 @@
+import { linkGuestOrdersFor } from "@/features/orders/server";
 import { prisma } from "@/lib/db";
 import { tokenService } from "./services";
 
@@ -9,5 +10,7 @@ export async function verifyEmailFromLink(token: string): Promise<boolean> {
     where: { id: res.token.userId, email: res.token.email },
     data: { emailVerifiedAt: new Date() },
   });
+  // US-009: guest orders placed with this email join the account now that it is verified.
+  if (count === 1) await linkGuestOrdersFor(res.token.userId);
   return count === 1;
 }

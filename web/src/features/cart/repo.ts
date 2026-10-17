@@ -1,6 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { liveProductWhere } from "@/features/products";
 import { prisma } from "@/lib/db";
+import { ownerWhere } from "./owner";
 import type { CartOwner, ItemChanges, NewItem } from "./service";
 
 /**
@@ -9,9 +10,7 @@ import type { CartOwner, ItemChanges, NewItem } from "./service";
  * customer or device can never read or change another's cart.
  */
 
-export function ownerWhere(owner: CartOwner): Prisma.CartItemWhereInput {
-  return owner.kind === "user" ? { userId: owner.userId } : { guestToken: owner.guestToken, userId: null };
-}
+export { ownerWhere };
 
 function ownerData(owner: CartOwner) {
   return owner.kind === "user" ? { userId: owner.userId, guestToken: null } : { userId: null, guestToken: owner.guestToken };

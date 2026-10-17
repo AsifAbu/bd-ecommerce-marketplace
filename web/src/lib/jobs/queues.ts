@@ -11,6 +11,8 @@ export const queues = {
   "cart.purge-guest-carts": z.object({}),
   "search.reindex-product": z.object({ productIds: z.array(z.string().min(1)).min(1).max(500) }),
   "search.reindex-all": z.object({}),
+  // One SMS + one email invoice for a placed order (US-051); retried until both are sent.
+  "orders.notify-placed": z.object({ orderId: z.string().min(1).max(64) }),
 } as const;
 
 export type QueueName = keyof typeof queues;
