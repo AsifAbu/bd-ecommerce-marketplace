@@ -4,7 +4,7 @@ import { TIER_LIMITS } from "@/lib/shop-tiers";
 import { inviteStaff, removeStaff, requestUpgrade, updateProfile, uploadLicence } from "../actions";
 import * as repo from "../repo";
 import { REGISTRATION_TYPE_LABELS, REGISTRATION_TYPES, SHOP_TYPE_LABELS } from "../schemas";
-import { ActionForm, Field } from "./action-form";
+import { ActionForm, Field } from "@/components/action-form";
 
 const FILE_HINT = "PDF, JPG, PNG or WebP, up to 4 MB. In test mode any file is accepted.";
 const date = (d: Date) => d.toISOString().slice(0, 10);

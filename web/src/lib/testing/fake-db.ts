@@ -4,7 +4,8 @@
  *
  * `where` supports equality (null matches a missing field), the operators in / notIn / not /
  * gt / gte / lt / lte / equals, AND / OR / NOT, and to-one relation filters by the `<name>Id`
- * convention (e.g. `{ shop: { status: "approved" } }` on a row with `shopId`).
+ * convention (e.g. `{ shop: { status: "approved" } }` on a row with `shopId`), and compound unique
+ * keys (e.g. `{ shopId_userId: { shopId, userId } }`).
  * include / select / orderBy and nested writes are ignored.
  */
 export type Row = Record<string, unknown>;
@@ -59,6 +60,10 @@ function matches(row: Row, where: Where | undefined, tables: Tables): boolean {
       const target = related.rows.find((r) => r.id === row[`${key}Id`]);
       return !!target && matches(target, cond, tables);
     }
+    // Compound unique key: its fields live on the row itself.
+    if (isObject(cond) && !(key in row) && !Object.keys(cond).every((k) => OPERATORS.has(k))) {
+      return matches(row, cond, tables);
+    }
     return fieldMatches(row[key], cond);
   });
 }
@@ -89,6 +94,10 @@ function table(rows: Row[], tables: Tables, name: string) {
       const row = find(where)[0];
       if (!row) throw new Error(`fake-db: no ${name} row to update`);
       return Object.assign(row, data);
+    },
+    upsert: async ({ where, create: data, update }: { where: Where; create: Row; update: Row }) => {
+      const row = find(where)[0];
+      return row ? Object.assign(row, update) : create({ data });
     },
     updateMany: async ({ where, data }: { where?: Where; data: Row }) => {
       const hit = find(where);

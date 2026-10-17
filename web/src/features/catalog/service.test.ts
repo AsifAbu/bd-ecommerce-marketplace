@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // A tiny in-memory stand-in for the Prisma calls these service functions make.
 const db = vi.hoisted(() => {
   type Row = Record<string, unknown> & { id: string };
-  const state = { categories: [] as Row[], attributes: [] as Row[], audit: [] as Row[] };
+  const state = { categories: [] as Row[], attributes: [] as Row[], options: [] as Row[], requests: [] as Row[], audit: [] as Row[] };
   const table = (rows: () => Row[]) => ({
     // Copies, like Prisma: later updates don't change rows the caller already read.
     findUnique: async ({ where }: { where: { id: string } }) => {
@@ -24,6 +24,19 @@ const db = vi.hoisted(() => {
   const client = {
     category: table(() => state.categories),
     attribute: table(() => state.attributes),
+    attributeOption: {
+      ...table(() => state.options),
+      delete: async ({ where }: { where: { id: string } }) => {
+        state.options = state.options.filter((r) => r.id !== where.id);
+      },
+      deleteMany: async ({ where }: { where: Record<string, unknown> }) => {
+        const keep = state.options.filter((r) => !Object.entries(where).every(([k, v]) => r[k] === v));
+        const count = state.options.length - keep.length;
+        state.options = keep;
+        return { count };
+      },
+    },
+    categoryRequest: table(() => state.requests),
     auditLog: { create: async ({ data }: { data: Row }) => state.audit.push(data) },
     $transaction: <T>(fn: (tx: unknown) => Promise<T>) => fn(client),
   };
@@ -51,6 +64,10 @@ beforeEach(() => {
     cat("books", null, "/books/"),
   ];
   db.state.attributes = [{ id: "socket", key: "socket", name: "Socket", type: "enum", archivedAt: null }];
+  db.state.options = [{ id: "am5", attributeId: "socket", value: "am5", label: "AM5", status: "pending" }];
+  db.state.requests = [
+    { id: "r1", kind: "enum_option", status: "pending", attributeId: "socket", optionId: "am5", name: "AM5" },
+  ];
   db.state.audit = [];
 });
 
@@ -90,5 +107,29 @@ describe("archiving", () => {
     expect(byId("cpu").archivedAt).toBeInstanceOf(Date);
     expect(byId("components").isLeaf).toBe(true);
     expect(db.client.category.delete).not.toHaveBeenCalled();
+  });
+});
+
+describe("decideCategoryRequest (enum option)", () => {
+  const option = () => db.state.options.find((o) => o.id === "am5");
+  const request = () => db.state.requests.find((r) => r.id === "r1")!;
+
+  it("rejecting removes the pending option the request created", async () => {
+    await service.decideCategoryRequest("admin", "r1", false, "Not a real socket");
+    expect(option()).toBeUndefined();
+    expect(request()).toMatchObject({ status: "rejected", decidedById: "admin", decisionNote: "Not a real socket" });
+  });
+
+  it("rejecting never deletes an option an admin already approved", async () => {
+    await service.approveAttributeOption("admin", "am5"); // approved from the attribute page first
+    await service.decideCategoryRequest("admin", "r1", false);
+    expect(option()).toMatchObject({ status: "active" });
+    expect(request()).toMatchObject({ status: "rejected" });
+  });
+
+  it("approving activates the option", async () => {
+    await service.decideCategoryRequest("admin", "r1", true);
+    expect(option()).toMatchObject({ status: "active" });
+    expect(request()).toMatchObject({ status: "approved" });
   });
 });

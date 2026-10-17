@@ -3,7 +3,7 @@
 ## Repo layout
 - Root: `docs/` (Word deliverables, don't touch), `.claude/` (knowledge), `.github/workflows/ci.yml`, `web/` (the app).
 - `web/src/app/` routes only (thin). `web/src/features/<feature>/` holds a feature's UI, server actions, services, Zod schemas and tests (`auth`, `shops`, `catalog-schema`, `products`, `cart`, `checkout`...).
-- `web/src/lib/` shared code: `config.ts` (APP_MODE), `startup-guard.ts`, `db.ts` (Prisma), `auth/` (guards), `otp/` (adapter), `jobs/` (pg-boss). `web/src/components/` shared UI. `web/src/auth.ts` Auth.js config.
+- `web/src/lib/` shared code: `config.ts` (APP_MODE), `startup-guard.ts`, `db.ts` (Prisma), `auth/` (guards), `otp/` (adapter), `jobs/` (pg-boss), `errors.ts` (`AppError`, `toErrorBody`), `actions/` (`runAction`, `ActionResult`, `parseForm`, `ValidationError`), `client-ip.ts`. `web/src/components/` shared UI (`action-form.tsx` with `ActionForm`/`Field`, `form-styles.ts`). `web/src/auth.ts` Auth.js config.
 - Never import from another feature's internals; move shared code to `src/lib/`.
 
 ## Database and Prisma
@@ -21,7 +21,8 @@
 
 ## Auth and roles
 - Login: mobile or email + password (`src/auth.ts`, JWT session cookie). Guards: `requireUser()`, `requirePlatformAdmin()` from `@/lib/auth`; they throw `UnauthorizedError` (401) / `ForbiddenError` (403) and re-read the user from the DB.
-- Error JSON shape: `{ error: { code, message, fields? } }`.
+- Error JSON shape: `{ error: { code, message, fields? } }`. Throw an `AppError` subclass (feature rule errors extend it); server actions wrap their body in `runAction()` from `@/lib/actions`, route handlers use `toErrorBody()` from `@/lib/errors`.
+- Login lockout (`features/auth/login-throttle.ts`): 5 failed logins per identifier in 15 min lock it for 15 min; e2e tests that log in with wrong passwords should use their own fresh account.
 - Cache Components is on: anything reading cookies/session/env at request time goes inside `<Suspense>` and calls `await connection()` first.
 
 ## Test mode

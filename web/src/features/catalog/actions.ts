@@ -2,37 +2,24 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { parseForm as parse, runAction, type ActionResult } from "@/lib/actions";
 import { requirePlatformAdmin, requireShopRole, requireUser, type GuardUser } from "@/lib/auth";
-import { CatalogError, toErrorBody, type ErrorBody } from "./errors";
 import * as catalog from "./service";
 
-/** Result shown by <ActionForm>. Errors use the standard error shape plus the HTTP status. */
-export type ActionState = { ok?: string; error?: ErrorBody["error"] & { status: number } } | null;
+type Handler = (user: GuardUser, form: FormData) => Promise<string>;
 
-type Handler = (user: GuardUser, form: Record<string, FormDataEntryValue>) => Promise<string>;
-
+/** A server action shown by <ActionForm>: role check first, then the handler, then revalidate. */
 function action(guard: () => Promise<GuardUser>, handler: Handler) {
-  return async (_prev: ActionState, formData: FormData): Promise<ActionState> => {
-    try {
+  return async (_prev: ActionResult, formData: FormData): Promise<ActionResult> =>
+    runAction(async () => {
       const user = await guard(); // role check before any input is read
-      const ok = await handler(user, Object.fromEntries(formData));
+      const message = await handler(user, formData);
       revalidatePath("/", "layout");
-      return { ok };
-    } catch (err) {
-      const { status, body } = toErrorBody(err);
-      return { error: { ...body.error, status } };
-    }
-  };
+      return message;
+    });
 }
 
 const adminAction = (handler: Handler) => action(requirePlatformAdmin, handler);
-
-function parse<T extends z.ZodType>(schema: T, form: Record<string, FormDataEntryValue>): z.infer<T> {
-  const result = schema.safeParse(form);
-  if (result.success) return result.data;
-  const fields = Object.fromEntries(result.error.issues.map((i) => [i.path.join("."), i.message]));
-  throw new CatalogError(422, "VALIDATION", "Please check the form", fields);
-}
 
 const id = z.string().min(1);
 const name = z.string().trim().min(1, "Required").max(80);

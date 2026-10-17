@@ -2,33 +2,32 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { resultFields, resultValues } from "@/lib/actions";
 import { useActionState } from "react";
 import {
   forgotPasswordAction,
   loginAction,
   resetPasswordWithOtpAction,
   resetPasswordWithTokenAction,
-  signUpAction,
-  type FormState,
+  signUpAction
 } from "../actions";
 import { Field, FormMessage, SubmitButton } from "./form-parts";
 
-const initial: FormState = {};
 const formClass = "flex flex-col gap-4";
 
 export function LoginForm() {
   const params = useSearchParams();
-  const [state, action] = useActionState(loginAction, initial);
+  const [state, action] = useActionState(loginAction, undefined);
   return (
     <form action={action} className={formClass} noValidate>
-      {params.get("reset") === "1" && !state.error && (
+      {params.get("reset") === "1" && !(state && "error" in state) && (
         <p role="status" className="rounded border border-green-700 bg-green-50 px-3 py-2 text-green-900">
           Your password was changed. Log in with the new password.
         </p>
       )}
       <FormMessage state={state} />
       <input type="hidden" name="callbackUrl" value={params.get("callbackUrl") ?? "/account"} />
-      <Field label="Mobile number or email" name="identifier" autoComplete="username" required defaultValue={state.values?.identifier} />
+      <Field label="Mobile number or email" name="identifier" autoComplete="username" required defaultValue={resultValues(state).identifier} />
       <Field label="Password" name="password" type="password" autoComplete="current-password" required />
       <SubmitButton>Log in</SubmitButton>
       <p className="text-sm">
@@ -45,9 +44,9 @@ export function LoginForm() {
 }
 
 export function SignUpForm() {
-  const [state, action] = useActionState(signUpAction, initial);
-  const f = state.fields ?? {};
-  const v = state.values ?? {};
+  const [state, action] = useActionState(signUpAction, undefined);
+  const f = resultFields(state);
+  const v = resultValues(state);
   return (
     <form action={action} className={formClass} noValidate>
       <FormMessage state={state} />
@@ -85,7 +84,7 @@ export function SignUpForm() {
 }
 
 export function ForgotPasswordForm() {
-  const [state, action] = useActionState(forgotPasswordAction, initial);
+  const [state, action] = useActionState(forgotPasswordAction, undefined);
   return (
     <form action={action} className={formClass} noValidate>
       <FormMessage state={state} />
@@ -95,8 +94,8 @@ export function ForgotPasswordForm() {
         autoComplete="username"
         required
         hint="Email: we send a reset link. Mobile: we send a code by SMS."
-        error={state.fields?.identifier}
-        defaultValue={state.values?.identifier}
+        error={resultFields(state).identifier}
+        defaultValue={resultValues(state).identifier}
       />
       <SubmitButton>Continue</SubmitButton>
     </form>
@@ -105,13 +104,13 @@ export function ForgotPasswordForm() {
 
 export function ResetPasswordForm() {
   const token = useSearchParams().get("token") ?? "";
-  const [state, action] = useActionState(resetPasswordWithTokenAction, initial);
+  const [state, action] = useActionState(resetPasswordWithTokenAction, undefined);
   if (!token) return <p role="alert">This reset link is incomplete. Ask for a new one.</p>;
   return (
     <form action={action} className={formClass} noValidate>
       <FormMessage state={state} />
       <input type="hidden" name="token" value={token} />
-      <Field label="New password" name="password" type="password" autoComplete="new-password" required hint="At least 8 characters." error={state.fields?.password} />
+      <Field label="New password" name="password" type="password" autoComplete="new-password" required hint="At least 8 characters." error={resultFields(state).password} />
       <SubmitButton>Change password</SubmitButton>
     </form>
   );
@@ -119,8 +118,8 @@ export function ResetPasswordForm() {
 
 export function ResetPasswordSmsForm() {
   const phone = useSearchParams().get("phone") ?? "";
-  const [state, action] = useActionState(resetPasswordWithOtpAction, initial);
-  const f = state.fields ?? {};
+  const [state, action] = useActionState(resetPasswordWithOtpAction, undefined);
+  const f = resultFields(state);
   return (
     <form action={action} className={formClass} noValidate>
       <p role="status">If an account uses this mobile number, we sent a 6-digit code by SMS. It works for 5 minutes.</p>
