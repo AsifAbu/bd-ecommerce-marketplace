@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applicationSchema, fieldErrors, nidSchema, upgradeSchema, type SchemaContext } from "./schemas";
+import { applicationSchema, fieldErrors, nidSchema, profileSchema, upgradeSchema, type SchemaContext } from "./schemas";
 
 const now = new Date("2026-10-16T06:00:00Z");
 const prod: SchemaContext = { testMode: false, now };
@@ -89,5 +89,23 @@ describe("Verified upgrade", () => {
 
   it.each(["trade_licence", "vat", "tin", "ubid", "pra", "dbid"])("accepts registration type %s", (t) => {
     expect(upgradeSchema(prod).safeParse({ registrationType: t, registrationNo: "TL-1", registrationDoc: pdf() }).success).toBe(true);
+  });
+});
+
+describe("shop profile: free-delivery threshold (US-058)", () => {
+  const parse = (freeDeliveryThreshold: string) => profileSchema.safeParse({ freeDeliveryThreshold });
+
+  it("empty means no free delivery", () => {
+    expect(parse("")).toMatchObject({ success: true, data: { freeDeliveryThreshold: undefined } });
+    expect(parse("  ")).toMatchObject({ success: true, data: { freeDeliveryThreshold: undefined } });
+  });
+
+  it("accepts a Tk amount, with commas or 2 decimals", () => {
+    expect(parse("2000")).toMatchObject({ success: true, data: { freeDeliveryThreshold: 2000 } });
+    expect(parse("1,500.50")).toMatchObject({ success: true, data: { freeDeliveryThreshold: 1500.5 } });
+  });
+
+  it("rejects text, zero, negatives, too many decimals and huge amounts", () => {
+    for (const bad of ["free", "0", "-5", "10.123", "2000000"]) expect(parse(bad).success).toBe(false);
   });
 });

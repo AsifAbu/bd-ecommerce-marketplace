@@ -123,6 +123,12 @@ export async function SellerDashboard({ shopId, role }: { shopId: string; role: 
             <Field name="bannerUrl" label="Banner URL" type="url" defaultValue={shop.bannerUrl ?? ""} />
             <Field as="textarea" name="description" label="Description" defaultValue={shop.description ?? ""} />
             <Field as="textarea" name="policies" label="Shop policies" rows={6} defaultValue={shop.policies ?? ""} />
+            <Field
+              name="freeDeliveryThreshold"
+              label="Free delivery from (Tk)"
+              hint="Orders from your shop of this amount or more get free delivery (your shop covers the delivery charge). Leave empty for none."
+              defaultValue={shop.freeDeliveryThreshold?.toString() ?? ""}
+            />
           </ActionForm>
         </Section>
       )}
