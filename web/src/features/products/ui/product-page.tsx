@@ -10,7 +10,8 @@ import { linkClass } from "./styles";
  * Public product page (US-044): images, price and variants, delivery charge, return
  * eligibility, the seller, and the specs (guideline fields included).
  * `cart` is the add-to-cart control (cart feature), `wishlist` the wishlist button (wishlist
- * feature); `notice` a message above the page.
+ * feature); `notice` a message above the page; `rating` the rating under the title and
+ * `reviews` the ratings and reviews section (reviews feature, US-055).
  */
 export function ProductDetailView({
   page,
@@ -18,12 +19,16 @@ export function ProductDetailView({
   cart,
   wishlist,
   notice,
+  rating,
+  reviews,
 }: {
   page: ProductPage;
   initialVariantId: string | null;
   cart?: ReactNode;
   wishlist?: ReactNode;
   notice?: ReactNode;
+  rating?: ReactNode;
+  reviews?: ReactNode;
 }) {
   const rates = DEFAULT_DELIVERY_RATES;
   return (
@@ -52,6 +57,7 @@ export function ProductDetailView({
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-1">
             <h1 className="text-3xl font-bold">{page.title}</h1>
+            {rating}
             <p className="flex flex-wrap items-center gap-2">
               <span>
                 Sold by{" "}
@@ -125,6 +131,8 @@ export function ProductDetailView({
           </tbody>
         </table>
       </section>
+
+      {reviews}
 
       <section aria-labelledby="seller-heading" className="flex flex-col gap-2 rounded border border-gray-300 p-4">
         <h2 id="seller-heading" className="text-xl font-semibold">

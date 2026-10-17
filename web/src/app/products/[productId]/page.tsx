@@ -5,6 +5,8 @@ import { cache, Suspense } from "react";
 import { AddToCartButton } from "@/features/cart/ui/add-to-cart-button";
 import { loadProductPage } from "@/features/products/server";
 import { ProductDetailView } from "@/features/products/ui/product-page";
+import { reviewService } from "@/features/reviews/server";
+import { ProductReviews, RatingSummary } from "@/features/reviews/ui/product-reviews";
 import { applyWishlistIntent, parseWishlistIntent } from "@/features/wishlist";
 import { currentUserOrNull, wishlistService } from "@/features/wishlist/server";
 import { WishlistIntentNotice } from "@/features/wishlist/ui/intent-notice";
@@ -57,12 +59,24 @@ async function Content({
   const onlyVariant = page.variants.length === 1 ? page.variants[0].id : null;
   const wanted = Array.isArray(query.variant) ? query.variant[0] : query.variant;
   const initialVariantId = page.variants.find((v) => v.id === wanted)?.id ?? onlyVariant;
+  // US-055: rating and a page of visible reviews (?reviews=n).
+  const reviewsPage = Array.isArray(query.reviews) ? query.reviews[0] : query.reviews;
+  const reviews = await reviewService.productReviews(page.id, reviewsPage ?? 1);
+  const reviewsHref = (n: number) => {
+    const next = new URLSearchParams();
+    if (typeof wanted === "string" && wanted) next.set("variant", wanted);
+    if (n > 1) next.set("reviews", String(n));
+    const qs = next.toString();
+    return `/products/${encodeURIComponent(page.id)}${qs ? `?${qs}` : ""}#reviews-heading`;
+  };
 
   return (
     <ProductDetailView
       page={page}
       initialVariantId={initialVariantId}
       notice={intent && <WishlistIntentNotice result={intent} />}
+      rating={<RatingSummary rating={reviews.rating} />}
+      reviews={<ProductReviews data={reviews} pageHref={reviewsHref} />}
       cart={
         <AddToCartButton
           variants={page.variants.map((v) => ({ id: v.id, stock: v.stock }))}
