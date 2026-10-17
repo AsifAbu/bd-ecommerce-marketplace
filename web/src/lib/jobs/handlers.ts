@@ -1,6 +1,7 @@
 import type { Job } from "pg-boss";
 import { purgeStaleGuestCarts } from "@/features/cart/purge";
 import { refreshLiveCounts } from "@/features/products/live-counts";
+import { indexer } from "@/features/search/server";
 import { hasStateFailures, prismaExpiryDeps, runLicenceExpiryCheck } from "@/features/shops/licence-expiry";
 import { queues, type JobData, type QueueName } from "./queues";
 
@@ -29,5 +30,16 @@ export const handlers: Handlers = {
   "cart.purge-guest-carts": async () => {
     const removed = await purgeStaleGuestCarts(new Date());
     console.info("[worker] cart.purge-guest-carts", { removed });
+  },
+  "search.reindex-product": async (jobs) => {
+    for (const job of jobs) {
+      const { productIds } = queues["search.reindex-product"].parse(job.data);
+      const result = await indexer.reindexProducts(productIds);
+      console.info("[worker] search.reindex-product", result);
+    }
+  },
+  "search.reindex-all": async () => {
+    const result = await indexer.reindexAll();
+    console.info("[worker] search.reindex-all", result);
   },
 };

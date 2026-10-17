@@ -14,6 +14,8 @@ model Product {
   // Fixed after creation: the attributes only make sense for this leaf.
   categoryId  String        @map("category_id")
   title       String
+  // Optional Bengali name (Localisation, US-045): searchable alongside the English title.
+  bengaliName String?       @map("bengali_name")
   description String
   attributes  Json
   status      ProductStatus @default(active)
@@ -37,6 +39,8 @@ model Product {
 
   @@index([shopId, deletedAt])
   @@index([categoryId, status])
+  // Search (Postgres adapter): live listings, newest first.
+  @@index([status, deletedAt, createdAt])
   @@map("product")
 }
 

@@ -11,6 +11,7 @@ import { validationError } from "./errors";
 export const TITLE_MIN = 3;
 export const TITLE_MAX = 200;
 export const DESCRIPTION_MAX = 5000;
+export const BENGALI_NAME_MAX = 200;
 export const MAX_VARIANTS = 100;
 export const MAX_STOCK = 1_000_000;
 export const MAX_PRICE = 10_000_000; // Tk; fits Decimal(12, 2)
@@ -30,6 +31,8 @@ export interface VariantInput {
 
 export interface ProductInput {
   title: string;
+  /** Optional Bengali name (searchable), or null. */
+  bengaliName: string | null;
   description: string;
   attributes: Record<string, unknown>;
   variants: VariantInput[];
@@ -171,6 +174,16 @@ export function validateProductInput(schema: CategorySchema, body: unknown, toda
 
   const title = text(input.title, "title", "Title", TITLE_MIN, TITLE_MAX, errors);
   const description = text(input.description, "description", "Description", 1, DESCRIPTION_MAX, errors);
+  let bengaliName: string | null = null;
+  if (input.bengaliName !== undefined && input.bengaliName !== null) {
+    if (typeof input.bengaliName !== "string") errors.bengaliName = "Bengali name must be text";
+    else {
+      bengaliName = input.bengaliName.trim().normalize("NFC") || null;
+      if (bengaliName && bengaliName.length > BENGALI_NAME_MAX) {
+        errors.bengaliName = `Bengali name must be at most ${BENGALI_NAME_MAX} characters`;
+      }
+    }
+  }
 
   // Product-level attributes.
   const { productFields, variantFields } = formFields(schema);
@@ -276,5 +289,5 @@ export function validateProductInput(schema: CategorySchema, body: unknown, toda
       : undefined;
     throw validationError(errors, message);
   }
-  return { title, description, attributes, variants, expiresOn };
+  return { title, bengaliName, description, attributes, variants, expiresOn };
 }

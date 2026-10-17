@@ -22,6 +22,7 @@ export interface VariantValues {
 
 export interface ProductValues {
   title: string;
+  bengaliName?: string;
   description: string;
   attributes: Record<string, unknown>;
   variants: VariantValues[];
@@ -232,6 +233,7 @@ export function ProductForm({
     const body = {
       categoryId: schema.categoryId,
       title: String(form.get("title") ?? ""),
+      bengaliName: String(form.get("bengaliName") ?? ""),
       description: String(form.get("description") ?? ""),
       attributes,
       variants,
@@ -266,6 +268,13 @@ export function ProductForm({
       </p>
       {errors.categoryId && <p className={errorTextClass}>{errors.categoryId}</p>}
       <PlainField name="title" label="Title" required defaultValue={initial?.title} error={errors.title} />
+      <PlainField
+        name="bengaliName"
+        label="Bengali name (optional)"
+        hint="Helps shoppers who search in Bengali, e.g. শাড়ি"
+        defaultValue={initial?.bengaliName}
+        error={errors.bengaliName}
+      />
       <PlainField name="description" label="Description" as="textarea" required defaultValue={initial?.description} error={errors.description} />
 
       <fieldset className="flex flex-col gap-3 rounded border border-gray-300 p-3">

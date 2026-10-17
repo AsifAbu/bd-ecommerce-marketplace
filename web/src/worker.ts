@@ -28,6 +28,8 @@ async function main() {
   await boss.schedule("products.refresh-counts", "15 1 * * *", {}, { tz: "Asia/Dhaka" });
   // Guest carts untouched for 30 days (their cookie has expired too).
   await boss.schedule("cart.purge-guest-carts", "30 3 * * *", {}, { tz: "Asia/Dhaka" });
+  // Full search re-index after the liveness changes above (no-op without Meilisearch).
+  await boss.schedule("search.reindex-all", "30 1 * * *", {}, { tz: "Asia/Dhaka" });
 
   if (process.argv.includes("--demo")) {
     await boss.send("example.log", { message: "hello from the worker demo" });
