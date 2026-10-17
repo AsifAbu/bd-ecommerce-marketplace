@@ -516,7 +516,8 @@ async function seedProducts() {
           ["Black", "White"].map((colour) => ({
             sku: `TEST-OX-${size}-${colour.toUpperCase()}`,
             price: size === "L" ? 1950 : 1850,
-            stock: 6,
+            // L / White is sold out, so the product page shows a disabled option.
+            stock: size === "L" && colour === "White" ? 0 : 6,
             options: { size: size.toLowerCase(), colour: colour.toLowerCase() },
           })),
         ),
@@ -587,6 +588,27 @@ async function seedProducts() {
   console.info(`Seeded ${count} test products (no images)`);
 }
 
+/**
+ * Wishlist (US-057): the verified customer saved a book and a sold-out shirt variant, so
+ * /account/wishlist shows both "In stock" and "Out of stock". Idempotent.
+ */
+async function seedWishlist() {
+  const user = await prisma.user.findUniqueOrThrow({ where: { email: "customer.verified@ecom.test" } });
+  const picks: { title: string; optionKey: string }[] = [
+    { title: "[TEST] Himu (paperback)", optionKey: "" },
+    { title: "[TEST] Oxford cotton shirt", optionKey: "colour=white;size=l" },
+  ];
+  for (const pick of picks) {
+    const product = await prisma.product.findFirstOrThrow({ where: { title: pick.title, deletedAt: null } });
+    const variant = await prisma.productVariant.findUniqueOrThrow({
+      where: { productId_optionKey: { productId: product.id, optionKey: pick.optionKey } },
+    });
+    const existing = await prisma.wishlistItem.findFirst({ where: { userId: user.id, productId: product.id, variantId: variant.id } });
+    if (!existing) await prisma.wishlistItem.create({ data: { userId: user.id, productId: product.id, variantId: variant.id } });
+  }
+  console.info("Seeded 2 wishlist items for customer.verified@ecom.test");
+}
+
 async function main() {
   assertSeedAllowed();
   await seedUsers();
@@ -594,6 +616,7 @@ async function main() {
   await seedShops();
   await seedAccounts();
   await seedProducts();
+  await seedWishlist();
 }
 
 main()

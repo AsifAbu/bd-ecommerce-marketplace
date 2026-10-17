@@ -39,6 +39,9 @@ model User {
   addresses     Address[]
   accountTokens AccountToken[]
 
+  // wishlist relations
+  wishlistItems WishlistItem[]
+
   @@map("user")
 }
 

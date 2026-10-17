@@ -78,6 +78,23 @@ The seller dashboard shows the full link (base URL from `APP_URL`, else `AUTH_UR
 Facebook** and **View storefront**, for the owner and staff; the admin shops list links each approved storefront.
 The seed adds `[TEST] Suspended Shop` (`/s/test-suspended-shop`, suspended, one hidden product).
 
+## Product page and wishlist
+
+- **Product page** `/products/<productId>` (public, live listings only; anything else shows "Product not
+  available"): images (placeholder when there are none or storage is down), price, size/colour picker with
+  stock per choice (sold-out options disabled; the choice is kept in `?variant=`), specs in the category's
+  display order, delivery charge, return eligibility, the seller with its "Verified seller" badge and a link to
+  `/s/<shop slug>`. "Add to cart" is disabled until the cart (Sprint 6).
+- **Delivery charge** (`src/lib/delivery.ts`, decision D9): `deliveryCharge({ insideDhaka, weightGrams })` gives
+  Tk 70 inside Dhaka / Tk 130 outside for the first kg, plus Tk 20 per started kg above 1 kg (per shop order);
+  `deliveryBreakdown` gives the parts.
+- **Wishlist** `/account/wishlist` (logged-in; header link "Wishlist"): price, variant and "In stock" /
+  "Out of stock", remove. A guest who taps **Save to wishlist** logs in and comes back to the product with
+  `?wishlist=add`, and the item is saved on the server. "Move to cart" is disabled until the cart exists; the cart
+  calls `wishlistService.moveToCart(userId, itemId, addToCart)` from `features/wishlist/server.ts`.
+  JSON API: `GET/POST /api/wishlist`, `DELETE /api/wishlist/<itemId>`. The seed gives
+  `customer.verified@ecom.test` two items (one sold out).
+
 ## Scripts
 
 `dev`, `build`, `start`, `lint`, `typecheck`, `test` (Vitest), `test:e2e` (Playwright; first run
