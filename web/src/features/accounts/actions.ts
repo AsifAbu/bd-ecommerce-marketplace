@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { signIn, signOut } from "@/auth";
 import { parseLoginIdentifier } from "@/features/auth/identifier";
 import { hashPassword } from "@/features/auth/password";
+import { linkGuestOrdersFor } from "@/features/orders/server";
 import { Prisma } from "@/generated/prisma/client";
 import { AppError } from "@/lib/errors";
 import { formString as str, parseForm, runAction, ValidationError, type ActionResult } from "@/lib/actions";
@@ -134,6 +135,7 @@ async function resetWithToken(token: string, newPassword: string) {
     where: { id: res.token.userId },
     data: { passwordHash: await hashPassword(newPassword), ...emailVerified },
   });
+  await linkGuestOrdersFor(res.token.userId); // the link verified the email (US-009)
   return true;
 }
 
@@ -153,6 +155,7 @@ export async function resetPasswordWithOtpAction(_prev: ActionResult, fd: FormDa
       where: { id: user.id },
       data: { passwordHash: await hashPassword(pw.data), phoneVerifiedAt: user.phoneVerifiedAt ?? new Date() },
     });
+    await linkGuestOrdersFor(user.id); // the SMS code verified the mobile (US-009)
     redirect("/login?reset=1");
   });
 }
@@ -183,6 +186,7 @@ export async function verifyPhoneAction(_prev: ActionResult, fd: FormData): Prom
     if (!res.ok) throw new ValidationError({ code: OTP_MESSAGES[res.code] });
     // Only if the phone has not changed meanwhile.
     await prisma.user.updateMany({ where: { id: user.id, phone: user.phone }, data: { phoneVerifiedAt: new Date() } });
+    await linkGuestOrdersFor(user.id); // US-009: guest orders with this mobile join the account
     redirect("/account?phoneVerified=1");
   });
 }

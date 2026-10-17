@@ -26,6 +26,8 @@ model Address {
 enum OtpPurpose {
   phone_verify
   password_reset
+  checkout_verify // guest checkout: the contact mobile (orders feature)
+  order_track // guest order tracking: the order's mobile (orders feature)
 }
 
 // One row per OTP sent. Only an HMAC of the code is stored. The rows also

@@ -6,6 +6,8 @@
  * gt / gte / lt / lte / equals, AND / OR / NOT, and to-one relation filters by the `<name>Id`
  * convention (e.g. `{ shop: { status: "approved" } }` on a row with `shopId`), and compound unique
  * keys (e.g. `{ shopId_userId: { shopId, userId } }`).
+ * Writes apply `{ increment }` / `{ decrement }` to numbers. `$transaction(fn)` restores every
+ * table when fn throws (like a database rollback).
  * include / select / orderBy and nested writes are ignored.
  */
 export type Row = Record<string, unknown>;
@@ -70,6 +72,19 @@ function matches(row: Row, where: Where | undefined, tables: Tables): boolean {
 
 const copy = (row: Row | null) => (row ? { ...row } : null);
 
+/** Object.assign with Prisma's numeric operators ({ increment: n } / { decrement: n }). */
+function apply(row: Row, data: Row): Row {
+  for (const [key, value] of Object.entries(data)) {
+    if (isObject(value) && ("increment" in value || "decrement" in value)) {
+      const by = Number(value.increment ?? 0) - Number(value.decrement ?? 0);
+      row[key] = Number(row[key] ?? 0) + by;
+    } else {
+      row[key] = value;
+    }
+  }
+  return row;
+}
+
 function table(rows: Row[], tables: Tables, name: string) {
   let seq = rows.length;
   const find = (where?: Where) => rows.filter((r) => matches(r, where, tables));
@@ -93,15 +108,15 @@ function table(rows: Row[], tables: Tables, name: string) {
     update: async ({ where, data }: { where: Where; data: Row }) => {
       const row = find(where)[0];
       if (!row) throw new Error(`fake-db: no ${name} row to update`);
-      return Object.assign(row, data);
+      return apply(row, data);
     },
     upsert: async ({ where, create: data, update }: { where: Where; create: Row; update: Row }) => {
       const row = find(where)[0];
-      return row ? Object.assign(row, update) : create({ data });
+      return row ? apply(row, update) : create({ data });
     },
     updateMany: async ({ where, data }: { where?: Where; data: Row }) => {
       const hit = find(where);
-      hit.forEach((r) => Object.assign(r, data));
+      hit.forEach((r) => apply(r, data));
       return { count: hit.length };
     },
     delete: async ({ where }: { where: Where }) => {
@@ -127,8 +142,16 @@ export function createFakeDb<K extends string>(seed: Partial<Record<K, Row[]>>) 
   tables.auditLog ??= table([], tables, "auditLog");
   const db = {
     ...(tables as Record<K | "auditLog", FakeTable>),
-    $transaction: async (ops: unknown) =>
-      typeof ops === "function" ? (ops as (tx: unknown) => Promise<unknown>)(db) : Promise.all(ops as Promise<unknown>[]),
+    $transaction: async (ops: unknown) => {
+      if (typeof ops !== "function") return Promise.all(ops as Promise<unknown>[]);
+      const snapshot = Object.entries(tables).map(([, t]) => [t, t.rows.map((r) => ({ ...r }))] as const);
+      try {
+        return await (ops as (tx: unknown) => Promise<unknown>)(db);
+      } catch (err) {
+        for (const [t, rows] of snapshot) t.rows.splice(0, t.rows.length, ...rows);
+        throw err;
+      }
+    },
   };
   return db;
 }

@@ -37,6 +37,9 @@ model Product {
   // cart relations
   cartItems CartItem[]
 
+  // orders relations
+  orderItems OrderItem[]
+
   @@index([shopId, deletedAt])
   @@index([categoryId, status])
   // Search (Postgres adapter): live listings, newest first.
@@ -67,6 +70,9 @@ model ProductVariant {
 
   // cart relations
   cartItems CartItem[]
+
+  // orders relations
+  orderItems OrderItem[]
 
   @@unique([shopId, sku])
   @@unique([productId, optionKey])

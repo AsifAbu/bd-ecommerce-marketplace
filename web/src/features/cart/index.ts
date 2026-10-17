@@ -5,8 +5,11 @@
  *   resolveDeliveryZone(owner)       inside / outside Dhaka for the delivery charges
  *   cartService.getCart(owner, zone) the cart grouped by shop with delivery charges
  *   cartService.clearItems(owner, ids) remove the ordered lines after checkout
+ * and here `cartOwnerWhere(owner)`: the Prisma filter for one owner's rows (checkout clears the
+ * ordered lines with it inside the order transaction).
  */
 export { CartError } from "./errors";
+export { ownerWhere as cartOwnerWhere } from "./owner";
 export {
   buildCart,
   cartReadyForCheckout,

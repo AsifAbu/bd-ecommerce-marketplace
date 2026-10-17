@@ -22,3 +22,14 @@ body {
   color: var(--foreground);
   font-family: system-ui, Arial, Helvetica, sans-serif;
 }
+
+/* Printable invoices (features/orders): print only the invoice, not the site header, footer or banners. */
+@media print {
+  body:has([data-invoice]) > *:not(main) {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+}

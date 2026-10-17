@@ -23,6 +23,11 @@
 ## Policies and consent (US-080)
 - Other features use `@/features/policies` (server) or `@/features/policies/client` (client components). Checkout: `getCurrentVersions(CHECKOUT_POLICY_SLUGS)` + `<PolicyConsent>` in the form, then `readPolicyConsent()` + `recordAcceptance({ userId | guestPhone, slugs, context: "checkout", shownVersions, ...await requestMeta() })`, and `assertAcceptedCurrent(userId, CHECKOUT_POLICY_SLUGS)` (422 `POLICY_ACCEPTANCE_REQUIRED`). Store the returned `{ slug, version }` list on the order.
 
+## Orders (US-051, Sprint 6)
+- `features/orders` holds checkout and orders. Pure API: `@/features/orders` (statuses `OPEN_STATUSES`/`STATUS_LABELS`, `getOrderConfig()` with the D8/D14/VAT/launch-offer values, `toOrderView`, order numbers). Wired: `@/features/orders/server` (`placementService`, `viewableOrder`, `ordersOfUser`, `invoiceOrder`, `shopOrdersOf`, `linkGuestOrdersFor`, `notifyOrderPlaced`).
+- Sprint 7 changes a shop order's status on `shop_order` (set `statusChangedAt`; `deliveredAt` on delivery; `cancelReason` on cancel). Never delete orders, shop orders or items. Customer-facing amounts come from the snapshots, never from current listings.
+- SMS go through `src/lib/sms` (test mode logs); OTP purposes `checkout_verify` and `order_track` belong to orders.
+
 ## Shop-scoped data access (ADR-004)
 - Every shop-side query takes a `shopId` and filters by it: `getProduct(shopId, productId)` uses `where: { id: productId, shopId }`, never `findUnique({ where: { id } })`.
 - Repositories in `features/<feature>/repo.ts` take the scope (`shopId` or `userId`) as the first argument. Pages and actions call a guard first, then pass the checked `shopId`.

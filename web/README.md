@@ -102,7 +102,7 @@ The seed adds `[TEST] Suspended Shop` (`/s/test-suspended-shop`, suspended, one 
   threshold on the seller dashboard profile). Quantity is capped at the stock with a message; a price change since
   adding shows a notice and **Checkout** waits for "Accept new price"; "Save for later" moves a line out of the
   totals; unavailable lines are listed apart. Delivery area: the choice on the cart page (cookie `cart_zone`),
-  else the default address (district Dhaka = inside Dhaka), else inside Dhaka. `/checkout` is a placeholder.
+  else the default address (district Dhaka = inside Dhaka), else inside Dhaka. **Checkout** opens `/checkout`.
 - **Guests**: an httpOnly `cart_guest` cookie (30 days; only its SHA-256 is stored). At login or sign-up the
   Auth.js `signIn` event merges the guest cart into the account cart (quantities added, capped at the stock) and
   removes the cookie. The daily job `cart.purge-guest-carts` removes guest carts untouched for 30 days.
@@ -114,6 +114,43 @@ The seed adds `[TEST] Suspended Shop` (`/s/test-suspended-shop`, suspended, one 
   `features/cart`.
 - The seed gives `customer.verified@ecom.test` a cart across the Test Tech Shop (free delivery from Tk 10,000) and
   the Test Book Shop, with one price change to accept and one item saved for later.
+
+## Checkout and orders (US-051, US-052, US-007 to US-009)
+
+- **`/checkout`** (cash on delivery only): logged in, pick a saved address or add one (saved to the address
+  book); a guest gives name, mobile, email and the address. The mobile must be verified by OTP first (test code
+  **123456**): a guest verifies the contact mobile, a customer with an unverified phone verifies it on the page.
+  The review shows one block per shop order with its items, ONE delivery charge for the zone of the chosen
+  address (district Dhaka = inside Dhaka, Tk 70; else Tk 130; + Tk 20 per extra kg; free above the shop's
+  threshold) and its total, then the grand total. The Return and Delivery policies (+ Privacy for guests) must be
+  ticked; the accepted versions are stored on the order.
+- **Placing** (`features/orders/placement.ts`): the server re-reads the cart; checks the verified mobile, the
+  D8 fake-order limits (a mobile, guest or account, may hold 3 open COD orders until one is delivered; 2 refused
+  deliveries block COD) and the D14 limit (a Basic shop takes 20 open orders); then one transaction lowers each
+  variant's stock only if enough is left at the shown price, writes the order (`BD-YYMMDD-XXXXX`) with one shop
+  order per shop (`…-1`, `…-2`; status `placed`, handover due in 48 h) and item snapshots, and removes the
+  ordered cart lines. A double submit returns the same order (idempotency key). Limits, VAT rate and the D15
+  launch offer are in `features/orders/config.ts` (`VAT_RATE_PERCENT`, default 0, prices are VAT-inclusive;
+  `COMMISSION_LAUNCH_OFFER_UNTIL`, ISO date, records 0% commission until then).
+- **Confirmation**: the job `orders.notify-placed` sends ONE SMS (test mode: logged, see `src/lib/sms`) and ONE
+  email invoice listing every shop order; a failed channel is retried (8 times with backoff) and never fails
+  the order. Run `npm run worker` to send them.
+- **Orders**: `/orders/<orderNo>` (confirmation and detail, per shop order status), `/account/orders` (My orders),
+  `/orders/<orderNo>/invoice/<shopOrderId>` (printable invoice per shop order: seller and registration, items with
+  SKU and warranty, VAT line, delivery charge, total, COD; also open to that shop's owner and staff),
+  `/seller/<shopId>/orders` (the shop's orders; lifecycle actions come in Sprint 7).
+- **Guests** (US-007, US-008): after placing, the browser may open that order for 1 hour (signed `order_access`
+  cookie). `/track`: order number + a code sent to the order's mobile opens it. If the verified mobile belongs to
+  an account (whose phone is verified), the order is attached to that account and the page offers "Log in".
+  A typed email never attaches an order by itself.
+- **Linking** (US-009): guest orders join an account through its verified mobile or verified email, at login or
+  sign-up and right after a phone OTP, an email link or a password reset.
+- **JSON API**: `POST /api/checkout`, `POST /api/checkout/otp` `{ action: "send" | "verify", phone, code? }`,
+  `GET /api/orders`, `GET /api/orders/<orderNo>`, `POST /api/track` `{ orderNo, code? }` (see
+  `features/orders/api.ts`). Writes need `application/json`; errors use `{ error: { code, message, fields? } }`.
+- **Seed**: `customer.verified` has a delivered order (BD-261005-SEEDA) and an open one (BD-261015-SEEDB); a guest
+  order BD-261016-SEEDC for mobile 01700000009 can be tracked at `/track`; `customer.flagged` has 2 refused shop
+  orders, so checkout says COD is not available.
 
 ## Search and categories (shopper)
 

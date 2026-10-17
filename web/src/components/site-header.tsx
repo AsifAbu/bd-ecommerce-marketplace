@@ -7,7 +7,8 @@ import { SiteSearch } from "./site-search";
 
 /**
  * Site header: the marketplace name, the categories link and search box (Sprint 5), for
- * logged-in users a link to their wishlist, and the cart with its item count (guests too).
+ * logged-in users links to their orders and wishlist (guests: order tracking), and the cart
+ * with its item count (guests too).
  */
 export function SiteHeader() {
   return (
@@ -39,10 +40,22 @@ export function SiteHeader() {
 async function UserLinks() {
   await connection(); // session reads are request-time (Cache Components)
   const session = await auth();
-  if (!session?.user) return null;
+  if (!session?.user) {
+    // US-008: guests track an order with its number and an SMS code.
+    return (
+      <Link className="underline" href="/track">
+        Track order
+      </Link>
+    );
+  }
   return (
-    <Link className="underline" href="/account/wishlist">
-      Wishlist
-    </Link>
+    <>
+      <Link className="underline" href="/account/orders">
+        My orders
+      </Link>
+      <Link className="underline" href="/account/wishlist">
+        Wishlist
+      </Link>
+    </>
   );
 }

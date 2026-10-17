@@ -1,0 +1,140 @@
+// Orders (US-051, US-052, US-007 to US-009): one checkout makes one Order (what the customer
+// sees and pays on delivery) split into one ShopOrder per shop (decision A1), each with its own
+// delivery charge (D9), status and 48 h handover timer. Order items keep a snapshot of what was
+// bought (title, variant, SKU, price, weight, warranty, commission rate), so later listing edits
+// never change an order. Orders, shop orders and items are 6-year business records
+// (src/lib/retention.ts): never hard-deleted, every relation uses Restrict or SetNull.
+
+enum ShopOrderStatus {
+  placed // waiting for the shop to confirm
+  confirmed
+  packed
+  handed_over // to the courier (48 h timer stops)
+  delivered
+  cancelled // before handover (cancel_reason says why)
+  refused // the customer refused the COD delivery (counts toward the D8 COD block)
+  returned
+}
+
+enum PaymentMethod {
+  cod
+}
+
+enum OrderZone {
+  inside_dhaka
+  outside_dhaka
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  // Human-readable, e.g. BD-261017-7KQ2M (Dhaka date + 5 random characters).
+  orderNo         String        @unique @map("order_no")
+  // Null for a guest order until it is linked through a verified mobile or email (US-009).
+  userId          String?       @map("user_id")
+  contactName     String        @map("contact_name")
+  // E.164 (+8801XXXXXXXXX), verified by OTP before the order was placed. The D8 fake-order
+  // limits are keyed by this number across guest and account orders.
+  contactPhone    String        @map("contact_phone")
+  phoneVerifiedAt DateTime      @map("phone_verified_at")
+  // Typed by a guest (not verified): it gets the invoice but never links the order by itself.
+  contactEmail    String?       @map("contact_email")
+  // Delivery address as it was at checkout: { name, phone, division, district, upazila, area, line1 }.
+  address         Json
+  zone            OrderZone
+  itemsSubtotal   Decimal       @map("items_subtotal") @db.Decimal(12, 2)
+  deliveryTotal   Decimal       @map("delivery_total") @db.Decimal(12, 2)
+  grandTotal      Decimal       @map("grand_total") @db.Decimal(12, 2)
+  paymentMethod   PaymentMethod @default(cod) @map("payment_method")
+  // Policies accepted for this order: [{ slug, version }] (Return and Delivery; + Privacy for guests).
+  policyVersions  Json          @map("policy_versions")
+  // SHA-256 of the checkout form's idempotency key with its owner: a double submit returns this order.
+  idempotencyKey  String        @unique @map("idempotency_key")
+  // How a guest order joined an account: checkout_phone, phone (sign-up / login) or email (verified later).
+  linkedVia       String?       @map("linked_via")
+  linkedAt        DateTime?     @map("linked_at")
+  // Confirmation sent by the orders.notify-placed job (null until it succeeded; the job retries).
+  smsSentAt       DateTime?     @map("sms_sent_at")
+  emailSentAt     DateTime?     @map("email_sent_at")
+  placedAt        DateTime      @default(now()) @map("placed_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  user       User?       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  shopOrders ShopOrder[]
+
+  @@index([userId, placedAt])
+  @@index([contactPhone])
+  @@index([contactEmail])
+  @@map("order")
+}
+
+model ShopOrder {
+  id               String          @id @default(cuid())
+  orderId          String          @map("order_id")
+  shopId           String          @map("shop_id")
+  // 1, 2, ... within the order; shown as BD-261017-7KQ2M-1.
+  seq              Int
+  status           ShopOrderStatus @default(placed)
+  statusChangedAt  DateTime        @default(now()) @map("status_changed_at")
+  // Seller details printed on the invoice, as they were at checkout.
+  shopName         String          @map("shop_name")
+  shopRegistration String?         @map("shop_registration") // e.g. "Trade licence TEST-TL-0001"; null for Basic shops
+  itemsSubtotal    Decimal         @map("items_subtotal") @db.Decimal(12, 2)
+  weightGrams      Int             @map("weight_grams")
+  // One delivery charge per shop order (D9), 0 when the shop's free-delivery threshold was reached.
+  deliveryCharge   Decimal         @map("delivery_charge") @db.Decimal(12, 2)
+  freeDelivery     Boolean         @default(false) @map("free_delivery")
+  total            Decimal         @db.Decimal(12, 2) // items + delivery, collected on delivery
+  // VAT included in the item prices (invoice line). Rate from the orders config (0 in testing).
+  vatRate          Decimal         @map("vat_rate") @db.Decimal(5, 2)
+  vatAmount        Decimal         @map("vat_amount") @db.Decimal(12, 2)
+  // Platform commission on the items (D10 rates per category, snapshot on each item); 0 under
+  // the launch offer (D15). Deducted from the payout (Sprint 7).
+  commissionAmount Decimal         @map("commission_amount") @db.Decimal(12, 2)
+  launchOffer      Boolean         @default(false) @map("launch_offer")
+  // Placed + 48 h (Guidelines 2021): the shop must hand over to the courier before this.
+  handoverDueAt    DateTime        @map("handover_due_at")
+  cancelReason     String?         @map("cancel_reason")
+  deliveredAt      DateTime?       @map("delivered_at")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  order Order       @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  shop  Shop        @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  items OrderItem[]
+
+  @@unique([orderId, shopId])
+  @@index([shopId, status])
+  @@index([shopId, createdAt])
+  @@index([status, handoverDueAt])
+  @@map("shop_order")
+}
+
+model OrderItem {
+  id              String   @id @default(cuid())
+  shopOrderId     String   @map("shop_order_id")
+  productId       String   @map("product_id")
+  // Null if the seller later removes the variant; the snapshot below keeps what was bought.
+  variantId       String?  @map("variant_id")
+  categoryId      String   @map("category_id")
+  title           String
+  variantLabel    String?  @map("variant_label") // "Size: M, Colour: Black"
+  sku             String?
+  unitPrice       Decimal  @map("unit_price") @db.Decimal(12, 2)
+  quantity        Int
+  lineTotal       Decimal  @map("line_total") @db.Decimal(12, 2)
+  unitWeightGrams Int      @map("unit_weight_grams")
+  warranty        String? // from the listing, printed on the invoice
+  // Percent applied to this line (category rate, or 0 under the launch offer).
+  commissionRate  Decimal  @map("commission_rate") @db.Decimal(5, 2)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  shopOrder ShopOrder       @relation(fields: [shopOrderId], references: [id], onDelete: Restrict)
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([shopOrderId])
+  @@index([productId])
+  @@index([variantId])
+  @@map("order_item")
+}
