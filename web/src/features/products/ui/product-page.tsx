@@ -9,16 +9,19 @@ import { linkClass } from "./styles";
 /**
  * Public product page (US-044): images, price and variants, delivery charge, return
  * eligibility, the seller, and the specs (guideline fields included).
- * `wishlist` is the wishlist button (wishlist feature); `notice` a message above the page.
+ * `cart` is the add-to-cart control (cart feature), `wishlist` the wishlist button (wishlist
+ * feature); `notice` a message above the page.
  */
 export function ProductDetailView({
   page,
   initialVariantId,
+  cart,
   wishlist,
   notice,
 }: {
   page: ProductPage;
   initialVariantId: string | null;
+  cart?: ReactNode;
   wishlist?: ReactNode;
   notice?: ReactNode;
 }) {
@@ -66,6 +69,7 @@ export function ProductDetailView({
             axes={page.axes}
             variants={page.variants}
             initialVariantId={initialVariantId}
+            cart={cart}
           >
             {wishlist}
           </PurchasePanel>
