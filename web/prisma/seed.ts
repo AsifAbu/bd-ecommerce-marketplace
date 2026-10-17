@@ -593,6 +593,39 @@ async function seedWishlist() {
   console.info("Seeded 2 wishlist items for customer.verified@ecom.test");
 }
 
+/**
+ * Cart (US-050, US-056, US-058): the Test Tech Shop gives free delivery from Tk 10,000, and the
+ * verified customer's cart spans two shops: RAM (tech, "Add Tk 3,200 more for free delivery"),
+ * two Engineering Mathematics books added at Tk 600 (now Tk 650, so the cart shows a price
+ * notice and Checkout waits for "Accept new price"), and a shirt saved for later. Idempotent.
+ */
+async function seedCart() {
+  await prisma.shop.update({ where: { slug: "test-tech-shop" }, data: { freeDeliveryThreshold: "10000.00" } });
+  const user = await prisma.user.findUniqueOrThrow({ where: { email: "customer.verified@ecom.test" } });
+  const lines: { title: string; optionKey: string; quantity: number; priceAtAdd?: string; savedForLater?: boolean }[] = [
+    { title: "[TEST] Corsair Vengeance 16GB DDR5 RAM", optionKey: "", quantity: 1 },
+    { title: "[TEST] Engineering Mathematics", optionKey: "", quantity: 2, priceAtAdd: "600.00" },
+    { title: "[TEST] Oxford cotton shirt", optionKey: "colour=black;size=m", quantity: 1, savedForLater: true },
+  ];
+  for (const line of lines) {
+    const product = await prisma.product.findFirstOrThrow({ where: { title: line.title, deletedAt: null } });
+    const variant = await prisma.productVariant.findUniqueOrThrow({
+      where: { productId_optionKey: { productId: product.id, optionKey: line.optionKey } },
+    });
+    const data = {
+      quantity: line.quantity,
+      savedForLater: line.savedForLater ?? false,
+      priceAtAdd: line.priceAtAdd ?? variant.price.toFixed(2),
+    };
+    await prisma.cartItem.upsert({
+      where: { userId_variantId: { userId: user.id, variantId: variant.id } },
+      update: data,
+      create: { ...data, userId: user.id, productId: product.id, variantId: variant.id, shopId: product.shopId },
+    });
+  }
+  console.info(`Seeded a cart of ${lines.length} lines (2 shops + 1 saved) for customer.verified@ecom.test`);
+}
+
 async function main() {
   await seedUsers();
   await seedCatalog();
@@ -600,6 +633,7 @@ async function main() {
   await seedAccounts();
   await seedProducts();
   await seedWishlist();
+  await seedCart();
 }
 
 main()
