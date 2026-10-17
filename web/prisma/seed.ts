@@ -21,6 +21,7 @@ import { deliveryCharge } from "../src/lib/delivery";
 import { assertSeedAllowed } from "./seed-guard";
 import { POLICY_SLUGS, SIGNUP_POLICY_SLUGS, CHECKOUT_POLICY_SLUGS } from "../src/features/policies/catalog";
 import { SEED_POLICY_TEXT } from "../src/features/policies/seed-text";
+import * as reviewsRepo from "../src/features/reviews/repo";
 
 export const TEST_PASSWORD = "Test@12345";
 
@@ -788,6 +789,18 @@ async function seedOrders() {
       shopOrders: [{ shopSlug: "test-tech-shop", status: "delivered", lines: [{ title: "[TEST] Corsair Vengeance 16GB DDR5 RAM", quantity: 1 }] }],
     },
     {
+      // Reviews (US-055): customer.new's delivered order, reviewed in seedReviews (one review hidden).
+      orderNo: "BD-261008-SEEDR",
+      placedAt: "2026-10-08T15:00:00+06:00",
+      userEmail: "customer.new@ecom.test",
+      contact: { name: "[TEST] Customer, new", phone: "+8801700000004", email: "customer.new@ecom.test" },
+      address: { ...verifiedHome, name: "[TEST] Customer, new", phone: "+8801700000004" },
+      shopOrders: [
+        { shopSlug: "test-tech-shop", status: "delivered", lines: [{ title: "[TEST] Corsair Vengeance 16GB DDR5 RAM", quantity: 1 }] },
+        { shopSlug: "test-book-shop", status: "delivered", lines: [{ title: "[TEST] Himu (paperback)", quantity: 1 }] },
+      ],
+    },
+    {
       orderNo: "BD-261015-SEEDB",
       placedAt: "2026-10-15T18:30:00+06:00",
       userEmail: "customer.verified@ecom.test",
@@ -930,6 +943,48 @@ async function seedOrders() {
   console.info(`Seeded ${created} new test orders (${orders.length} in the seed; guest order tracking: BD-261016-SEEDC, mobile 01700000009)`);
 }
 
+/**
+ * Reviews (US-055), through the real repository so the product ratings are rebuilt: the verified
+ * customer and customer.new reviewed the RAM (5 and 4 stars), and customer.new's Himu review is
+ * hidden by the admin with a logged reason. Reviews are never deleted: existing ones are left as
+ * they are.
+ */
+async function seedReviews() {
+  const admin = await prisma.user.findUniqueOrThrow({ where: { email: "admin@ecom.test" }, select: { id: true } });
+  const picks = [
+    { orderNo: "BD-261005-SEEDA", title: "[TEST] Corsair Vengeance 16GB DDR5 RAM", rating: 5, heading: "Fast and stable", text: "[TEST] Runs at 5600 MHz out of the box. Delivered in 3 days, well packed." },
+    { orderNo: "BD-261008-SEEDR", title: "[TEST] Corsair Vengeance 16GB DDR5 RAM", rating: 4, heading: null, text: "[TEST] Good memory, the heat spreader is a bit tall for my cooler." },
+    {
+      orderNo: "BD-261008-SEEDR",
+      title: "[TEST] Himu (paperback)",
+      rating: 1,
+      heading: "Call me",
+      text: "[TEST] Cheaper copies at 01700000099, call me!",
+      hide: "[TEST] Contains a phone number and advertising",
+    },
+  ];
+  let created = 0;
+  for (const p of picks) {
+    const item = await prisma.orderItem.findFirstOrThrow({
+      where: { title: p.title, shopOrder: { order: { orderNo: p.orderNo } } },
+      select: { id: true, productId: true, shopOrder: { select: { shopId: true, order: { select: { userId: true } } } } },
+    });
+    if (await prisma.review.findUnique({ where: { orderItemId: item.id }, select: { id: true } })) continue;
+    const review = await reviewsRepo.createReview({
+      userId: item.shopOrder.order.userId!,
+      orderItemId: item.id,
+      productId: item.productId,
+      shopId: item.shopOrder.shopId,
+      rating: p.rating,
+      title: p.heading,
+      text: p.text,
+    });
+    if (p.hide) await reviewsRepo.setStatus(review.id, "visible", admin.id, p.hide, new Date());
+    created++;
+  }
+  console.info(`Seeded ${created} new reviews (${picks.length} in the seed, 1 hidden by the admin)`);
+}
+
 async function main() {
   assertSeedAllowed();
   await seedUsers();
@@ -941,6 +996,7 @@ async function main() {
   await seedWishlist();
   await seedCart();
   await seedOrders();
+  await seedReviews();
   await seedSearchIndex();
 }
 
