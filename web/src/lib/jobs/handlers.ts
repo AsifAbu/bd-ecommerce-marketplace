@@ -6,6 +6,7 @@ import { refreshLiveCounts } from "@/features/products/live-counts";
 import { checkPayoutsDue } from "@/features/payouts/server";
 import { flagOverdueComplaints, notifyComplaint } from "@/features/complaints/server";
 import { escalateOverdueReturns, notifyReturn } from "@/features/returns/server";
+import { refreshAllScores } from "@/features/metrics/server";
 import { indexer } from "@/features/search/server";
 import { hasStateFailures, prismaExpiryDeps, runLicenceExpiryCheck } from "@/features/shops/licence-expiry";
 import { queues, type JobData, type QueueName } from "./queues";
@@ -27,6 +28,12 @@ export const handlers: Handlers = {
     if (hasStateFailures(result)) {
       throw new Error(`shops.licence-expiry: ${result.failures.length} step(s) failed, see the log`);
     }
+  },
+  // A shop whose score cannot be computed fails the job (pg-boss retries); the others are saved.
+  "shops.refresh-scores": async () => {
+    const result = await refreshAllScores();
+    console.info("[worker] shops.refresh-scores", JSON.stringify(result));
+    if (result.failures.length) throw new Error(`shops.refresh-scores: ${result.failures.length} shop(s) failed, see the log`);
   },
   "products.refresh-counts": async () => {
     const result = await refreshLiveCounts(new Date());

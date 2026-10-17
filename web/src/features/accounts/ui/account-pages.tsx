@@ -89,6 +89,9 @@ export async function ProfilePage({ searchParams }: { searchParams: SearchParams
         )}
         {user.isPlatformAdmin && (
           <>
+            <Link className="underline" href="/admin/metrics">
+              Marketplace metrics
+            </Link>
             <Link className="underline" href="/admin/orders">
               All shop orders
             </Link>

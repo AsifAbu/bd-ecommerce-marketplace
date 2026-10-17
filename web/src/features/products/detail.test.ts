@@ -131,7 +131,7 @@ describe("buildProductPage", () => {
     const page = buildProductPage(shirtRow(), shirtSchema(), trail);
     expect(page.returns).toMatchObject({ value: "change_of_mind", label: "Returnable, including change of mind" });
     expect(page.returns.text).toMatch(/7 days/);
-    expect(page.shop).toEqual({ name: "Test Fashion Shop", slug: "test-fashion-shop", verified: true, href: "/s/test-fashion-shop" });
+    expect(page.shop).toEqual({ name: "Test Fashion Shop", slug: "test-fashion-shop", verified: true, href: "/s/test-fashion-shop", score: null });
     expect(page.breadcrumb.map((c) => c.name)).toEqual(["Fashion", "Men", "Men's Shirts"]);
     expect(page.images).toEqual([
       { id: "img-cover", alt: "Oxford cotton shirt, image 1 of 2" },

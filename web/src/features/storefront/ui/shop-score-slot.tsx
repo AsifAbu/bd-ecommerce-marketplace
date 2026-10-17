@@ -1,9 +1,11 @@
+import { ScoreBadge } from "@/features/metrics";
+import { storedShopScore } from "@/features/metrics/server";
+
 /**
- * Slot for the seller performance score in the storefront header (US-059, R1 stretch goal).
- * Renders nothing until that story lands; it then reads the shop's score by `shopId` and shows
- * it here (UC-48 "View shop performance score" extends "View shop storefront").
+ * The seller performance score in the storefront header (US-059; UC-48 "View shop performance
+ * score" extends "View shop storefront"). Reads the stored score by `shopId`; "New seller" when
+ * the shop has too few delivered orders for one.
  */
-export function ShopScoreSlot({ shopId }: { shopId: string }) {
-  void shopId;
-  return null;
+export async function ShopScoreSlot({ shopId }: { shopId: string }) {
+  return <ScoreBadge score={await storedShopScore(shopId)} />;
 }

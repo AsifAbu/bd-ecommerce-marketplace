@@ -1,3 +1,4 @@
+import { ScoreBadge } from "@/features/metrics";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { DEFAULT_DELIVERY_RATES, describeDelivery } from "@/lib/delivery";
@@ -66,6 +67,7 @@ export function ProductDetailView({
                 </Link>
               </span>
               {page.shop.verified && <VerifiedBadge />}
+              <ScoreBadge score={page.shop.score} testId="product-seller-score" />
             </p>
             {page.expiresOn && <p className="text-sm">Expiry date: {formatDate(page.expiresOn)}</p>}
           </div>
@@ -141,6 +143,7 @@ export function ProductDetailView({
         <p className="flex flex-wrap items-center gap-2">
           <span className="font-semibold">{page.shop.name}</span>
           {page.shop.verified && <VerifiedBadge />}
+          <ScoreBadge score={page.shop.score} testId="about-seller-score" />
         </p>
         <p>
           <Link className={linkClass} href={page.shop.href}>

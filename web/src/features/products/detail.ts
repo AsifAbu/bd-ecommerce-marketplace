@@ -17,7 +17,7 @@ export interface DetailRow {
   attributes: unknown;
   expiresOn: Date | null;
   category: { id: string; name: string; path: string };
-  shop: { id: string; name: string; slug: string; tier: "basic" | "verified" };
+  shop: { id: string; name: string; slug: string; tier: "basic" | "verified"; performanceScore?: number | null };
   variants: { id: string; price: { toString(): string } | number; stock: number; options: unknown; position: number }[];
   images: { id: string }[];
 }
@@ -50,7 +50,7 @@ export interface ProductPage {
   title: string;
   description: string;
   images: { id: string; alt: string }[];
-  shop: { name: string; slug: string; verified: boolean; href: string };
+  shop: { name: string; slug: string; verified: boolean; href: string; score: number | null };
   /** Root to leaf. */
   breadcrumb: { id: string; name: string }[];
   specs: SpecRow[];
@@ -211,6 +211,7 @@ export function buildProductPage(
       slug: row.shop.slug,
       verified: row.shop.tier === "verified",
       href: `/s/${row.shop.slug}`,
+      score: row.shop.performanceScore ?? null,
     },
     breadcrumb: breadcrumb.length ? breadcrumb : [{ id: row.category.id, name: row.category.name }],
     specs: buildSpecs(schema, attributes),
