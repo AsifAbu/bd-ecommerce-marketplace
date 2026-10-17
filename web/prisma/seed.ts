@@ -16,6 +16,7 @@ import { getCategorySchema } from "../src/features/catalog";
 import { refreshLiveCounts } from "../src/features/products/live-counts";
 import { validateProductInput } from "../src/features/products/validation";
 import { dhakaToday } from "../src/features/shops";
+import { indexer } from "../src/features/search/server";
 import { assertSeedAllowed } from "./seed-guard";
 
 export const TEST_PASSWORD = "Test@12345";
@@ -463,7 +464,14 @@ async function seedProducts() {
   const common = { quantity: 1, quantity_unit: "pcs", weight_g: 250, return_eligibility: "eligible" };
   const expiry = `${new Date().getUTCFullYear() + 1}-12-31`;
   type SeedVariant = { sku: string; price: number; stock: number; options?: Record<string, string> };
-  type SeedProduct = { title: string; category: string; description: string; attributes: Record<string, unknown>; variants: SeedVariant[] };
+  type SeedProduct = {
+    title: string;
+    bengaliName?: string;
+    category: string;
+    description: string;
+    attributes: Record<string, unknown>;
+    variants: SeedVariant[];
+  };
   const byShop: Record<string, SeedProduct[]> = {
     "test-suspended-shop": [
       {
@@ -482,6 +490,29 @@ async function seedProducts() {
         attributes: { ...common, country_of_origin: "China", warranty: "3 years", brand: "amd", socket: "am5", core_count: 6, base_clock_ghz: 3.8, tdp_w: 65, integrated_graphics: true, model_number: "100-100001015BOX" },
         variants: [{ sku: "TEST-R5-7600", price: 24500, stock: 12 }],
       },
+      // Search (US-041, US-042): more processors so the Brand, Socket and core filters have choices.
+      {
+        title: "[TEST] AMD Ryzen 7 7700X Processor",
+        category: "processor",
+        description: "8 cores, 16 threads, AM5 socket. No cooler in the box.",
+        attributes: { ...common, country_of_origin: "China", warranty: "3 years", brand: "amd", socket: "am5", core_count: 8, base_clock_ghz: 4.5, tdp_w: 105, integrated_graphics: true, model_number: "100-100000591WOF" },
+        variants: [{ sku: "TEST-R7-7700X", price: 36500, stock: 4 }],
+      },
+      {
+        title: "[TEST] Intel Core i5-14400F Processor",
+        category: "processor",
+        description: "10 cores (6P + 4E), LGA1700 socket. Needs a graphics card.",
+        attributes: { ...common, country_of_origin: "Vietnam", warranty: "3 years", brand: "intel", socket: "lga1700", core_count: 10, base_clock_ghz: 2.5, tdp_w: 65, integrated_graphics: false, model_number: "BX8071514400F" },
+        variants: [{ sku: "TEST-I5-14400F", price: 21500, stock: 7 }],
+      },
+      {
+        // Out of stock: live but not searchable, so it never shows in results or counts.
+        title: "[TEST] Intel Core i3-12100 Processor",
+        category: "processor",
+        description: "4 cores, LGA1700 socket, Intel UHD 730 graphics.",
+        attributes: { ...common, country_of_origin: "Vietnam", warranty: "3 years", brand: "intel", socket: "lga1700", core_count: 4, base_clock_ghz: 3.3, tdp_w: 60, integrated_graphics: true },
+        variants: [{ sku: "TEST-I3-12100", price: 12500, stock: 0 }],
+      },
       {
         title: "[TEST] Corsair Vengeance 16GB DDR5 RAM",
         category: "ram",
@@ -493,6 +524,7 @@ async function seedProducts() {
     "test-book-shop": [
       {
         title: "[TEST] Himu (paperback)",
+        bengaliName: "হিমু",
         category: "fiction",
         description: "A Himu novel by Humayun Ahmed.",
         attributes: { ...common, country_of_origin: "Bangladesh", brand: "Anyaprokash", author: "Humayun Ahmed", language: "bangla", format: "paperback", genre: "novel", page_count: 120 },
@@ -509,6 +541,7 @@ async function seedProducts() {
     "test-fashion-shop": [
       {
         title: "[TEST] Oxford cotton shirt",
+        bengaliName: "অক্সফোর্ড সুতি শার্ট",
         category: "mens-shirts",
         description: "Regular-fit long-sleeve Oxford shirt.",
         attributes: { ...common, country_of_origin: "Bangladesh", brand: "yellow", fit: "regular", material: "cotton", tryon_eligible: true },
@@ -557,12 +590,19 @@ async function seedProducts() {
       const category = await prisma.category.findUniqueOrThrow({ where: { slug: p.category } });
       const input = validateProductInput(
         await getCategorySchema(category.id),
-        { title: p.title, description: p.description, attributes: p.attributes, variants: p.variants.map((v) => ({ ...v, options: v.options ?? {} })) },
+        {
+          title: p.title,
+          bengaliName: p.bengaliName,
+          description: p.description,
+          attributes: p.attributes,
+          variants: p.variants.map((v) => ({ ...v, options: v.options ?? {} })),
+        },
         today,
       );
       const data = {
         categoryId: category.id,
         title: input.title,
+        bengaliName: input.bengaliName,
         description: input.description,
         attributes: input.attributes as Prisma.InputJsonValue,
         expiresOn: input.expiresOn,
@@ -586,6 +626,16 @@ async function seedProducts() {
   }
   await refreshLiveCounts(new Date());
   console.info(`Seeded ${count} test products (no images)`);
+}
+
+/** Search (US-041): builds the Meilisearch index when MEILI_URL is set; Postgres needs nothing. */
+async function seedSearchIndex() {
+  try {
+    const result = await indexer.reindexAll();
+    console.info(result.skipped ? "Search index: Meilisearch not configured, the Postgres adapter serves search" : `Search index built: ${result.indexed} products`);
+  } catch (err) {
+    console.warn(`Search index not built (is Meilisearch running?): ${err instanceof Error ? err.message : err}`);
+  }
 }
 
 /**
@@ -617,6 +667,7 @@ async function main() {
   await seedAccounts();
   await seedProducts();
   await seedWishlist();
+  await seedSearchIndex();
 }
 
 main()

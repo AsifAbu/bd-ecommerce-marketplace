@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { auth } from "@/auth";
 import { LogoutButton } from "@/features/accounts/ui/page-shell";
+import { CategoryShortcuts } from "@/features/search/ui/category-nav";
 
 export default function Home() {
   return (
@@ -12,8 +13,16 @@ export default function Home() {
       <Suspense fallback={<p className="text-sm">Checking session…</p>}>
         <SessionStatus />
       </Suspense>
+      <Suspense fallback={null}>
+        <Categories />
+      </Suspense>
     </main>
   );
+}
+
+async function Categories() {
+  await connection(); // product counts change at request time
+  return <CategoryShortcuts />;
 }
 
 async function SessionStatus() {

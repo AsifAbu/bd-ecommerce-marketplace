@@ -81,6 +81,14 @@ describe("validateProductInput", () => {
     expect(input.expiresOn).toBeNull();
   });
 
+  it("takes an optional Bengali name (searchable, US-045)", () => {
+    expect(validateProductInput(processorSchema(), validProcessor(), TODAY).bengaliName).toBeNull();
+    expect(validateProductInput(processorSchema(), validProcessor({ bengaliName: "  " }), TODAY).bengaliName).toBeNull();
+    expect(validateProductInput(processorSchema(), validProcessor({ bengaliName: " প্রসেসর " }), TODAY).bengaliName).toBe("প্রসেসর");
+    expect(() => validateProductInput(processorSchema(), validProcessor({ bengaliName: "ক".repeat(201) }), TODAY)).toThrow(/at most 200/);
+    expect(() => validateProductInput(processorSchema(), validProcessor({ bengaliName: 5 }), TODAY)).toThrow(ProductError);
+  });
+
   it("blocks the save when a required attribute is empty, with an error on that field", () => {
     const body = validProcessor();
     (body.attributes as Record<string, unknown>).socket = "";

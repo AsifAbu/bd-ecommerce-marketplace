@@ -187,6 +187,7 @@ export async function EditProductView({ shopId, productId, notice }: { shopId: s
   const state = listingState(product, today);
   const initial = {
     title: product.title,
+    bengaliName: product.bengaliName ?? "",
     description: product.description,
     attributes: (product.attributes ?? {}) as Record<string, unknown>,
     variants: product.variants.map((v) => ({

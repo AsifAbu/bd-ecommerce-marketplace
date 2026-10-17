@@ -130,8 +130,11 @@ function service() {
     storage: () => storage,
     now: () => NOW,
     newKey: () => "uuid-1",
+    onProductsChanged: (ids) => changes.push(ids),
   });
 }
+
+let changes: string[][] = [];
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0]);
 const caught = (p: Promise<unknown>) => p.then(() => null, (e) => e);
@@ -149,6 +152,7 @@ beforeEach(() => {
   stored = new Map();
   storageUp = true;
   repo = makeRepo();
+  changes = [];
 });
 
 describe("create product (US-030 acceptance criteria)", () => {
@@ -425,5 +429,31 @@ describe("CSV import (US-034)", () => {
     const { filename, csv } = await service().importTemplate("A", "cat-processor");
     expect(filename).toBe("products-processor.csv");
     expect(csv).toContain("handle,title,description,sku,price,stock,brand,socket");
+  });
+});
+
+describe("search re-index hook", () => {
+  it("reports the changed product after each successful write, and nothing when the write is refused", async () => {
+    const { id } = await service().createProduct("A", validProcessor());
+    expect(changes).toEqual([[id]]);
+    await caught(service().createProduct("B", validProcessor()));
+    expect(changes).toHaveLength(1);
+    await service().deleteProduct("A", id);
+    expect(changes).toEqual([[id], [id]]);
+  });
+
+  it("a failing hook never fails the write", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const svc = createProductService({
+      requireShopRole: async () => ({ shopId: "A", role: "staff", user: { id: "staffA" } }) as never,
+      getCategorySchema: async () => { throw new Error("unused"); },
+      repo,
+      storage: () => storage,
+      now: () => NOW,
+      onProductsChanged: () => { throw new Error("queue down"); },
+    });
+    await expect(svc.deleteProduct("A", "p9")).resolves.toBeUndefined();
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

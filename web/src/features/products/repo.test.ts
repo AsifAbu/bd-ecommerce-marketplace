@@ -52,6 +52,7 @@ beforeEach(() => {
 
 const input = (sku: string | null = "NEW-1"): ProductInput => ({
   title: "Edited",
+  bengaliName: null,
   description: "Desc",
   attributes: { brand: "amd" },
   variants: [{ sku, price: "10.00", stock: 2, options: {}, optionKey: "", position: 0 }],

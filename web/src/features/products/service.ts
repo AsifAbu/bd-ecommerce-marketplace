@@ -58,6 +58,11 @@ export interface ProductServiceDeps {
   storage: () => ImageStorage;
   now: () => Date;
   newKey?: () => string;
+  /**
+   * Called after a write that can change what shoppers see (search re-indexes these products).
+   * Must not throw; the write has already been committed.
+   */
+  onProductsChanged?: (productIds: string[]) => void;
 }
 
 export interface UploadedFile {
@@ -74,6 +79,13 @@ const field = (body: unknown, key: string): unknown =>
 
 export function createProductService(deps: ProductServiceDeps) {
   const { repo } = deps;
+  const changed = (...productIds: string[]) => {
+    try {
+      deps.onProductsChanged?.(productIds);
+    } catch (err) {
+      console.warn("[products] change hook failed", err instanceof Error ? err.message : err);
+    }
+  };
   const clock = () => {
     const now = deps.now();
     return { now, today: dhakaToday(now) };
@@ -114,6 +126,7 @@ export function createProductService(deps: ProductServiceDeps) {
     await assertSkusFree(shopId, input);
     assertWithinTierLimit(shop.tier, await repo.countLiveListings(shopId, today));
     const product = await repo.createProduct(shopId, categoryId, input, user.id, today);
+    changed(product.id);
     return { id: product.id };
   }
 
@@ -136,6 +149,7 @@ export function createProductService(deps: ProductServiceDeps) {
       assertWithinTierLimit(shop.tier, await repo.countLiveListings(shopId, today, productId));
     }
     await repo.updateProduct(shopId, productId, input, user.id, today);
+    changed(productId);
   }
 
   /** US-033: deactivate (hidden) or activate again (listing rules and tier limit apply). */
@@ -155,12 +169,14 @@ export function createProductService(deps: ProductServiceDeps) {
       assertWithinTierLimit(shop.tier, await repo.countLiveListings(shopId, today, productId));
     }
     await repo.setStatus(shopId, productId, status, user.id, today);
+    changed(productId);
   }
 
   /** US-033: soft delete (kept for the 6-year records, hidden everywhere). */
   async function deleteProduct(shopId: string, productId: string): Promise<void> {
     const { user } = await deps.requireShopRole(shopId, ROLES);
     await repo.softDeleteProduct(shopId, productId, user.id, clock().today);
+    changed(productId);
   }
 
   /** US-033: quick stock update for one variant. */
@@ -169,6 +185,7 @@ export function createProductService(deps: ProductServiceDeps) {
     const stock = parseStock(field(body, "stock"));
     if ("error" in stock) throw validationError({ stock: stock.error });
     await repo.updateVariantStock(shopId, productId, variantId, stock.stock, user.id);
+    changed(productId);
   }
 
   // ---- Images (US-032) ----
@@ -196,7 +213,9 @@ export function createProductService(deps: ProductServiceDeps) {
       throw storageDown();
     }
     try {
-      return await repo.addImage(shopId, productId, { storageKey, contentType }, user.id);
+      const image = await repo.addImage(shopId, productId, { storageKey, contentType }, user.id);
+      changed(productId);
+      return image;
     } catch (err) {
       await storage.deleteObject(storageKey).catch(() => undefined);
       throw err;
@@ -206,6 +225,7 @@ export function createProductService(deps: ProductServiceDeps) {
   async function deleteImage(shopId: string, productId: string, imageId: string): Promise<void> {
     const { user } = await deps.requireShopRole(shopId, ROLES);
     const image = await repo.deleteImage(shopId, productId, imageId, user.id);
+    changed(productId);
     try {
       await deps.storage().deleteObject(image.storageKey);
     } catch (err) {
@@ -217,6 +237,7 @@ export function createProductService(deps: ProductServiceDeps) {
   async function makeCover(shopId: string, productId: string, imageId: string): Promise<void> {
     const { user } = await deps.requireShopRole(shopId, ROLES);
     await repo.makeCoverImage(shopId, productId, imageId, user.id);
+    changed(productId);
   }
 
   /** Public: a short-lived signed URL for an image of a product that is not deleted. */
@@ -287,6 +308,7 @@ export function createProductService(deps: ProductServiceDeps) {
 
     assertWithinTierLimit(shop.tier, await repo.countLiveListings(shopId, today), products.length);
     const created = await repo.createProducts(shopId, categoryId, products.map((p) => p.input), user.id, today);
+    changed(...created.map((p) => p.id));
     return { created: created.length, ids: created.map((p) => p.id) };
   }
 

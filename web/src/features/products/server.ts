@@ -1,4 +1,5 @@
 import { getCategorySchema } from "@/features/catalog";
+import { notifyProductsChanged } from "@/features/search";
 import { requireShopRole } from "@/lib/auth";
 import { getStorage } from "@/lib/storage";
 import { createProductPageLoader } from "./detail";
@@ -12,6 +13,7 @@ export const productService = createProductService({
   repo,
   storage: getStorage,
   now: () => new Date(),
+  onProductsChanged: notifyProductsChanged,
 });
 
 /** US-044: the public page of a live listing, or null (404). */

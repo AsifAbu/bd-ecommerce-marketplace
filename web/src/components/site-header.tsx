@@ -2,10 +2,11 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { auth } from "@/auth";
+import { SiteSearch } from "./site-search";
 
 /**
- * Site header: the marketplace name and, for logged-in users, a link to their wishlist.
- * Kept small; the search box (Sprint 5) goes between the name and the links.
+ * Site header: the marketplace name, the categories link and search box (Sprint 5), and for
+ * logged-in users a link to their wishlist.
  */
 export function SiteHeader() {
   return (
@@ -14,6 +15,7 @@ export function SiteHeader() {
         <Link href="/" className="text-lg font-bold">
           Marketplace
         </Link>
+        <SiteSearch />
         <nav aria-label="Your links" className="ml-auto flex gap-4 text-sm">
           <Suspense fallback={null}>
             <UserLinks />
