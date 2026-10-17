@@ -70,16 +70,36 @@ products per seeded shop (no images).
   available"): images (placeholder when there are none or storage is down), price, size/colour picker with
   stock per choice (sold-out options disabled; the choice is kept in `?variant=`), specs in the category's
   display order, delivery charge, return eligibility, the seller with its "Verified seller" badge and a link to
-  `/s/<shop slug>`. "Add to cart" is disabled until the cart (Sprint 6).
+  `/s/<shop slug>`. "Add to cart" adds the chosen variant (guests too).
 - **Delivery charge** (`src/lib/delivery.ts`, decision D9): `deliveryCharge({ insideDhaka, weightGrams })` gives
   Tk 70 inside Dhaka / Tk 130 outside for the first kg, plus Tk 20 per started kg above 1 kg (per shop order);
   `deliveryBreakdown` gives the parts.
 - **Wishlist** `/account/wishlist` (logged-in; header link "Wishlist"): price, variant and "In stock" /
   "Out of stock", remove. A guest who taps **Save to wishlist** logs in and comes back to the product with
-  `?wishlist=add`, and the item is saved on the server. "Move to cart" is disabled until the cart exists; the cart
-  calls `wishlistService.moveToCart(userId, itemId, addToCart)` from `features/wishlist/server.ts`.
-  JSON API: `GET/POST /api/wishlist`, `DELETE /api/wishlist/<itemId>`. The seed gives
-  `customer.verified@ecom.test` two items (one sold out).
+  `?wishlist=add`, and the item is saved on the server. "Move to cart" (in-stock item with a chosen variant)
+  adds it to the cart and removes it from the wishlist.
+  JSON API: `GET/POST /api/wishlist`, `DELETE /api/wishlist/<itemId>`,
+  `POST /api/wishlist/<itemId>/move-to-cart`. The seed gives `customer.verified@ecom.test` two items (one sold out).
+
+## Cart
+
+- **Cart** `/cart` (guests and customers; header link "Cart (n)"): one cart across shops, grouped by shop with
+  each shop's subtotal, delivery charge (D9, by weight) and free-delivery hint ("Add Tk X more"; owners set the
+  threshold on the seller dashboard profile). Quantity is capped at the stock with a message; a price change since
+  adding shows a notice and **Checkout** waits for "Accept new price"; "Save for later" moves a line out of the
+  totals; unavailable lines are listed apart. Delivery area: the choice on the cart page (cookie `cart_zone`),
+  else the default address (district Dhaka = inside Dhaka), else inside Dhaka. `/checkout` is a placeholder.
+- **Guests**: an httpOnly `cart_guest` cookie (30 days; only its SHA-256 is stored). At login or sign-up the
+  Auth.js `signIn` event merges the guest cart into the account cart (quantities added, capped at the stock) and
+  removes the cookie. The daily job `cart.purge-guest-carts` removes guest carts untouched for 30 days.
+- **JSON API**: `GET /api/cart?zone=`, `POST /api/cart/items` `{ variantId, quantity? }`,
+  `PATCH /api/cart/items/<id>` `{ quantity?, savedForLater?, acknowledgePrice? }`, `DELETE /api/cart/items/<id>`,
+  `POST /api/cart/merge`. The owner comes from the session or cookie only; another owner's line is a 404.
+- **For checkout (US-051)**: `resolveCartOwner`, `resolveDeliveryZone`, `cartService.getCart(owner, zone)` and
+  `cartService.clearItems(owner, ids)` from `features/cart/server.ts`; `cartReadyForCheckout(cart)` from
+  `features/cart`.
+- The seed gives `customer.verified@ecom.test` a cart across the Test Tech Shop (free delivery from Tk 10,000) and
+  the Test Book Shop, with one price change to accept and one item saved for later.
 
 ## Scripts
 
