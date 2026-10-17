@@ -1,7 +1,8 @@
 "use client";
 
+import { resultFields, resultValues } from "@/lib/actions";
 import { useActionState, useEffect, useState } from "react";
-import { saveAddressAction, type FormState } from "../actions";
+import { saveAddressAction } from "../actions";
 import { Field, FormMessage, inputClass, SubmitButton } from "./form-parts";
 
 export interface AddressDefaults {
@@ -16,7 +17,6 @@ export interface AddressDefaults {
   isDefault: boolean;
 }
 
-const initial: FormState = {};
 
 /** Loads options from GET /api/locations for the cascading selects. */
 function useOptions(key: "divisions" | "districts" | "upazilas", param?: { division?: string; district?: string }) {
@@ -88,9 +88,9 @@ function Select({
 }
 
 export function AddressForm({ defaults }: { defaults: AddressDefaults }) {
-  const [state, action] = useActionState(saveAddressAction, initial);
-  const f = state.fields ?? {};
-  const v = { ...defaults, ...state.values };
+  const [state, action] = useActionState(saveAddressAction, undefined);
+  const f = resultFields(state);
+  const v = { ...defaults, ...resultValues(state) };
   const [division, setDivision] = useState(defaults.division);
   const [district, setDistrict] = useState(defaults.district);
   const [upazila, setUpazila] = useState(defaults.upazila);
