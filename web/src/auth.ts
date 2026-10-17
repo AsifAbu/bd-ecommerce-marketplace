@@ -1,7 +1,13 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db";
+import { ipFromHeaders } from "@/lib/client-ip";
 import { authorizeCredentials } from "@/features/auth/credentials";
+import { prismaLoginFailureStore } from "@/features/auth/login-failure-store";
+import { createLoginThrottle } from "@/features/auth/login-throttle";
+
+/** Login lockout: 5 failures per identifier in 15 min lock it for 15 min; per-IP cap (see login-throttle.ts). */
+const loginThrottle = createLoginThrottle({ store: prismaLoginFailureStore });
 
 /**
  * Auth.js v5. Login with mobile number or email + password.
@@ -17,9 +23,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         identifier: { label: "Mobile or email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      authorize: (credentials) =>
-        authorizeCredentials(credentials, (kind, value) =>
-          prisma.user.findUnique({ where: kind === "email" ? { email: value } : { phone: value } }),
+      authorize: (credentials, request) =>
+        authorizeCredentials(
+          credentials,
+          (kind, value) => prisma.user.findUnique({ where: kind === "email" ? { email: value } : { phone: value } }),
+          // signIn() from a server action forwards the incoming request headers, so the IP is the client's.
+          { throttle: loginThrottle, ip: ipFromHeaders(request.headers) },
         ),
     }),
   ],

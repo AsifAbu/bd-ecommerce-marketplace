@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { connection } from "next/server";
+import { Suspense } from "react";
+import { auth } from "@/auth";
 import { SiteSearch } from "./site-search";
 
 /**
- * Site header: the marketplace name, then the categories link and search box (Sprint 5).
- * Kept small; the product-page branch adds the wishlist link on the right.
+ * Site header: the marketplace name, the categories link and search box (Sprint 5), and for
+ * logged-in users a link to their wishlist.
  */
 export function SiteHeader() {
   return (
@@ -13,7 +16,23 @@ export function SiteHeader() {
           Marketplace
         </Link>
         <SiteSearch />
+        <nav aria-label="Your links" className="ml-auto flex gap-4 text-sm">
+          <Suspense fallback={null}>
+            <UserLinks />
+          </Suspense>
+        </nav>
       </div>
     </header>
+  );
+}
+
+async function UserLinks() {
+  await connection(); // session reads are request-time (Cache Components)
+  const session = await auth();
+  if (!session?.user) return null;
+  return (
+    <Link className="underline" href="/account/wishlist">
+      Wishlist
+    </Link>
   );
 }

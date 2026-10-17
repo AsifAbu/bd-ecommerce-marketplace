@@ -3,6 +3,7 @@
  * Feature agents extend this file with their own seed blocks.
  * All accounts use the password TEST_PASSWORD and @ecom.test emails.
  * Remove all seed data before release (pre-release checklist).
+ * Refuses to run when APP_MODE is production or unset (see seed-guard.ts).
  */
 import "dotenv/config";
 import { prisma } from "../src/lib/db";
@@ -16,6 +17,7 @@ import { refreshLiveCounts } from "../src/features/products/live-counts";
 import { validateProductInput } from "../src/features/products/validation";
 import { dhakaToday } from "../src/features/shops";
 import { indexer } from "../src/features/search/server";
+import { assertSeedAllowed } from "./seed-guard";
 
 export const TEST_PASSWORD = "Test@12345";
 
@@ -35,7 +37,9 @@ async function seedUsers() {
     {
       email: "customer.verified@ecom.test",
       phone: "+8801700000002",
-      name: "[TEST] Customer, verified phone",
+      name: "[TEST] Customer, verified phone and email",
+      // Verified email too: the shops e2e test invites this account as staff, which needs it.
+      emailVerifiedAt: now,
       phoneVerifiedAt: now,
     },
     {
@@ -319,7 +323,8 @@ async function seedCatalog() {
 }
 
 /**
- * Shops (US-010 to US-017): Tech, Fashion and Pharmacy are Verified, Books is Basic. All approved.
+ * Shops (US-010 to US-017): Tech, Fashion and Pharmacy are Verified, Books is Basic; all approved.
+ * A fifth, Basic shop is suspended (hidden storefront and products).
  * Each has an owner and one staff user. The pharmacy has a dummy verified drug licence.
  */
 async function seedShops() {
@@ -339,6 +344,8 @@ async function seedShops() {
     { key: "books", name: "[TEST] Test Book Shop", slug: "test-book-shop", type: "books", verified: false },
     { key: "fashion", name: "[TEST] Test Fashion Shop", slug: "test-fashion-shop", type: "fashion", verified: true },
     { key: "pharmacy", name: "[TEST] Test Pharmacy", slug: "test-pharmacy", type: "medicine", verified: true },
+    // Suspended by the admin: its storefront is "not found" and its products are hidden (US-014, US-015).
+    { key: "suspended", name: "[TEST] Suspended Shop", slug: "test-suspended-shop", type: "general", verified: false, suspended: true },
   ] as const;
 
   for (const [i, s] of shops.entries()) {
@@ -353,8 +360,8 @@ async function seedShops() {
     const data = {
       name: s.name,
       type: s.type,
-      status: "approved",
-      statusReason: null,
+      status: "suspended" in s ? "suspended" : "approved",
+      statusReason: "suspended" in s ? "[TEST] Suspended for testing" : null,
       ownerId: owner.id,
       ownerNid: `199000000000${String(i + 1).padStart(5, "0")}`,
       ownerPhotoKey: docKey,
@@ -466,6 +473,15 @@ async function seedProducts() {
     variants: SeedVariant[];
   };
   const byShop: Record<string, SeedProduct[]> = {
+    "test-suspended-shop": [
+      {
+        title: "[TEST] Hidden: suspended shop's processor",
+        category: "processor",
+        description: "Listed by a suspended shop, so customers never see it.",
+        attributes: { ...common, country_of_origin: "China", brand: "intel", socket: "lga1700", core_count: 6, base_clock_ghz: 2.5 },
+        variants: [{ sku: "TEST-SUSP-CPU", price: 15000, stock: 3 }],
+      },
+    ],
     "test-tech-shop": [
       {
         title: "[TEST] AMD Ryzen 5 7600 Processor",
@@ -533,7 +549,8 @@ async function seedProducts() {
           ["Black", "White"].map((colour) => ({
             sku: `TEST-OX-${size}-${colour.toUpperCase()}`,
             price: size === "L" ? 1950 : 1850,
-            stock: 6,
+            // L / White is sold out, so the product page shows a disabled option.
+            stock: size === "L" && colour === "White" ? 0 : 6,
             options: { size: size.toLowerCase(), colour: colour.toLowerCase() },
           })),
         ),
@@ -621,12 +638,35 @@ async function seedSearchIndex() {
   }
 }
 
+/**
+ * Wishlist (US-057): the verified customer saved a book and a sold-out shirt variant, so
+ * /account/wishlist shows both "In stock" and "Out of stock". Idempotent.
+ */
+async function seedWishlist() {
+  const user = await prisma.user.findUniqueOrThrow({ where: { email: "customer.verified@ecom.test" } });
+  const picks: { title: string; optionKey: string }[] = [
+    { title: "[TEST] Himu (paperback)", optionKey: "" },
+    { title: "[TEST] Oxford cotton shirt", optionKey: "colour=white;size=l" },
+  ];
+  for (const pick of picks) {
+    const product = await prisma.product.findFirstOrThrow({ where: { title: pick.title, deletedAt: null } });
+    const variant = await prisma.productVariant.findUniqueOrThrow({
+      where: { productId_optionKey: { productId: product.id, optionKey: pick.optionKey } },
+    });
+    const existing = await prisma.wishlistItem.findFirst({ where: { userId: user.id, productId: product.id, variantId: variant.id } });
+    if (!existing) await prisma.wishlistItem.create({ data: { userId: user.id, productId: product.id, variantId: variant.id } });
+  }
+  console.info("Seeded 2 wishlist items for customer.verified@ecom.test");
+}
+
 async function main() {
+  assertSeedAllowed();
   await seedUsers();
   await seedCatalog();
   await seedShops();
   await seedAccounts();
   await seedProducts();
+  await seedWishlist();
   await seedSearchIndex();
 }
 

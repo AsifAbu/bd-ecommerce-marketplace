@@ -2,10 +2,10 @@
 
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import type { FormState } from "../actions";
+import { buttonClass, inputClass } from "@/components/form-styles";
+import type { ActionResult } from "@/lib/actions";
 
-export const inputClass =
-  "w-full rounded border border-gray-400 px-3 py-2 text-base focus:outline-2 focus:outline-offset-1 focus:outline-blue-700 aria-invalid:border-red-700";
+export { inputClass };
 
 /** Labelled input with its error message linked by aria-describedby. */
 export function Field({
@@ -42,23 +42,26 @@ export function SubmitButton({ children, className = "" }: { children: ReactNode
     <button
       type="submit"
       disabled={pending}
-      className={`rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 disabled:opacity-60 ${className}`}
+      className={`${buttonClass} ${className}`}
     >
       {pending ? "Please wait…" : children}
     </button>
   );
 }
 
-/** Form-level error or success message, announced to screen readers. */
-export function FormMessage({ state }: { state: FormState }) {
-  if (state.error) {
+/**
+ * Form-level error or success message, announced to screen readers.
+ * Validation errors are shown next to their fields instead.
+ */
+export function FormMessage({ state }: { state: ActionResult }) {
+  if (state && "error" in state && state.error.code !== "VALIDATION") {
     return (
       <p role="alert" className="rounded border border-red-700 bg-red-50 px-3 py-2 text-red-800">
-        {state.error}
+        {state.error.message}
       </p>
     );
   }
-  if (state.message) {
+  if (state && "ok" in state && state.message) {
     return (
       <p role="status" className="rounded border border-green-700 bg-green-50 px-3 py-2 text-green-900">
         {state.message}

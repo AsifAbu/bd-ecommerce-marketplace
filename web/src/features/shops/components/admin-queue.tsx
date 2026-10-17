@@ -1,4 +1,5 @@
 import { getStorage } from "@/lib/storage";
+import { storefrontPath, storefrontUrl } from "@/lib/storefront-link";
 import {
   approveShop,
   approveUpgrade,
@@ -11,7 +12,7 @@ import {
 import * as repo from "../repo";
 import { isLicenceValid } from "../rules";
 import { REGISTRATION_TYPE_LABELS, SHOP_TYPE_LABELS } from "../schemas";
-import { ActionForm, Field } from "./action-form";
+import { ActionForm, Field } from "@/components/action-form";
 
 const date = (d: Date) => d.toISOString().slice(0, 10);
 const row = "flex flex-col gap-2 rounded border border-gray-300 p-3";
@@ -145,6 +146,14 @@ export async function AdminQueue() {
               {s.name} · {s.status} · {s.tier}
               {s.medicineSuspended && " · medicine suspended (licence expired)"}
             </h3>
+            {s.status === "approved" && (
+              <p>
+                Storefront:{" "}
+                <a className="text-blue-800 underline" href={storefrontPath(s.slug)} target="_blank" rel="noreferrer">
+                  {storefrontUrl(s.slug)}
+                </a>
+              </p>
+            )}
             {s.status === "approved" ? (
               <ReasonForm action={suspendShop} label="Suspend" idName="shopId" id={s.id} />
             ) : (

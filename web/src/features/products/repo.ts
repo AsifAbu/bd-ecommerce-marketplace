@@ -281,3 +281,26 @@ export function publicFindImage(imageId: string) {
     select: { id: true, storageKey: true },
   });
 }
+
+/** A live product for the product page (US-044): shop, category, variants and images, cover first. */
+export function publicFindLiveProduct(productId: string, today: Date) {
+  return prisma.product.findFirst({
+    where: { ...liveProductWhere(today), id: productId },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      attributes: true,
+      expiresOn: true,
+      category: { select: { id: true, name: true, path: true } },
+      shop: { select: { id: true, name: true, slug: true, tier: true } },
+      variants: { ...variantOrder, select: { id: true, price: true, stock: true, options: true, position: true } },
+      images: { orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: { id: true } },
+    },
+  });
+}
+
+/** Names of categories (the product page breadcrumb). */
+export function publicFindCategories(ids: string[]) {
+  return prisma.category.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } });
+}
