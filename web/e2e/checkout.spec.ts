@@ -184,7 +184,7 @@ test("guest checks out with OTP 123456, tracks the order with its number + OTP, 
   await tracker.getByRole("button", { name: "View order" }).click();
   await expect(tracker.getByRole("heading", { level: 1, name: `Order ${orderNo}` })).toBeVisible();
   await expect(tracker.getByTestId("shop-order-status")).toHaveText("Placed, waiting for the shop");
-  await expect(tracker.getByText("Request a return (coming soon)")).toBeVisible();
+  await expect(tracker.getByRole("link", { name: /^Report a problem/ })).toBeVisible();
   await other.close();
 
   const [row] = await query<{ user_id: string | null; phone_verified_at: Date | null }>(
