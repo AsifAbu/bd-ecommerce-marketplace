@@ -1,14 +1,14 @@
 import Form from "next/form";
 import Link from "next/link";
 import { hasFilters, searchHref, toSearchParams, type SearchParams } from "../params";
-import type { AttributeFacet, FacetOption, SearchResponse } from "../service";
+import type { AttributeFacet, FacetOption, SearchFacets, SearchResponse } from "../service";
 import { AutoSubmit } from "./auto-submit";
 import { formatTk } from "./format";
 import { linkClass, secondaryButtonClass, smallInputClass } from "./styles";
 
 /**
  * The filter panel (US-042): the leaf category's filterable attributes plus the common filters
- * (price, shop; rating once reviews exist), or for a search across categories only the common
+ * (price, shop, rating), or for a search across categories only the common
  * filters and "Narrow by category". A plain GET form: the URL holds the whole state.
  */
 
@@ -101,6 +101,37 @@ function RangeInputs(props: {
   );
 }
 
+/** US-055: "N stars & up" (one choice at a time) plus "Any rating". */
+function RatingFilter({ facet }: { facet: NonNullable<SearchFacets["rating"]> }) {
+  return (
+    <fieldset className={fieldsetClass}>
+      <legend className={legendClass}>Customer rating</legend>
+      <ul className="flex flex-col gap-1">
+        {facet.options.map((o) => (
+          <li key={o.min}>
+            <label className="flex items-center gap-2">
+              <input type="radio" name="rating" value={o.min} defaultChecked={o.selected} className="h-4 w-4" />
+              <span>
+                <span aria-hidden="true" className="text-amber-700">
+                  {"★".repeat(o.min)}
+                  <span className="text-gray-400">{"★".repeat(5 - o.min)}</span>
+                </span>{" "}
+                {o.label} <span className="text-gray-700">({o.count})</span>
+              </span>
+            </label>
+          </li>
+        ))}
+        <li>
+          <label className="flex items-center gap-2">
+            <input type="radio" name="rating" value="" defaultChecked={facet.selected === null} className="h-4 w-4" />
+            <span>Any rating</span>
+          </label>
+        </li>
+      </ul>
+    </fieldset>
+  );
+}
+
 function AttributeFilter({ facet }: { facet: AttributeFacet }) {
   const name = `f.${facet.key}`;
   switch (facet.widget) {
@@ -149,7 +180,10 @@ export function FilterPanel({ response, basePath, onCategoryPage }: { response: 
     <aside aria-label="Filters" className="flex flex-col gap-3 text-sm md:w-64 md:shrink-0">
       <h2 className="text-lg font-semibold">Filters</h2>
       {hasFilters(params) && (
-        <Link className={linkClass} href={searchHref(basePath, params, (d) => ((d.attrs = {}), (d.priceMin = null), (d.priceMax = null), (d.shops = [])), linkOptions)}>
+        <Link
+          className={linkClass}
+          href={searchHref(basePath, params, (d) => ((d.attrs = {}), (d.priceMin = null), (d.priceMax = null), (d.shops = []), (d.minRating = null)), linkOptions)}
+        >
           Clear all filters
         </Link>
       )}
@@ -195,7 +229,7 @@ export function FilterPanel({ response, basePath, onCategoryPage }: { response: 
             />
           )}
           {facets.shops.length > 0 && <CheckboxList name="shop" legend="Shop" options={facets.shops} />}
-          {/* Rating filter: added with reviews (US-055); facets.rating is the hook. */}
+          {facets.rating && <RatingFilter facet={facets.rating} />}
           <div className="border-t border-gray-300 pt-3">
             <button type="submit" className={secondaryButtonClass}>
               Apply filters

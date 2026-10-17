@@ -6,7 +6,7 @@ import { createPostgresEngine } from "./postgres";
 import { doc, request } from "./test-fixtures";
 import type { EngineResult, SearchEngine } from "./types";
 
-const empty: EngineResult = { hits: [], total: 0, facets: { categories: {}, shops: {}, price: null, attrs: {} } };
+const empty: EngineResult = { hits: [], total: 0, facets: { categories: {}, shops: {}, price: null, rating: {}, attrs: {} } };
 
 function fakeEngine(name: SearchEngine["name"], impl?: () => Promise<EngineResult>) {
   return { name, search: vi.fn(impl ?? (async () => empty)) } satisfies SearchEngine;

@@ -114,6 +114,8 @@ describe("category results with dynamic filters (US-042 acceptance criteria)", (
         shopName: "Book Shop",
         shopSlug: "books",
         categoryName: "Fiction",
+        rating: null,
+        ratingCount: 0,
         imageUrl: null,
         url: "/products/himu",
       },

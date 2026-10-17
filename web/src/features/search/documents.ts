@@ -23,6 +23,8 @@ export interface ProductForIndex {
   variants: { price: { toString(): string } | number | string; stock: number; options: unknown }[];
   /** Ordered: the first is the cover. */
   images: { id: string }[];
+  /** The product's rating aggregate (reviews, US-055); null or missing without reviews. */
+  rating?: { count: number; average: { toString(): string } | number } | null;
 }
 
 export type IndexField = Pick<FieldDef, "key" | "type" | "source" | "options">;
@@ -43,6 +45,12 @@ export function pathIds(path: string): string[] {
 
 function pushUnique<T>(list: T[], value: T) {
   if (!list.includes(value)) list.push(value);
+}
+
+/** Average to 1 decimal and the review count; null and 0 without reviews. */
+export function ratingOf(rating: ProductForIndex["rating"]): Pick<SearchDocument, "rating" | "ratingCount"> {
+  if (!rating || rating.count <= 0) return { rating: null, ratingCount: 0 };
+  return { rating: Math.round(Number(rating.average.toString()) * 10) / 10, ratingCount: rating.count };
 }
 
 export function buildSearchDocument(product: ProductForIndex, fields: IndexField[]): SearchDocument | null {
@@ -120,7 +128,7 @@ export function buildSearchDocument(product: ProductForIndex, fields: IndexField
     inStock: true,
     coverImageId: product.images[0]?.id ?? null,
     createdAt: product.createdAt.getTime(),
-    rating: null,
+    ...ratingOf(product.rating),
     attrs,
   };
 }

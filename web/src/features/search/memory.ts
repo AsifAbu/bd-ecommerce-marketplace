@@ -63,11 +63,20 @@ export function matchesPrice(doc: SearchDocument, price: EngineRequest["price"])
   return (price.min === null || doc.priceMax >= price.min) && (price.max === null || doc.priceMin <= price.max);
 }
 
-type Except = { shops?: boolean; price?: boolean; attr?: string };
+/** "N stars & up": rated at least `min` (unrated products never match a rating filter). */
+export function matchesRating(doc: SearchDocument, min: number | null | undefined): boolean {
+  return min === null || min === undefined || (doc.rating !== null && doc.rating >= min);
+}
+
+/** The thresholds counted by the rating facet ("4" = 4 stars & up). */
+export const RATING_FACET_THRESHOLDS = [4, 3, 2, 1] as const;
+
+type Except = { shops?: boolean; price?: boolean; rating?: boolean; attr?: string };
 
 function passes(doc: SearchDocument, req: EngineRequest, except: Except = {}): boolean {
   if (!except.shops && req.shops.length > 0 && !req.shops.includes(doc.shopSlug)) return false;
   if (!except.price && !matchesPrice(doc, req.price)) return false;
+  if (!except.rating && !matchesRating(doc, req.minRating)) return false;
   return req.attrs.every((f) => f.key === except.attr || matchesAttr(doc, f));
 }
 
@@ -82,12 +91,15 @@ function minMax(values: number[]): { min: number; max: number } | null {
 
 /** Facet counts over the documents that match the keywords and category scope. */
 export function computeFacets(scoped: SearchDocument[], req: EngineRequest): EngineFacets {
-  const facets: EngineFacets = { categories: {}, shops: {}, price: null, attrs: {} };
+  const facets: EngineFacets = { categories: {}, shops: {}, price: null, rating: {}, attrs: {} };
   const prices: number[] = [];
   for (const doc of scoped) {
     if (passes(doc, req)) increment(facets.categories, doc.categoryId);
     if (passes(doc, req, { shops: true })) increment(facets.shops, doc.shopSlug);
     if (passes(doc, req, { price: true })) prices.push(doc.priceMin, doc.priceMax);
+    if (doc.rating !== null && passes(doc, req, { rating: true })) {
+      for (const t of RATING_FACET_THRESHOLDS) if (doc.rating >= t) increment(facets.rating, String(t));
+    }
   }
   facets.price = minMax(prices);
 
@@ -123,6 +135,10 @@ function compare(req: EngineRequest, scores: Map<string, number>) {
       return (a: SearchDocument, b: SearchDocument) => b.priceMin - a.priceMin || newest(a, b);
     case "newest":
       return newest;
+    case "rating":
+      // Best rated first; unrated last; more reviews break a tie.
+      return (a: SearchDocument, b: SearchDocument) =>
+        (b.rating ?? -1) - (a.rating ?? -1) || b.ratingCount - a.ratingCount || newest(a, b);
     case "relevance":
       return (a: SearchDocument, b: SearchDocument) => (scores.get(b.id) ?? 0) - (scores.get(a.id) ?? 0) || newest(a, b);
   }

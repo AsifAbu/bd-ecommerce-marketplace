@@ -30,8 +30,8 @@ export interface MeiliOptions {
 export function indexSettings() {
   return {
     searchableAttributes: ["title", "bengaliName", "brand", "keywords", "categoryNames", "description"],
-    filterableAttributes: ["inStock", "categoryId", "categoryPath", "shopId", "shopSlug", "priceMin", "priceMax", "createdAt", "indexedAt", "attrs"],
-    sortableAttributes: ["priceMin", "createdAt"],
+    filterableAttributes: ["inStock", "categoryId", "categoryPath", "shopId", "shopSlug", "priceMin", "priceMax", "rating", "createdAt", "indexedAt", "attrs"],
+    sortableAttributes: ["priceMin", "createdAt", "rating", "ratingCount"],
     synonyms: meiliSynonyms(),
     faceting: { maxValuesPerFacet: 100 },
     pagination: { maxTotalHits: MAX_PAGE * PER_PAGE },
@@ -58,7 +58,7 @@ function attrFilter(f: AttrFilter): string[] {
   }
 }
 
-type Except = { shops?: boolean; price?: boolean; attr?: string };
+type Except = { shops?: boolean; price?: boolean; rating?: boolean; attr?: string };
 
 /** The filter expressions (AND-ed) of a request, optionally leaving one filter group out. */
 export function buildFilters(req: EngineRequest, except: Except = {}): string[] {
@@ -69,6 +69,7 @@ export function buildFilters(req: EngineRequest, except: Except = {}): string[] 
     if (req.price.min !== null) out.push(`priceMax >= ${req.price.min}`);
     if (req.price.max !== null) out.push(`priceMin <= ${req.price.max}`);
   }
+  if (!except.rating && req.minRating !== null) out.push(`rating >= ${req.minRating}`);
   for (const f of req.attrs) if (f.key !== except.attr) out.push(...attrFilter(f));
   return out;
 }
@@ -81,6 +82,8 @@ export function buildSort(req: EngineRequest): string[] | undefined {
       return ["priceMin:desc", "createdAt:desc"];
     case "newest":
       return ["createdAt:desc"];
+    case "rating":
+      return ["rating:desc", "ratingCount:desc", "createdAt:desc"];
     case "relevance":
       return req.q.trim() ? undefined : ["createdAt:desc"];
   }
@@ -105,7 +108,7 @@ interface MeiliResponse {
 }
 
 /** What each query of the multi-search is for. */
-type Purpose = { kind: "main" } | { kind: "shops" } | { kind: "price" } | { kind: "attr"; key: string };
+type Purpose = { kind: "main" } | { kind: "shops" } | { kind: "price" } | { kind: "rating" } | { kind: "attr"; key: string };
 
 /** The multi-search plan for a request: the main query, then one per active filter group. */
 export function buildQueries(req: EngineRequest, indexUid: string): { purpose: Purpose; query: MeiliQuery }[] {
@@ -114,6 +117,7 @@ export function buildQueries(req: EngineRequest, indexUid: string): { purpose: P
   const mainFacets = ["categoryId"];
   if (req.shops.length === 0) mainFacets.push("shopSlug");
   if (!req.price) mainFacets.push("priceMin", "priceMax");
+  if (req.minRating === null) mainFacets.push("rating");
   for (const f of req.facets) if (!filtered.has(f.key)) mainFacets.push(facetName(f.key));
 
   const base = { indexUid, q: req.q };
@@ -126,6 +130,7 @@ export function buildQueries(req: EngineRequest, indexUid: string): { purpose: P
   ];
   if (req.shops.length > 0) plan.push({ purpose: { kind: "shops" }, query: facetOnly(buildFilters(req, { shops: true }), ["shopSlug"]) });
   if (req.price) plan.push({ purpose: { kind: "price" }, query: facetOnly(buildFilters(req, { price: true }), ["priceMin", "priceMax"]) });
+  if (req.minRating !== null) plan.push({ purpose: { kind: "rating" }, query: facetOnly(buildFilters(req, { rating: true }), ["rating"]) });
   for (const f of req.facets) {
     if (filtered.has(f.key)) {
       plan.push({ purpose: { kind: "attr", key: f.key }, query: facetOnly(buildFilters(req, { attr: f.key }), [facetName(f.key)]) });
@@ -135,9 +140,20 @@ export function buildQueries(req: EngineRequest, indexUid: string): { purpose: P
   return plan;
 }
 
+/** Exact ratings ("4.3": 2) to "N stars & up" counts ("4": 2, "3": 2, ...). */
+export function ratingThresholds(distribution: Record<string, number> | undefined): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [value, count] of Object.entries(distribution ?? {})) {
+    const rating = Number(value);
+    if (!Number.isFinite(rating)) continue;
+    for (const t of [4, 3, 2, 1]) if (rating >= t) out[String(t)] = (out[String(t)] ?? 0) + count;
+  }
+  return out;
+}
+
 /** Turns the multi-search responses back into engine facets and hits. */
 export function readResults(req: EngineRequest, plan: { purpose: Purpose }[], responses: MeiliResponse[]): EngineResult {
-  const facets: EngineFacets = { categories: {}, shops: {}, price: null, attrs: {} };
+  const facets: EngineFacets = { categories: {}, shops: {}, price: null, rating: {}, attrs: {} };
   let hits: SearchDocument[] = [];
   let total = 0;
   const priceOf = (r: MeiliResponse) => {
@@ -167,7 +183,11 @@ export function readResults(req: EngineRequest, plan: { purpose: Purpose }[], re
         facets.categories = { ...(r.facetDistribution?.categoryId ?? {}) };
         if (req.shops.length === 0) facets.shops = { ...(r.facetDistribution?.shopSlug ?? {}) };
         if (!req.price) facets.price = priceOf(r);
+        if (req.minRating === null) facets.rating = ratingThresholds(r.facetDistribution?.rating);
         for (const f of req.facets) if (!filtered.has(f.key)) facets.attrs[f.key] = attrOf(r, f.key, f.kind);
+        break;
+      case "rating":
+        facets.rating = ratingThresholds(r.facetDistribution?.rating);
         break;
       case "shops":
         facets.shops = { ...(r.facetDistribution?.shopSlug ?? {}) };
