@@ -45,6 +45,26 @@ Shops pages: `/shops/apply` (apply), `/seller` (my shops), `/admin/shops` (Platf
 Uploaded documents go to the private MinIO bucket (`S3_BUCKET_PRIVATE`); in test mode any file is accepted.
 Staff invite emails land in Mailpit (http://localhost:8025). The worker runs the daily licence-expiry job.
 
+## Products (seller)
+
+From the shop dashboard, **Products** opens `/seller/<shopId>/products` (owner and staff):
+
+- **Add a product** (`/products/new`): choose a leaf category (shown with its path; medicine categories only for
+  medicine shops with a verified licence), then fill the form generated from that category's schema. Categories
+  with variant axes (e.g. size and colour) get one row per variant with its own price, stock and SKU.
+- **Edit** (`/products/<productId>`): details and variants, quick stock update per variant, images (JPEG, PNG or
+  WebP, up to 5 MB, 8 per product; the first is the cover), activate/deactivate and delete (soft delete).
+- **Import from CSV** (`/products/import`): pick a category, download its template and see each column's allowed
+  values. Rows with the same `handle` are one product with several variants; multi-value cells use `|`; yes/no
+  columns accept yes/no/true/false/1/0; dates are `YYYY-MM-DD`. Up to 500 rows / 1 MB. All or nothing: if any
+  row has a problem, nothing is imported and every problem is listed by line and column.
+
+Rules: the shop must be approved; Basic shops can have 100 live listings; expired products are hidden
+automatically. JSON API: `/api/shops/<shopId>/products/...`; images are served by `/api/product-images/<id>`
+(redirect to a short-lived signed URL; uploads fail with a clear 503 when MinIO is not running). The worker's
+daily `products.refresh-counts` job recounts each category's live listings. The seed adds two `[TEST]`
+products per seeded shop (no images).
+
 ## Scripts
 
 `dev`, `build`, `start`, `lint`, `typecheck`, `test` (Vitest), `test:e2e` (Playwright; first run

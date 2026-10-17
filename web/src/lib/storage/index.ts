@@ -80,7 +80,13 @@ export function createStorage(config: StorageConfig, fetchImpl: typeof fetch = f
     return signed.url;
   }
 
-  return { ensureBucket, putObject, getSignedUrl };
+  /** Deletes an object (S3 answers 204 even when it does not exist). */
+  async function deleteObject(key: string): Promise<void> {
+    const res = await send(objectUrl(key), { method: "DELETE" });
+    if (!res.ok && res.status !== 404) throw new Error(`Storage: delete failed (${res.status})`);
+  }
+
+  return { ensureBucket, putObject, getSignedUrl, deleteObject };
 }
 
 export type Storage = ReturnType<typeof createStorage>;

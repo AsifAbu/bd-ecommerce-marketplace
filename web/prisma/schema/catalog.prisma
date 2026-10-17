@@ -45,7 +45,8 @@ model Category {
   requiresExpiry   Boolean   @default(false) @map("requires_expiry")
   // Percent, e.g. 12.00 = 12%. Deducted before the shop payout.
   commissionRate   Decimal   @default(10) @map("commission_rate") @db.Decimal(5, 2)
-  // Updated by a background job once products exist (Sprint 4).
+  // Live listings in this leaf: recounted after each product write and daily by the
+  // products.refresh-counts job (expiry changes liveness over time).
   liveProductCount Int       @default(0) @map("live_product_count")
   archivedAt       DateTime? @map("archived_at")
   createdAt        DateTime  @default(now()) @map("created_at")
@@ -55,6 +56,9 @@ model Category {
   children   Category[]          @relation("CategoryTree")
   attributes CategoryAttribute[]
   requests   CategoryRequest[]
+
+  // products relations
+  products Product[]
 
   @@index([parentId])
   @@index([path])

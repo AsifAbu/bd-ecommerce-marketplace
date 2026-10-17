@@ -1,4 +1,5 @@
 import type { Job } from "pg-boss";
+import { refreshLiveCounts } from "@/features/products/live-counts";
 import { hasStateFailures, prismaExpiryDeps, runLicenceExpiryCheck } from "@/features/shops/licence-expiry";
 import { queues, type JobData, type QueueName } from "./queues";
 
@@ -19,5 +20,9 @@ export const handlers: Handlers = {
     if (hasStateFailures(result)) {
       throw new Error(`shops.licence-expiry: ${result.failures.length} step(s) failed, see the log`);
     }
+  },
+  "products.refresh-counts": async () => {
+    const result = await refreshLiveCounts(new Date());
+    console.info("[worker] products.refresh-counts", result);
   },
 };

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createFakeDb } from "./fake-db";
+import { createFakeDb } from "@/lib/testing/fake-db";
 
 // Shop-scoped repositories (ADR-004): calls scoped to shop A never read or change shop B.
 const state = vi.hoisted(() => ({ db: null as unknown }));
@@ -11,7 +11,7 @@ vi.mock("@/lib/db", () => ({
 
 const repo = await import("./repo");
 
-let db: ReturnType<typeof createFakeDb>;
+let db: ReturnType<typeof createFakeDb<"shop" | "shopLicence" | "shopMember" | "shopInvite" | "user">>;
 
 beforeEach(() => {
   db = createFakeDb({
@@ -32,6 +32,7 @@ beforeEach(() => {
       { id: "iA", shopId: "A", email: "a@ecom.test", acceptedAt: null },
       { id: "iB", shopId: "B", email: "b@ecom.test", acceptedAt: null },
     ],
+    user: [],
   });
   state.db = db;
 });

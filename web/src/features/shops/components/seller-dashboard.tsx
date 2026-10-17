@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ShopRole } from "@/generated/prisma/client";
 import { TIER_LIMITS } from "@/lib/shop-tiers";
 import { inviteStaff, removeStaff, requestUpgrade, updateProfile, uploadLicence } from "../actions";
@@ -57,6 +58,11 @@ export async function SellerDashboard({ shopId, role }: { shopId: string; role: 
             </>
           )}
         </dl>
+        <nav aria-label="Manage shop" className="flex flex-wrap gap-4">
+          <Link className="text-blue-800 underline" href={`/seller/${shop.id}/products`}>
+            Products
+          </Link>
+        </nav>
       </header>
 
       {isOwner && shop.type === "medicine" && (

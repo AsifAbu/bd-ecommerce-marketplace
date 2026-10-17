@@ -90,6 +90,9 @@ model Shop {
   // catalog relations
   categoryRequests CategoryRequest[]
 
+  // products relations
+  products Product[]
+
   @@index([status])
   @@index([ownerId])
   @@map("shop")

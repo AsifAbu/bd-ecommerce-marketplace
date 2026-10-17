@@ -1,0 +1,77 @@
+// Products (US-030 to US-034): listings in one leaf category, their variants (SKUs) and images.
+// `attributes` holds the product-level values of the category schema (keyed by field key);
+// variant-axis values (size, colour...) live on each variant. Products are soft-deleted
+// (deletedAt) and kept for 6 years. Shop-side access is always scoped by shopId (ADR-004).
+
+enum ProductStatus {
+  active
+  inactive
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  shopId      String        @map("shop_id")
+  // Fixed after creation: the attributes only make sense for this leaf.
+  categoryId  String        @map("category_id")
+  title       String
+  description String
+  attributes  Json
+  status      ProductStatus @default(active)
+  // Copied from attributes.expiry_date so expired goods can be hidden by query.
+  expiresOn   DateTime?     @map("expires_on") @db.Date
+  deletedAt   DateTime?     @map("deleted_at")
+  createdById String        @map("created_by_id")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  shop     Shop             @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  category Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  variants ProductVariant[]
+  images   ProductImage[]
+
+  @@index([shopId, deletedAt])
+  @@index([categoryId, status])
+  @@map("product")
+}
+
+// One sellable SKU. A product without variant axes has exactly one variant (optionKey "").
+model ProductVariant {
+  id        String   @id @default(cuid())
+  productId String   @map("product_id")
+  shopId    String   @map("shop_id") // denormalised for shop-scoped queries
+  sku       String?
+  price     Decimal  @db.Decimal(12, 2) // Tk
+  stock     Int
+  // Variant-axis values keyed by field key, e.g. { "size": "m", "colour": "black" }.
+  options   Json
+  // Canonical form of options, e.g. "colour=black;size=m" ("" for the single default variant).
+  optionKey String   @map("option_key")
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, sku])
+  @@unique([productId, optionKey])
+  @@index([shopId])
+  @@map("product_variant")
+}
+
+// Stored in the private bucket at products/<shopId>/<productId>/<uuid>.<ext>, served through
+// short-lived signed URLs. The image with the lowest position is the cover.
+model ProductImage {
+  id          String   @id @default(cuid())
+  productId   String   @map("product_id")
+  shopId      String   @map("shop_id")
+  storageKey  String   @map("storage_key")
+  contentType String   @map("content_type")
+  position    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, position])
+  @@index([shopId])
+  @@map("product_image")
+}
