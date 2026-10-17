@@ -3,39 +3,46 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { auth } from "@/auth";
 import { LogoutButton } from "@/features/accounts/ui/page-shell";
-import { CategoryShortcuts } from "@/features/search/ui/category-nav";
+import { getHomeData } from "@/features/home/server";
+import { DemoHint } from "@/features/home/ui/demo-hint";
+import { Hero, HomeSections, SellCta } from "@/features/home/ui/home-view";
 
 export default function Home() {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-16">
-      <h1 className="text-3xl font-bold">Marketplace</h1>
-      <p className="text-lg">All online products in one place, from shops across Bangladesh.</p>
-      <Suspense fallback={<p className="text-sm">Checking session…</p>}>
-        <SessionStatus />
-      </Suspense>
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-4 py-6">
+      <Hero>
+        <Suspense fallback={<p>Checking session…</p>}>
+          <SessionStatus />
+        </Suspense>
+      </Hero>
       <Suspense fallback={null}>
-        <Categories />
+        <DemoHint />
       </Suspense>
+      <Suspense fallback={<p aria-live="polite">Loading products…</p>}>
+        <Sections />
+      </Suspense>
+      <SellCta />
     </main>
   );
 }
 
-async function Categories() {
-  await connection(); // product counts change at request time
-  return <CategoryShortcuts />;
+async function Sections() {
+  await connection(); // products and counts change at request time
+  return <HomeSections data={await getHomeData()} />;
 }
 
 async function SessionStatus() {
   await connection(); // session reads are request-time (Cache Components)
   const session = await auth();
+  const link = "font-medium underline";
   if (!session?.user) {
     return (
-      <p className="text-sm">
-        <Link className="underline" href="/login">
+      <p>
+        <Link className={link} href="/login">
           Log in
         </Link>{" "}
         with your mobile number or email, or{" "}
-        <Link className="underline" href="/signup">
+        <Link className={link} href="/signup">
           create an account
         </Link>
         .
@@ -43,9 +50,9 @@ async function SessionStatus() {
     );
   }
   return (
-    <div className="flex flex-wrap gap-x-4 text-sm">
+    <div className="flex flex-wrap items-center gap-x-4">
       <span>Logged in as {session.user.name ?? session.user.email}.</span>
-      <Link className="underline" href="/account">
+      <Link className={link} href="/account">
         My account
       </Link>
       <LogoutButton />

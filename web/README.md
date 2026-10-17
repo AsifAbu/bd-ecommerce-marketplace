@@ -3,24 +3,33 @@
 Next.js (App Router) + TypeScript + Tailwind, Prisma + PostgreSQL, Auth.js v5, pg-boss jobs.
 Conventions for contributors and agents: `../.claude/knowledge/dev-conventions.md`.
 
-## Prerequisites
-
-- Node.js 22.12+ and npm
-- Docker (for Postgres, Meilisearch, MinIO, Mailpit)
-
-## Run locally
+## Quick start / Try the demo
 
 ```bash
-cp .env.example .env            # then set AUTH_SECRET: openssl rand -base64 32
-docker compose up -d            # Postgres :5432, Meilisearch :7700, MinIO :9100 (console :9101), Mailpit :8025
-npm install                     # also runs `prisma generate`
-npx prisma migrate dev          # apply migrations
-npm run seed                    # test users
-npm run dev                     # http://localhost:3000
-npm run worker                  # background jobs (separate terminal; add -- --demo to send a test job)
+cp .env.example .env                    # then set AUTH_SECRET (openssl rand -base64 32); APP_MODE=test is the default
+docker compose up -d postgres           # or use any local Postgres 16 and point DATABASE_URL at it
+npm install                             # also runs `prisma generate`
+npx prisma migrate deploy               # create the tables
+npm run seed                            # test users, 4 shops, 12 [TEST] products, policies
+npm run dev                             # http://localhost:3000
 ```
 
-Change host ports in `.env` if any are busy.
+Open http://localhost:3000: in test mode the home page shows a store front (category tiles, new arrivals, product rows,
+featured shops) and a **Try the demo** box with these logins (password **`Test@12345`**, OTP code **123456**):
+
+| Log in as | Email | Try |
+| --- | --- | --- |
+| Platform Admin | `admin@ecom.test` | `/admin/shops`, `/admin/policies` |
+| Customer | `customer.verified@ecom.test` | cart, wishlist, place a cash-on-delivery order, `/account/orders` |
+| Shop owner (Test Tech Shop) | `owner.tech@ecom.test` | `/seller`: products, orders, profile |
+| Shop staff (Test Tech Shop) | `staff.tech@ecom.test` | the same shop as staff |
+
+Optional services: **Meilisearch, MinIO and Mailpit are not needed to look around.** Without Meilisearch, search falls
+back to Postgres; without MinIO, products show a coloured placeholder instead of a picture (uploads fail with a clear
+message); without Mailpit, emails are not delivered. Start them all with `docker compose up -d` when you need them
+(Postgres :5432, Meilisearch :7700, MinIO :9100 with console :9101, Mailpit :8025; change host ports in `.env` if busy).
+Background jobs: `npm run worker` (separate terminal; add `-- --demo` to send a test job).
+Prerequisites: Node.js 22.12+ and npm; Docker only for the services above.
 
 ## Test mode
 
