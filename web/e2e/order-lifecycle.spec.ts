@@ -93,10 +93,11 @@ test("shop staff confirm, pack, hand over and deliver an order; the COD collecti
   const entry = page.getByRole("listitem", { name: `Shop order ${shopOrderNo}` });
   await expect(entry.getByTestId("shop-order-status")).toHaveText("Placed, waiting for the shop");
   await expect(entry.getByTestId("handover-countdown")).toHaveText(/^1 d 2[23] h left to hand over$/);
-  await entry.getByRole("link", { name: shopOrderNo }).click();
+  await entry.getByRole("link", { name: shopOrderNo, exact: true }).click();
 
   await expect(page.getByRole("heading", { level: 1, name: `Shop order ${shopOrderNo}` })).toBeVisible();
-  const status = page.getByTestId("shop-order-status");
+  // Cache Components keeps the previous page hidden in the DOM: only look at what is visible.
+  const status = page.getByTestId("shop-order-status").locator("visible=true");
   await page.getByRole("button", { name: "Confirm order" }).click();
   await expect(status).toHaveText("Confirmed by the shop");
   await page.getByRole("button", { name: "Mark packed" }).click();
@@ -111,7 +112,7 @@ test("shop staff confirm, pack, hand over and deliver an order; the COD collecti
   await handover.getByRole("button", { name: "Hand over to courier" }).click();
   await expect(status).toHaveText("With the courier");
   await expect(page.getByText("Courier: RedX, tracking number RX-E2E-0001")).toBeVisible();
-  await expect(page.getByText(/\(within 48 h\)/)).toBeVisible();
+  await expect(page.getByText(/\(within 48 h\)/).locator("visible=true").first()).toBeVisible();
 
   // Test mode: no courier feed, so the shop marks the delivery.
   await page.getByRole("button", { name: "Mark delivered" }).click();
