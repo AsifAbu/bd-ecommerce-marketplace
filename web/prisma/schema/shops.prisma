@@ -102,6 +102,16 @@ model Shop {
   // orders relations
   shopOrders ShopOrder[]
 
+  // reviews relations
+  reviews Review[]
+
+  // payouts relations
+  codCollections CodCollection[]
+  payouts        Payout[]
+  // returns and complaints relations
+  returnRequests   ReturnRequest[]
+  complaintTickets ComplaintTicket[]
+
   @@index([status])
   @@index([ownerId])
   @@map("shop")

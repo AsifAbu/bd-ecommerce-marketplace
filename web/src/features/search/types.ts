@@ -30,8 +30,10 @@ export interface SearchDocument {
   coverImageId: string | null;
   /** Epoch ms. */
   createdAt: number;
-  /** Rating once reviews exist (US-055); null until then. */
+  /** Average star rating of the visible reviews to 1 decimal (US-055); null without reviews. */
   rating: number | null;
+  /** Number of visible reviews (0 without reviews). */
+  ratingCount: number;
   /**
    * Filterable values by attribute key: option values or short texts (string[]), numbers
    * (number[]) and yes/no (boolean). Variant axes hold the union over in-stock variants.
@@ -56,6 +58,8 @@ export interface EngineRequest {
   shops: string[];
   price: { min: number | null; max: number | null } | null;
   attrs: AttrFilter[];
+  /** "4 stars & up": only documents whose rating is at least this (US-055); null for any. */
+  minRating: number | null;
   /** Attribute facets to count (the category's filterable attributes). */
   facets: { key: string; kind: FacetKind }[];
   sort: Sort;
@@ -76,6 +80,11 @@ export interface EngineFacets {
   shops: Record<string, number>;
   /** Lowest and highest price in the results (price filter not applied). */
   price: { min: number; max: number } | null;
+  /**
+   * Documents per rating threshold ("4" = rated 4 or more), within the results of the other
+   * filters (the rating filter itself is not applied).
+   */
+  rating: Record<string, number>;
   attrs: Record<string, AttrFacetResult>;
 }
 

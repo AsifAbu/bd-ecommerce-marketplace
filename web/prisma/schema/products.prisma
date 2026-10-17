@@ -40,6 +40,10 @@ model Product {
   // orders relations
   orderItems OrderItem[]
 
+  // reviews relations
+  reviews Review[]
+  rating  ProductRating?
+
   @@index([shopId, deletedAt])
   @@index([categoryId, status])
   // Search (Postgres adapter): live listings, newest first.

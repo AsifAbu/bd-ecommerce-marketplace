@@ -53,6 +53,16 @@ model User {
   // orders relations
   orders Order[]
 
+  // reviews relations
+  reviews        Review[] @relation("ReviewAuthor")
+  reviewsHidden  Review[] @relation("ReviewHiddenBy")
+  reviewsReplied Review[] @relation("ReviewReplyBy")
+
+  // returns and complaints relations
+  returnRequests    ReturnRequest[]
+  complaintTickets  ComplaintTicket[]
+  complaintMessages ComplaintMessage[]
+
   @@map("user")
 }
 

@@ -28,6 +28,7 @@ export function doc(overrides: Partial<SearchDocument> = {}): SearchDocument {
     coverImageId: null,
     createdAt: n,
     rating: null,
+    ratingCount: 0,
     attrs: {},
     ...overrides,
   };
@@ -41,6 +42,7 @@ export function request(overrides: Partial<EngineRequest> = {}): EngineRequest {
     shops: [],
     price: null,
     attrs: [],
+    minRating: null,
     facets: [],
     sort: "relevance",
     page: 1,

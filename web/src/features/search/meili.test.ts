@@ -58,7 +58,7 @@ describe("Meilisearch query building", () => {
     expect(plan.map((p) => p.purpose)).toEqual([{ kind: "main" }, { kind: "shops" }, { kind: "attr", key: "brand" }]);
     const [main, shops, brand] = plan.map((p) => p.query);
     expect(main).toMatchObject({ indexUid: "products", q: "ryzen", page: 2, hitsPerPage: 24 });
-    expect(main.facets).toEqual(["categoryId", "priceMin", "priceMax", "attrs.core_count", "attrs.integrated_graphics"]);
+    expect(main.facets).toEqual(["categoryId", "priceMin", "priceMax", "rating", "attrs.core_count", "attrs.integrated_graphics"]);
     expect(shops).toMatchObject({ limit: 0, facets: ["shopSlug"] });
     expect(shops.filter).not.toContain('shopSlug IN ["tech"]');
     expect(brand.facets).toEqual(["attrs.brand"]);
@@ -85,6 +85,7 @@ describe("Meilisearch query building", () => {
       categories: { processor: 2 },
       shops: { tech: 2 },
       price: { min: 24500, max: 36500 },
+      rating: {},
       attrs: { brand: { values: { amd: 2, intel: 1 } }, core_count: { range: { min: 6, max: 8 } }, integrated_graphics: { trueCount: 2 } },
     });
   });
@@ -93,7 +94,8 @@ describe("Meilisearch query building", () => {
     const s = indexSettings();
     expect(s.searchableAttributes).toEqual(["title", "bengaliName", "brand", "keywords", "categoryNames", "description"]);
     expect(s.filterableAttributes).toEqual(expect.arrayContaining(["attrs", "categoryPath", "shopSlug", "priceMin", "priceMax", "inStock", "indexedAt"]));
-    expect(s.sortableAttributes).toEqual(["priceMin", "createdAt"]);
+    expect(s.sortableAttributes).toEqual(["priceMin", "createdAt", "rating", "ratingCount"]);
+    expect(s.filterableAttributes).toContain("rating");
     expect(s.synonyms.boi).toEqual(expect.arrayContaining(["book", "বই"]));
   });
 });

@@ -13,6 +13,25 @@ export const queues = {
   "search.reindex-all": z.object({}),
   // One SMS + one email invoice for a placed order (US-051); retried until both are sent.
   "orders.notify-placed": z.object({ orderId: z.string().min(1).max(64) }),
+  // US-053: marks shop orders past the 48 h handover deadline once and queues their alerts.
+  "orders.handover-check": z.object({}),
+  // Overdue alert for one shop order (shop owner/staff email + SMS, admins email); retried.
+  "orders.notify-overdue": z.object({ shopOrderId: z.string().min(1).max(64) }),
+  // US-082: daily check of collections near or past the 10-day payout deadline.
+  "payouts.due-check": z.object({}),
+  // Returns (US-070, US-071): unanswered requests to the admin after 48 h; SMS/email per status change.
+  "returns.escalate-overdue": z.object({}),
+  "returns.notify": z.object({
+    returnId: z.string().min(1).max(64),
+    event: z.enum(["requested", "accepted", "rejected", "escalated", "approved", "denied", "received", "refunded"]),
+  }),
+  // Complaints (US-072): the 72 h timer flags late tickets once; the customer is told of each change.
+  "complaints.flag-overdue": z.object({}),
+  "complaints.notify": z.object({
+    ticketId: z.string().min(1).max(64),
+    event: z.enum(["opened", "reply", "in_progress", "resolved", "closed", "overdue"]),
+    messageId: z.string().max(64).optional(),
+  }),
 } as const;
 
 export type QueueName = keyof typeof queues;

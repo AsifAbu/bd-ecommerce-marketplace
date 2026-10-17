@@ -1,12 +1,25 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { formatAddress, formatDhakaTime, formatTk, type OrderView, type ShopOrderView } from "../views";
 
 /**
  * One customer order (confirmation, My orders detail, guest tracking): every shop order with its
- * status, items, delivery charge and total, a printable invoice per shop order, and the places
- * reserved for returns and complaints (Sprint 7).
+ * status, items, delivery charge and total, a printable invoice per shop order, and the links to
+ * request a return and report a problem (US-070, US-072). `itemExtras` adds content under an item by order
+ * item id (the reviews feature's "Write a review", US-055).
  */
-export function OrderDetail({ order, placed }: { order: OrderView; placed?: boolean }) {
+export function OrderDetail({
+  order,
+  placed,
+  itemExtras,
+  shopOrderExtra,
+}: {
+  order: OrderView;
+  placed?: boolean;
+  itemExtras?: Record<string, ReactNode>;
+  /** Extra content per shop order (US-053 timeline and cancel; later returns and complaints). */
+  shopOrderExtra?: (so: ShopOrderView) => ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-6">
       {placed && (
@@ -40,7 +53,7 @@ export function OrderDetail({ order, placed }: { order: OrderView; placed?: bool
       </section>
 
       {order.shopOrders.map((so) => (
-        <ShopOrderCard key={so.id} orderNo={order.orderNo} shopOrder={so} />
+        <ShopOrderCard key={so.id} orderNo={order.orderNo} shopOrder={so} itemExtras={itemExtras} extra={shopOrderExtra?.(so)} />
       ))}
 
       <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 rounded border-2 border-gray-400 p-4" aria-label="Order total">
@@ -55,7 +68,17 @@ export function OrderDetail({ order, placed }: { order: OrderView; placed?: bool
   );
 }
 
-function ShopOrderCard({ orderNo, shopOrder: so }: { orderNo: string; shopOrder: ShopOrderView }) {
+function ShopOrderCard({
+  orderNo,
+  shopOrder: so,
+  itemExtras,
+  extra,
+}: {
+  orderNo: string;
+  shopOrder: ShopOrderView;
+  itemExtras?: Record<string, ReactNode>;
+  extra?: ReactNode;
+}) {
   const headingId = `shop-order-${so.id}`;
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3 rounded border border-gray-300 p-4">
@@ -95,6 +118,7 @@ function ShopOrderCard({ orderNo, shopOrder: so }: { orderNo: string; shopOrder:
                   {i.title}
                 </Link>
                 {i.variantLabel && <span className="text-gray-700"> ({i.variantLabel})</span>}
+                {itemExtras?.[i.id]}
               </td>
               <td className="py-1 text-right">{i.quantity}</td>
               <td className="py-1 text-right">{formatTk(i.unitPrice)}</td>
@@ -119,14 +143,17 @@ function ShopOrderCard({ orderNo, shopOrder: so }: { orderNo: string; shopOrder:
         <Link className="text-blue-800 underline" href={`/orders/${orderNo}/invoice/${so.id}`}>
           Print invoice
         </Link>
-        {/* Sprint 7 (US-070, US-072): returns and complaints from the order page. */}
-        <span className="text-gray-700" aria-disabled="true">
-          Request a return (coming soon)
-        </span>
-        <span className="text-gray-700" aria-disabled="true">
-          Raise a complaint (coming soon)
-        </span>
+        {/* US-070 and US-072: returns (delivered shop orders, 7 days) and complaints, also for guests with the order open. */}
+        {so.status === "delivered" && (
+          <Link className="text-blue-800 underline" href={`/orders/${orderNo}/return?shopOrder=${so.id}`}>
+            Request a return<span className="sr-only"> from {so.shopOrderNo}</span>
+          </Link>
+        )}
+        <Link className="text-blue-800 underline" href={`/orders/${orderNo}/complaint?shopOrder=${so.id}`}>
+          Report a problem<span className="sr-only"> with {so.shopOrderNo}</span>
+        </Link>
       </div>
+      {extra}
     </section>
   );
 }

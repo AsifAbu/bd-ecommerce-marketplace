@@ -2,8 +2,15 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { currentUserOrNull } from "@/features/cart/server";
+import { buildTimeline } from "@/features/orders/lifecycle";
+import { orderTimelines } from "@/features/orders/lifecycle/server";
+import { CustomerShopOrderLifecycle } from "@/features/orders/lifecycle/ui/customer-lifecycle";
 import { viewableOrder } from "@/features/orders/server";
+import { OrderComplaints } from "@/features/complaints/ui/order-complaints";
 import { OrderDetail } from "@/features/orders/ui/order-view";
+import { OrderReturns } from "@/features/returns/ui/order-returns";
+import { reviewService } from "@/features/reviews/server";
+import { ItemReview } from "@/features/reviews/ui/item-review";
 
 export const metadata = { title: "Your order", robots: { index: false } };
 
@@ -30,7 +37,7 @@ async function Content({
 }) {
   await connection();
   const { orderNo } = await params;
-  const { placed } = await searchParams;
+  const { placed, return: returned, photos } = await searchParams;
   const order = await viewableOrder(decodeURIComponent(orderNo));
   if (!order) {
     const user = await currentUserOrNull();
@@ -59,10 +66,37 @@ async function Content({
       </>
     );
   }
+  // US-055: "Write a review" under each delivered item of the logged-in buyer's own order.
+  const user = await currentUserOrNull();
+  const itemIds = order.shopOrders.flatMap((so) => so.items.map((i) => i.id));
+  const states = user ? await reviewService.itemStates(user.id, itemIds) : {};
+  const itemExtras = Object.fromEntries(Object.entries(states).map(([id, state]) => [id, <ItemReview key={id} orderItemId={id} state={state} />]));
+  // US-053: each shop order's timeline, courier and tracking, and Cancel before confirmation.
+  const timelines = new Map((await orderTimelines(order.id)).map((t) => [t.id, t]));
   return (
     <>
       <h1 className="text-3xl font-bold">Order {order.orderNo}</h1>
-      <OrderDetail order={order} placed={placed === "1"} />
+      <OrderDetail
+        order={order}
+        placed={placed === "1"}
+        itemExtras={itemExtras}
+        shopOrderExtra={(so) => {
+          const t = timelines.get(so.id);
+          if (!t) return null;
+          return (
+            <CustomerShopOrderLifecycle
+              orderNo={order.orderNo}
+              shopOrderId={so.id}
+              shopOrderNo={so.shopOrderNo}
+              status={t.status}
+              timeline={buildTimeline({ status: t.status, statusChangedAt: t.statusChangedAt, placedAt: new Date(order.placedAt) }, t.events)}
+              courier={t.courierName ? { name: t.courierName, trackingNo: t.trackingNo } : null}
+            />
+          );
+        }}
+      />
+      <OrderReturns orderId={order.id} notice={returned === "requested" ? (photos === "unsaved" ? "requested-no-photos" : "requested") : undefined} />
+      <OrderComplaints orderId={order.id} orderNo={order.orderNo} />
     </>
   );
 }

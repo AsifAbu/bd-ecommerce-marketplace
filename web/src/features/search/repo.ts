@@ -29,6 +29,7 @@ const productSelect = {
   category: { select: { id: true, slug: true, name: true, path: true } },
   variants: { select: { price: true, stock: true, options: true }, orderBy: { position: "asc" } },
   images: { select: { id: true }, orderBy: [{ position: "asc" }, { createdAt: "asc" }] },
+  rating: { select: { count: true, average: true } },
 } satisfies Prisma.ProductSelect;
 
 /** Schema fields per category, loaded once per call (archived or broken categories: none). */
