@@ -1,0 +1,84 @@
+// Complaints (US-072, Guidelines 2021: complaints recorded and resolved within 72 h, and the
+// customer informed). A customer with an order (account, or a guest holding an order grant)
+// opens a ticket; the shop involved and the Platform Admin reply in its thread; the admin
+// resolves or closes it. due_at = created + 72 h; the complaints.flag-overdue job flags a late
+// ticket once and alerts the admin. Tickets and messages are 6-year business records
+// (src/lib/retention.ts): never hard-deleted, every relation uses Restrict.
+
+enum ComplaintCategory {
+  delivery // late, missing or not delivered
+  product // damaged, wrong or not as described
+  return_refund
+  shop_conduct
+  other
+}
+
+enum ComplaintStatus {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+enum ComplaintAuthorRole {
+  customer
+  shop
+  admin
+}
+
+model ComplaintTicket {
+  id              String            @id @default(cuid())
+  // CP-YYMMDD-XXXXX (Dhaka date + 5 characters), for the customer to quote.
+  ticketNo        String            @unique @map("ticket_no")
+  // The account that opened it (null for a guest).
+  userId          String?           @map("user_id")
+  // Who to inform: the order's verified mobile, or the account's mobile (E.164); may be null for
+  // an account without a mobile (email only).
+  contactPhone    String?           @map("contact_phone")
+  contactEmail    String?           @map("contact_email")
+  orderId         String?           @map("order_id")
+  shopOrderId     String?           @map("shop_order_id")
+  // The shop involved (from the shop order): its owner and staff see and answer the ticket.
+  shopId          String?           @map("shop_id")
+  subject         String
+  category        ComplaintCategory
+  status          ComplaintStatus   @default(open)
+  statusChangedAt DateTime          @default(now()) @map("status_changed_at")
+  // Created + 72 h (Guidelines 2021).
+  dueAt           DateTime          @map("due_at")
+  // Set once by the complaints.flag-overdue job when the ticket passed due_at unresolved.
+  overdueAt       DateTime?         @map("overdue_at")
+  resolvedAt      DateTime?         @map("resolved_at")
+  resolution      String?
+  resolvedById    String?           @map("resolved_by_id")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  user      User?              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  order     Order?             @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  shopOrder ShopOrder?         @relation(fields: [shopOrderId], references: [id], onDelete: Restrict)
+  shop      Shop?              @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  messages  ComplaintMessage[]
+
+  @@index([status, dueAt])
+  @@index([userId])
+  @@index([orderId])
+  @@index([shopId, status])
+  @@map("complaint_ticket")
+}
+
+model ComplaintMessage {
+  id         String              @id @default(cuid())
+  ticketId   String              @map("ticket_id")
+  authorRole ComplaintAuthorRole @map("author_role")
+  // The account that wrote it (null for a guest customer).
+  authorId   String?             @map("author_id")
+  text       String
+  createdAt  DateTime            @default(now()) @map("created_at")
+
+  ticket ComplaintTicket @relation(fields: [ticketId], references: [id], onDelete: Restrict)
+  author User?           @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId, createdAt])
+  @@map("complaint_message")
+}

@@ -1,7 +1,9 @@
 import type { Job } from "pg-boss";
 import { purgeStaleGuestCarts } from "@/features/cart/purge";
+import { flagOverdueComplaints, notifyComplaint } from "@/features/complaints/server";
 import { notifyOrderPlaced } from "@/features/orders/server";
 import { refreshLiveCounts } from "@/features/products/live-counts";
+import { escalateOverdueReturns, notifyReturn } from "@/features/returns/server";
 import { indexer } from "@/features/search/server";
 import { hasStateFailures, prismaExpiryDeps, runLicenceExpiryCheck } from "@/features/shops/licence-expiry";
 import { queues, type JobData, type QueueName } from "./queues";
@@ -49,6 +51,28 @@ export const handlers: Handlers = {
       const { orderId } = queues["orders.notify-placed"].parse(job.data);
       const result = await notifyOrderPlaced(orderId);
       console.info("[worker] orders.notify-placed", orderId, result);
+    }
+  },
+  // US-071: requests the shop left unanswered for 48 h go to the admin (every 15 minutes).
+  "returns.escalate-overdue": async () => {
+    const result = await escalateOverdueReturns();
+    console.info("[worker] returns.escalate-overdue", { escalated: result.escalated.length });
+  },
+  "returns.notify": async (jobs) => {
+    for (const job of jobs) {
+      const { returnId, event } = queues["returns.notify"].parse(job.data);
+      console.info("[worker] returns.notify", returnId, event, await notifyReturn(returnId, event));
+    }
+  },
+  // US-072: tickets past their 72 h are flagged once and the admin is alerted (every 15 minutes).
+  "complaints.flag-overdue": async () => {
+    const result = await flagOverdueComplaints();
+    console.info("[worker] complaints.flag-overdue", { flagged: result.flagged.length });
+  },
+  "complaints.notify": async (jobs) => {
+    for (const job of jobs) {
+      const { ticketId, event, messageId } = queues["complaints.notify"].parse(job.data);
+      console.info("[worker] complaints.notify", ticketId, event, await notifyComplaint(ticketId, event, messageId));
     }
   },
 };
