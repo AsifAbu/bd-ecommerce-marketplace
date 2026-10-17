@@ -13,11 +13,12 @@ import { SearchError } from "./errors";
  *   f.<key>=1     a yes/no (toggle) filter switched on
  *   price_min, price_max   in Tk
  *   shop          shop slug (repeat for several)
- *   sort          relevance (default), price_asc, price_desc, newest
+ *   rating        minimum average rating, 1 to 4 ("4 stars & up", US-055)
+ *   sort          relevance (default), price_asc, price_desc, newest, rating
  *   page          1-based, 24 per page
  */
 
-export const SORTS = ["relevance", "price_asc", "price_desc", "newest"] as const;
+export const SORTS = ["relevance", "price_asc", "price_desc", "newest", "rating"] as const;
 export type Sort = (typeof SORTS)[number];
 
 export const SORT_LABELS: Record<Sort, string> = {
@@ -25,7 +26,11 @@ export const SORT_LABELS: Record<Sort, string> = {
   price_asc: "Price: low to high",
   price_desc: "Price: high to low",
   newest: "Newest",
+  rating: "Customer rating",
 };
+
+/** The "N stars & up" choices of the rating filter. */
+export const RATING_THRESHOLDS = [4, 3, 2, 1] as const;
 
 export interface AttrParam {
   values: string[];
@@ -40,6 +45,8 @@ export interface SearchParams {
   priceMin: number | null;
   priceMax: number | null;
   shops: string[];
+  /** Minimum average rating (1 to 4), or null. */
+  minRating: number | null;
   sort: Sort;
   page: number;
 }
@@ -59,6 +66,7 @@ export const EMPTY_SEARCH: SearchParams = {
   priceMin: null,
   priceMax: null,
   shops: [],
+  minRating: null,
   sort: "relevance",
   page: 1,
 };
@@ -103,6 +111,9 @@ export function parseSearchParams(raw: RawParams): SearchParams {
     } else if (name === "shop") {
       if (!SLUG.test(value)) fields.shop = "Unknown shop";
       else if (!out.shops.includes(value) && out.shops.length < MAX_VALUES) out.shops.push(value);
+    } else if (name === "rating") {
+      if (!(RATING_THRESHOLDS as readonly number[]).includes(Number(value)) || !/^\d$/.test(value)) fields.rating = "Rating must be 1, 2, 3 or 4";
+      else out.minRating = Number(value);
     } else if (name === "sort") {
       if (!(SORTS as readonly string[]).includes(value)) fields.sort = `Sort must be one of ${SORTS.join(", ")}`;
       else out.sort = value as Sort;
@@ -155,6 +166,7 @@ export function toSearchParams(s: SearchParams, options: { omitCategory?: boolea
   if (s.priceMin !== null) p.set("price_min", String(s.priceMin));
   if (s.priceMax !== null) p.set("price_max", String(s.priceMax));
   for (const shop of s.shops) p.append("shop", shop);
+  if (s.minRating !== null) p.set("rating", String(s.minRating));
   if (s.sort !== "relevance") p.set("sort", s.sort);
   if (s.page > 1) p.set("page", String(s.page));
   return p;
@@ -176,5 +188,5 @@ export function searchHref(path: string, s: SearchParams, change?: (draft: Searc
 
 /** True when any filter (not the keywords, category, sort or page) is set. */
 export function hasFilters(s: SearchParams): boolean {
-  return Object.keys(s.attrs).length > 0 || s.priceMin !== null || s.priceMax !== null || s.shops.length > 0;
+  return Object.keys(s.attrs).length > 0 || s.priceMin !== null || s.priceMax !== null || s.shops.length > 0 || s.minRating !== null;
 }

@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { currentUserOrNull } from "@/features/cart/server";
 import { viewableOrder } from "@/features/orders/server";
 import { OrderDetail } from "@/features/orders/ui/order-view";
+import { reviewService } from "@/features/reviews/server";
+import { ItemReview } from "@/features/reviews/ui/item-review";
 
 export const metadata = { title: "Your order", robots: { index: false } };
 
@@ -59,10 +61,15 @@ async function Content({
       </>
     );
   }
+  // US-055: "Write a review" under each delivered item of the logged-in buyer's own order.
+  const user = await currentUserOrNull();
+  const itemIds = order.shopOrders.flatMap((so) => so.items.map((i) => i.id));
+  const states = user ? await reviewService.itemStates(user.id, itemIds) : {};
+  const itemExtras = Object.fromEntries(Object.entries(states).map(([id, state]) => [id, <ItemReview key={id} orderItemId={id} state={state} />]));
   return (
     <>
       <h1 className="text-3xl font-bold">Order {order.orderNo}</h1>
-      <OrderDetail order={order} placed={placed === "1"} />
+      <OrderDetail order={order} placed={placed === "1"} itemExtras={itemExtras} />
     </>
   );
 }

@@ -29,6 +29,7 @@ describe("search parameters from the URL (US-042: the URL holds the filter state
       priceMin: 20000,
       priceMax: 40000,
       shops: ["tech"],
+      minRating: null,
       sort: "price_asc",
       page: 2,
     });

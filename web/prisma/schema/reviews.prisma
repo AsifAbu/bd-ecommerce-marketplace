@@ -1,0 +1,71 @@
+// Ratings and reviews (US-055). Guidelines 2021: customers can rate and review; sellers, their
+// staff and connected people may not; reviews can't be deleted. So a review belongs to one
+// delivered order item of its author (one per item), shop members are blocked, and the platform
+// hides a review with a logged reason instead of deleting it. Reviews are 6-year business records
+// (src/lib/retention.ts): never hard-deleted, every relation uses Restrict or SetNull.
+
+enum ReviewStatus {
+  visible
+  hidden // by a Platform Admin, with hidden_reason (audit_log "review.hidden")
+}
+
+model Review {
+  id           String       @id @default(cuid())
+  productId    String       @map("product_id")
+  // The shop that sold the item (denormalised from the product for shop ratings and replies).
+  shopId       String       @map("shop_id")
+  userId       String       @map("user_id")
+  // One review per purchased item: the order item proves the purchase ("Verified purchase").
+  orderItemId  String       @unique @map("order_item_id")
+  rating       Int // 1 to 5 stars (checked by the reviews rules)
+  title        String?
+  text         String       @default("")
+  status       ReviewStatus @default(visible)
+  hiddenReason String?      @map("hidden_reason")
+  hiddenById   String?      @map("hidden_by_id")
+  hiddenAt     DateTime?    @map("hidden_at")
+  // Last edit by the author (allowed for 30 days; the previous text is kept in audit_log).
+  editedAt     DateTime?    @map("edited_at")
+  // Optional public reply by the shop (owner or staff); can be changed, not removed.
+  replyText    String?      @map("reply_text")
+  replyById    String?      @map("reply_by_id")
+  repliedAt    DateTime?    @map("replied_at")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  user      User      @relation("ReviewAuthor", fields: [userId], references: [id], onDelete: Restrict)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  hiddenBy  User?     @relation("ReviewHiddenBy", fields: [hiddenById], references: [id], onDelete: SetNull)
+  replyBy   User?     @relation("ReviewReplyBy", fields: [replyById], references: [id], onDelete: SetNull)
+
+  @@index([productId, status, createdAt])
+  @@index([shopId, status, createdAt])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@map("review")
+}
+
+// Rating aggregate of a product's visible reviews, rewritten in the same transaction as every
+// review write (create, edit, hide, unhide). Derived data: can be rebuilt from `review` at any
+// time, so it is not a retained record.
+model ProductRating {
+  productId String   @id @map("product_id")
+  shopId    String   @map("shop_id")
+  count     Int      @default(0)
+  // Sum of the star ratings (average = total / count).
+  total     Int      @default(0)
+  average   Decimal  @default(0) @db.Decimal(3, 2)
+  stars1    Int      @default(0) @map("stars_1")
+  stars2    Int      @default(0) @map("stars_2")
+  stars3    Int      @default(0) @map("stars_3")
+  stars4    Int      @default(0) @map("stars_4")
+  stars5    Int      @default(0) @map("stars_5")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+  @@map("product_rating")
+}

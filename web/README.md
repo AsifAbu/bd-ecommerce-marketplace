@@ -163,13 +163,36 @@ The seed adds `[TEST] Suspended Shop` (`/s/test-suspended-shop`, suspended, one 
   across categories shows only those common filters and "Narrow by category". Facet counts are within the current
   results; options with 0 results are hidden. The URL is the whole state: `category=`, `f.<key>=<option>`
   (repeat for OR), `f.<key>.min=`/`.max=`, `f.<key>=1` (yes/no), `price_min=`, `price_max=`, `shop=<slug>`,
-  `sort=relevance|price_asc|price_desc|newest`, `page=` (24 per page).
+  `rating=1..4` ("N stars & up"), `sort=relevance|price_asc|price_desc|newest|rating`, `page=` (24 per page).
 - **JSON**: `GET /api/search` (same parameters → `{ items, facets, total, page, perPage, totalPages, ... }`, header
   `x-search-engine`) and `GET /api/categories?visible=true`.
 - **Engines**: Meilisearch when `MEILI_URL` is set and reachable; otherwise (or during an outage, retried every
   30 s) a Postgres adapter that reads live, in-stock products directly (fine for dev and seed data, capped at 2,000
   candidates). Product writes enqueue `search.reindex-product`; the worker runs `search.reindex-all` daily at
   01:30 Dhaka time, and `npm run seed` builds the index when Meilisearch is up.
+
+## Ratings and reviews (US-055)
+
+- **Who**: only the buyer of an order item, once its shop order is delivered (or returned after delivery); a
+  guest order counts once it is linked to the account. Owners and staff of the selling shop are blocked (UI and
+  API: 403 `SHOP_MEMBER`). One review per order item: 1 to 5 stars, optional title and text.
+- **Customer**: "Write a review" under each delivered item on `/orders/<orderNo>`, and `/account/reviews` (items
+  waiting for a review, your reviews; linked from My orders). The author can edit for 30 days (the previous text is
+  kept in the audit log). Reviews are never deleted (`DELETE` answers 405 `REVIEW_NOT_DELETABLE`).
+- **Product page**: average, count, histogram and 10 visible reviews per page (`?reviews=n`), each marked
+  "Verified purchase" with the reviewer's first name and initial; optional public reply from the shop
+  (`/seller/<shopId>/reviews`).
+- **Moderation**: `/admin/reviews` (Published / Hidden). The admin hides a review with a reason or shows it again,
+  both written to `audit_log` (`review.hidden`, `review.unhidden`); hidden reviews leave the page and the rating.
+- **Ratings**: `product_rating` (count, total, average, stars per level) is rewritten in the same transaction as
+  every review write. Search documents carry `rating` and `ratingCount` (rating filter and sort above).
+  `reviewService.shopRating(shopId, { from, to }?)` is the shop rating for the seller score (US-059) and
+  `reviewService.metrics({ from, to })` the review numbers for the metrics dashboard (US-083).
+- **JSON**: `POST /api/reviews` `{ orderItemId, rating, title?, text? }`, `PATCH /api/reviews/<id>`,
+  `GET /api/products/<id>/reviews?page=`, `POST /api/admin/reviews/<id>/hide|unhide` `{ reason }`,
+  `PUT /api/shops/<shopId>/reviews/<id>/reply` `{ text }`.
+- **Seed**: the RAM has two reviews (from `customer.verified`, order BD-261005-SEEDA, and `customer.new`, order
+  BD-261008-SEEDR); `customer.new`'s Himu review is hidden with a reason.
 
 Policies and compliance (US-080, US-081): public pages at `/policies/<slug>` (terms, privacy, returns,
 delivery, seller, cookies; `?version=N` shows an earlier version), admin at `/admin/policies` (draft, publish,

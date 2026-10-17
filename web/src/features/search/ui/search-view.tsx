@@ -36,6 +36,16 @@ function ProductCard({ item }: { item: SearchItem }) {
           </p>
         )}
         <p className="font-semibold">{formatPriceRange(item.priceMin, item.priceMax)}</p>
+        {item.rating !== null && (
+          <p className="text-sm">
+            <span className="text-amber-700" aria-hidden="true">
+              ★
+            </span>{" "}
+            <span className="sr-only">Rated </span>
+            {item.rating.toFixed(1)}
+            <span className="sr-only"> out of 5</span> <span className="text-gray-700">({item.ratingCount})</span>
+          </p>
+        )}
         <p className="text-sm text-gray-700">{item.shopName}</p>
       </Link>
     </li>

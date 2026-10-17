@@ -28,6 +28,10 @@
 - Sprint 7 changes a shop order's status on `shop_order` (set `statusChangedAt`; `deliveredAt` on delivery; `cancelReason` on cancel). Never delete orders, shop orders or items. Customer-facing amounts come from the snapshots, never from current listings.
 - SMS go through `src/lib/sms` (test mode logs); OTP purposes `checkout_verify` and `order_track` belong to orders.
 
+## Reviews (US-055)
+- `features/reviews`: pure rules in `@/features/reviews`; wired `reviewService` in `@/features/reviews/server`. Seller score (US-059): `reviewService.shopRating(shopId, { from, to }?)` -> `{ count, average, histogram }`. Metrics (US-083): `reviewService.metrics({ from, to })`. Product pages: `reviewService.productRating(productId)`.
+- `product_rating` is rewritten in the same transaction as every review write (repo `recomputeRating`); search documents read it (`rating`, `ratingCount`). Reviews are retained 6 years and never deleted; moderation sets `status = hidden` with a reason in `audit_log`.
+
 ## Shop-scoped data access (ADR-004)
 - Every shop-side query takes a `shopId` and filters by it: `getProduct(shopId, productId)` uses `where: { id: productId, shopId }`, never `findUnique({ where: { id } })`.
 - Repositories in `features/<feature>/repo.ts` take the scope (`shopId` or `userId`) as the first argument. Pages and actions call a guard first, then pass the checked `shopId`.

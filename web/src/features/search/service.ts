@@ -1,7 +1,7 @@
 import type { FilterWidget } from "@/generated/prisma/enums";
 import { MAX_FACET_OPTIONS, PER_PAGE } from "./config";
 import { SearchError } from "./errors";
-import { parseSearchParams, type RawParams, type SearchParams } from "./params";
+import { parseSearchParams, RATING_THRESHOLDS, type RawParams, type SearchParams } from "./params";
 import { expandQuery } from "./synonyms";
 import type { AttrFilter, EngineRequest, EngineResult, FacetKind, SearchEngine } from "./types";
 
@@ -48,6 +48,9 @@ export interface SearchItem {
   shopName: string;
   shopSlug: string;
   categoryName: string;
+  /** Average star rating to 1 decimal (US-055), null without reviews; and the review count. */
+  rating: number | null;
+  ratingCount: number;
   /** Cover image through the signed-URL redirect, or null. */
   imageUrl: string | null;
   url: string;
@@ -70,8 +73,11 @@ export interface SearchFacets {
   categories: { id: string; slug: string; name: string; count: number }[];
   price: { min: number; max: number; selectedMin: number | null; selectedMax: number | null } | null;
   shops: FacetOption[];
-  /** Hook for US-055: a rating filter once reviews exist. Always null for now. */
-  rating: null;
+  /**
+   * US-055 rating filter: "N stars & up" choices with their counts (within the other filters),
+   * or null when no result has a rating and none is selected.
+   */
+  rating: { options: { min: number; label: string; count: number; selected: boolean }[]; selected: number | null } | null;
   /** The leaf category's filterable attributes, in display order (leaf categories only). */
   attributes: AttributeFacet[];
 }
@@ -178,6 +184,17 @@ export function buildAttributeFacets(fields: FilterField[], result: EngineResult
   return out;
 }
 
+/** The rating filter's choices: thresholds with results (the selected one is always kept). */
+export function ratingFacet(counts: Record<string, number> | undefined, selected: number | null): SearchFacets["rating"] {
+  const options = RATING_THRESHOLDS.map((min) => ({
+    min,
+    label: `${min} ${min === 1 ? "star" : "stars"} & up`,
+    count: counts?.[String(min)] ?? 0,
+    selected: selected === min,
+  })).filter((o) => o.count > 0 || o.selected);
+  return options.length > 0 ? { options, selected } : null;
+}
+
 export function createSearchService(deps: SearchServiceDeps) {
   /** Throws SearchError: 400 for malformed parameters, 404 for an unknown category. */
   async function search(raw: RawParams): Promise<SearchResponse> {
@@ -200,6 +217,7 @@ export function createSearchService(deps: SearchServiceDeps) {
       shops: params.shops,
       price: params.priceMin !== null || params.priceMax !== null ? { min: params.priceMin, max: params.priceMax } : null,
       attrs: filters,
+      minRating: params.minRating,
       facets: fields.map((f) => ({ key: f.key, kind: KIND[widgetOf(f)] })),
       sort: params.sort,
       page: params.page,
@@ -239,6 +257,8 @@ export function createSearchService(deps: SearchServiceDeps) {
         shopName: d.shopName,
         shopSlug: d.shopSlug,
         categoryName: d.categoryName,
+        rating: d.rating,
+        ratingCount: d.ratingCount,
         imageUrl: d.coverImageId ? `/api/product-images/${d.coverImageId}` : null,
         url: `/products/${d.id}`,
       })),
@@ -253,7 +273,7 @@ export function createSearchService(deps: SearchServiceDeps) {
           .sort((a, b) => b.count - a.count || natural(a.name, b.name)),
         price,
         shops: facetOptions(result.facets.shops, params.shops, (slug) => shopNames.get(slug) ?? slug),
-        rating: null,
+        rating: ratingFacet(result.facets.rating, params.minRating),
         attributes: buildAttributeFacets(fields, result, applied),
       },
       engine,
