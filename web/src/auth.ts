@@ -29,4 +29,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
+  events: {
+    // US-050: the guest cart on this device merges into the account cart at login.
+    // Imported lazily: the cart module imports the guards, which import this file.
+    async signIn({ user }) {
+      const { mergeGuestCartAtLogin } = await import("@/features/cart/login-merge");
+      await mergeGuestCartAtLogin(user.id);
+    },
+  },
 });
