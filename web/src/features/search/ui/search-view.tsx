@@ -1,6 +1,7 @@
 import Form from "next/form";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ProductThumb } from "@/components/product-thumb";
 import type { VisibleCategory } from "../categories";
 import { SearchError } from "../errors";
 import { searchHref, SORT_LABELS, SORTS, toSearchParams, type RawParams, type SearchParams } from "../params";
@@ -21,14 +22,13 @@ function ProductCard({ item }: { item: SearchItem }) {
   return (
     <li className="flex flex-col overflow-hidden rounded border border-gray-300">
       <Link href={item.url} className="flex flex-1 flex-col gap-1 p-3 hover:bg-gray-50 focus:outline-2 focus:outline-blue-700">
-        <div className="mb-2 flex aspect-square items-center justify-center overflow-hidden rounded bg-gray-100">
-          {item.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- signed-URL redirect, not optimisable
-            <img src={item.imageUrl} alt="" loading="lazy" className="h-full w-full object-contain" />
-          ) : (
-            <span className="text-sm text-gray-700">No image</span>
-          )}
-        </div>
+        <ProductThumb
+          src={item.imageUrl}
+          title={item.title}
+          category={item.categoryName}
+          decorative
+          className="mb-2 aspect-square w-full rounded"
+        />
         <h3 className="font-medium">{item.title}</h3>
         {item.bengaliName && (
           <p lang="bn" className="text-sm text-gray-700">
