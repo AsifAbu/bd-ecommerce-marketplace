@@ -20,7 +20,7 @@ export function ProductImage({ imageId, alt, className = "" }: { imageId: string
     // Decorative uses (alt="") stay hidden from screen readers.
     const label = alt ? { role: "img", "aria-label": `${alt} (no image available)` } : { "aria-hidden": true };
     return (
-      <div {...label} className={`flex items-center justify-center bg-gray-100 text-sm text-gray-600 ${className}`}>
+      <div {...label} className={`flex items-center justify-center bg-surface text-sm text-muted ${className}`}>
         <span aria-hidden="true">No image</span>
       </div>
     );
@@ -32,7 +32,7 @@ export function ProductImage({ imageId, alt, className = "" }: { imageId: string
       src={`/api/product-images/${encodeURIComponent(imageId)}`}
       alt={alt}
       onError={() => setFailed(true)}
-      className={`bg-gray-100 object-contain ${className}`}
+      className={`bg-surface object-contain ${className}`}
     />
   );
 }

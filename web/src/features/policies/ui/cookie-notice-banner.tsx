@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { buttonStyles } from "@/components/ui";
 import { dismissCookieNoticeAction } from "../actions";
 import { COOKIE_POLICY_SLUG, policyPath } from "../catalog";
 
@@ -16,28 +17,25 @@ export function CookieNoticeBanner({ version }: { version: number | null }) {
     <section
       aria-label="Cookie notice"
       data-testid="cookie-notice"
-      className="w-full border-b border-gray-300 bg-gray-50 px-4 py-3"
+      className="w-full bg-surface px-4 py-2 sm:px-6"
     >
       <form
         action={async (formData) => {
           setHidden(true);
           await dismissCookieNoticeAction(formData);
         }}
-        className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 text-sm"
+        className="mx-auto flex w-full max-w-[var(--container-page)] flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm"
       >
         <p>
           We use only the cookies needed to run this site, such as keeping you logged in. No advertising or tracking cookies.
           Read our{" "}
-          <Link className="underline" href={policyPath(COOKIE_POLICY_SLUG)}>
+          <Link className="font-medium text-jade underline" href={policyPath(COOKIE_POLICY_SLUG)}>
             Cookie Policy
           </Link>
           .
         </p>
         <input type="hidden" name="version" value={version ?? 0} />
-        <button
-          type="submit"
-          className="rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700"
-        >
+        <button type="submit" className={buttonStyles({ variant: "secondary", size: "sm" })}>
           OK, got it
         </button>
       </form>

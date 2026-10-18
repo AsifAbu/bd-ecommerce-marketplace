@@ -1,51 +1,52 @@
 import Form from "next/form";
 import Link from "next/link";
-import { initialOf, toneFor } from "@/components/product-thumb-style";
+import { Badge, buttonStyles, Input } from "@/components/ui";
+import { BadgeCheck, Search } from "lucide-react";
 import { storefrontPath } from "@/lib/storefront-link";
 import type { HomeData } from "../loader";
 import { ProductGrid } from "./home-product-card";
 
-const sectionHeading = "text-2xl font-bold";
-const seeAll = "text-sm font-semibold text-blue-800 underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700";
+const sectionHeading = "text-xl font-semibold sm:text-2xl";
+const seeAll = "shrink-0 py-1 text-sm font-medium text-jade underline-offset-4 hover:underline";
 
 export function Hero({ children }: { children?: React.ReactNode }) {
   return (
-    <section aria-labelledby="home-title" className="rounded-2xl bg-gradient-to-br from-blue-800 to-blue-600 px-6 py-10 text-white sm:px-10 sm:py-14">
-      <h1 id="home-title" className="text-3xl font-bold sm:text-4xl">
-        Welcome to Marketplace
-      </h1>
-      <p className="mt-2 max-w-xl text-lg text-blue-50">All online products in one place, from shops across Bangladesh.</p>
-      <Form action="/search" role="search" aria-label="Search the marketplace" className="mt-6 flex max-w-xl gap-2">
+    <section aria-labelledby="home-title" className="flex flex-col gap-4 rounded-lg bg-surface px-5 py-8 sm:px-8 sm:py-10">
+      <div>
+        <h1 id="home-title" className="text-3xl font-semibold sm:text-4xl">
+          Marketplace
+        </h1>
+        <p className="mt-2 max-w-xl text-lg text-muted">All online products in one place, from shops across Bangladesh.</p>
+      </div>
+      <Form action="/search" role="search" aria-label="Search the marketplace" className="flex max-w-xl gap-2">
         <label htmlFor="hero-search-q" className="sr-only">
           Search the marketplace
         </label>
-        <input
+        <Input
           id="hero-search-q"
           name="q"
           type="search"
           maxLength={100}
           placeholder="What are you looking for? e.g. processor, boi, শাড়ি"
-          className="min-w-0 flex-1 rounded-lg bg-white px-4 py-3 text-base text-gray-900 focus:outline-2 focus:outline-offset-2 focus:outline-white"
+          className="min-w-0 flex-1"
         />
-        <button
-          type="submit"
-          className="rounded-lg bg-amber-400 px-5 py-3 font-semibold text-gray-900 hover:bg-amber-300 focus:outline-2 focus:outline-offset-2 focus:outline-white"
-        >
+        <button type="submit" className={buttonStyles()}>
+          <Search aria-hidden="true" size={18} />
           Search
         </button>
       </Form>
-      {children && <div className="mt-4 text-sm text-blue-50">{children}</div>}
+      {children && <div className="text-sm text-muted">{children}</div>}
     </section>
   );
 }
 
 export function EmptyHome() {
   return (
-    <section aria-labelledby="empty-title" className="rounded-lg border border-gray-300 bg-gray-50 p-8 text-center">
+    <section aria-labelledby="empty-title" className="rounded-lg bg-surface p-8">
       <h2 id="empty-title" className="text-xl font-semibold">
         No products are listed yet
       </h2>
-      <p className="mt-2 text-gray-700">Shops are getting ready. Please check back soon.</p>
+      <p className="mt-2 text-muted">Shops are getting ready. Please check back soon.</p>
       <p className="mt-2 text-sm text-gray-600">
         Developer hint: run <code className="rounded bg-white px-1">npm run seed</code> in <code className="rounded bg-white px-1">web/</code> to add test shops and
         products.
@@ -73,15 +74,10 @@ export function HomeSections({ data }: { data: HomeData }) {
               <li key={c.id}>
                 <Link
                   href={`/c/${c.slug}`}
-                  className={`flex h-full items-center gap-3 rounded-lg p-4 hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${toneFor(c.name)}`}
+                  className="flex h-full min-h-16 flex-col justify-center gap-0.5 rounded-md bg-surface px-4 py-3 transition-colors hover:bg-line"
                 >
-                  <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/70 text-xl font-bold">
-                    {initialOf(c.name)}
-                  </span>
-                  <span className="flex min-w-0 flex-col">
-                    <span className="truncate font-semibold">{c.name}</span>
-                    <span className="text-sm">{c.count === 1 ? "1 product" : `${c.count} products`}</span>
-                  </span>
+                  <span className="truncate font-medium">{c.name}</span>
+                  <span className="tabular text-sm text-muted">{c.count === 1 ? "1 product" : `${c.count} products`}</span>
                 </Link>
               </li>
             ))}
@@ -127,11 +123,16 @@ export function HomeSections({ data }: { data: HomeData }) {
               <li key={s.id}>
                 <Link
                   href={storefrontPath(s.slug)}
-                  className="flex h-full flex-col gap-1 rounded-lg border border-gray-300 bg-white p-4 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+                  className="flex h-full flex-col gap-1 rounded-md bg-surface px-4 py-3 transition-colors hover:bg-line"
                 >
-                  <span className="font-semibold">{s.name}</span>
-                  <span className="text-sm text-gray-700">{s.productCount === 1 ? "1 product" : `${s.productCount} products`}</span>
-                  {s.verified && <span className="w-fit rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-900">✓ Verified seller</span>}
+                  <span className="font-medium">{s.name}</span>
+                  <span className="tabular text-sm text-muted">{s.productCount === 1 ? "1 product" : `${s.productCount} products`}</span>
+                  {s.verified && (
+                    <Badge tone="brand" className="w-fit">
+                      <BadgeCheck aria-hidden="true" size={14} />
+                      Verified seller
+                    </Badge>
+                  )}
                 </Link>
               </li>
             ))}
@@ -144,17 +145,14 @@ export function HomeSections({ data }: { data: HomeData }) {
 
 export function SellCta() {
   return (
-    <section aria-labelledby="sell-cta" className="flex flex-col items-start gap-3 rounded-lg bg-gray-100 p-6 sm:flex-row sm:items-center sm:justify-between">
+    <section aria-labelledby="sell-cta" className="flex flex-col items-start gap-4 rounded-lg bg-surface p-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 id="sell-cta" className="text-xl font-bold">
+        <h2 id="sell-cta" className="text-xl font-semibold">
           Sell on Marketplace
         </h2>
-        <p className="text-gray-700">Anyone can open a shop and reach customers across Bangladesh.</p>
+        <p className="text-muted">Anyone can open a shop and reach customers across Bangladesh.</p>
       </div>
-      <Link
-        href="/shops/apply"
-        className="rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
-      >
+      <Link href="/shops/apply" className={buttonStyles()}>
         Open your shop
       </Link>
     </section>

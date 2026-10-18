@@ -62,12 +62,12 @@ export function ActionForm({
       {submitLabel && (
         <div>
           <button type="submit" disabled={pending} className={variant === "danger" ? dangerButtonClass : buttonClass}>
-            {pending ? "Please wait…" : submitLabel}
+            {pending ? <><span aria-hidden="true" className="spinner" />Please wait…</> : submitLabel}
           </button>
         </div>
       )}
       {state && "error" in state && (
-        <div role="alert" className="w-full text-sm font-medium text-red-700">
+        <div role="alert" className="w-full text-sm font-medium text-vermilion">
           <p>{state.error.message}</p>
           {listFieldErrors && Object.keys(fields).length > 0 && (
             <ul className="list-disc pl-5 font-normal">
@@ -81,7 +81,7 @@ export function ActionForm({
         </div>
       )}
       {state && "ok" in state && (
-        <p role="status" className="w-full text-sm font-medium text-green-800">
+        <p role="status" className="w-full text-sm font-medium text-jade">
           {state.message}
         </p>
       )}
@@ -142,19 +142,19 @@ export function Field(props: FieldProps) {
     );
   }
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="font-medium">
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-sm font-medium">
         {props.label}
         {props.required && <span aria-hidden="true"> *</span>}
       </label>
       {props.hint && (
-        <p id={`${id}-hint`} className="text-sm text-gray-700">
+        <p id={`${id}-hint`} className="text-sm text-muted">
           {props.hint}
         </p>
       )}
       {control}
       {error && (
-        <p id={`${id}-error`} className="text-sm text-red-700">
+        <p id={`${id}-error`} className="text-sm text-vermilion">
           {error}
         </p>
       )}

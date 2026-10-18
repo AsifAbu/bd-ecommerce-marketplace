@@ -3,10 +3,11 @@ import { connection } from "next/server";
 import { auth } from "@/auth";
 import { LogoutButton } from "@/features/accounts/ui/page-shell";
 import { adminWaiting, loadMenuData, type MenuData } from "@/lib/menu-data";
+import { ChevronDown } from "lucide-react";
+import { buttonStyles, DisclosureMenu, menuItemStyles } from "./ui";
 
-const itemClass =
-  "flex items-center justify-between rounded px-3 py-2 text-sm hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-700";
-const headingClass = "px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-600";
+const itemClass = menuItemStyles;
+const headingClass = "px-3 pb-1 pt-3 text-xs font-medium text-muted";
 
 /** Logged out: a Log in link and a Sign up button. Logged in: the user's name with a dropdown. */
 export async function AccountMenu() {
@@ -25,7 +26,7 @@ export async function AccountMenu() {
   if (!userId) return <GuestLinks />;
   if (!data) {
     return (
-      <Link className="rounded border border-gray-400 px-3 py-1.5 text-sm font-semibold hover:bg-gray-50" href="/account">
+      <Link className={buttonStyles({ variant: "secondary", size: "sm" })} href="/account">
         My account
       </Link>
     );
@@ -35,17 +36,11 @@ export async function AccountMenu() {
 
 export function GuestLinks() {
   return (
-    <div className="flex items-center gap-2">
-      <Link
-        href="/login"
-        className="rounded border border-blue-700 px-3 py-1.5 text-sm font-semibold text-blue-800 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
-      >
+    <div className="flex items-center gap-1 sm:gap-2">
+      <Link href="/login" className={buttonStyles({ variant: "ghost", size: "sm" })}>
         Log in
       </Link>
-      <Link
-        href="/signup"
-        className="rounded bg-blue-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
-      >
+      <Link href="/signup" className={buttonStyles({ size: "sm" })}>
         Sign up
       </Link>
     </div>
@@ -55,25 +50,25 @@ export function GuestLinks() {
 function UserDropdown({ data }: { data: MenuData }) {
   const waiting = data.admin ? adminWaiting(data.admin) : 0;
   return (
-    <details className="group relative">
-      <summary
-        aria-label={`Account menu for ${data.displayName}`}
-        className="flex cursor-pointer list-none items-center gap-2 rounded border border-gray-400 bg-white px-3 py-1.5 text-sm font-semibold hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 [&::-webkit-details-marker]:hidden"
-      >
-        <span aria-hidden="true" className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-700 text-xs text-white">
-          {data.displayName.replace(/^\[TEST\]\s*/, "").charAt(0).toUpperCase()}
-        </span>
-        <span className="max-w-40 truncate">{data.displayName}</span>
-        {waiting > 0 && (
-          <span className="rounded-full bg-red-600 px-1.5 text-xs text-white" title="Waiting for your review">
-            {waiting}
+    <DisclosureMenu
+      summaryLabel={`Account menu for ${data.displayName}`}
+      summaryClassName="border border-line px-2 sm:pl-2 sm:pr-3"
+      summary={
+        <>
+          <span aria-hidden="true" className="flex size-7 items-center justify-center rounded-full bg-jade text-xs font-semibold text-paper">
+            {data.displayName.replace(/^\[TEST\]\s*/, "").charAt(0).toUpperCase()}
           </span>
-        )}
-        <span aria-hidden="true" className="text-xs transition-transform group-open:rotate-180">
-          ▾
-        </span>
-      </summary>
-      <div className="absolute right-0 top-full z-30 mt-1 max-h-[80vh] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-gray-300 bg-white p-2 shadow-lg">
+          <span className="hidden max-w-32 truncate sm:inline">{data.displayName}</span>
+          {waiting > 0 && (
+            <span className="tabular rounded-full bg-vermilion px-1.5 text-xs text-paper" title="Waiting for your review">
+              {waiting}
+            </span>
+          )}
+          <ChevronDown aria-hidden="true" size={16} className="hidden transition-transform group-open:rotate-180 sm:block" />
+        </>
+      }
+      panelClassName="w-72"
+    >
         <ul>
           <li>
             <Link href="/account" className={`${itemClass} font-semibold`}>
@@ -118,14 +113,14 @@ function UserDropdown({ data }: { data: MenuData }) {
             <li key={s.id}>
               <Link href={`/seller/${s.id}`} className={itemClass}>
                 <span className="truncate">{s.name}</span>
-                <span className={`ml-2 shrink-0 text-xs ${s.status === "approved" ? "text-green-800" : "text-amber-800"}`}>
+                <span className={`ml-2 shrink-0 text-xs ${s.status === "approved" ? "text-jade" : "text-gold-ink"}`}>
                   {s.status === "approved" ? s.role : s.status}
                 </span>
               </Link>
             </li>
           ))}
           <li>
-            <Link href="/shops/apply" className={`${itemClass} font-semibold text-blue-800`}>
+            <Link href="/shops/apply" className={`${itemClass} font-medium text-jade`}>
               {data.shops.length ? "Open another shop" : "Open a shop"}
             </Link>
           </li>
@@ -156,11 +151,10 @@ function UserDropdown({ data }: { data: MenuData }) {
           </>
         )}
 
-        <div className="mt-2 border-t border-gray-200 px-3 pb-1 pt-2 text-sm">
+        <div className="mt-1 border-t border-line px-3 py-2 text-sm">
           <LogoutButton />
         </div>
-      </div>
-    </details>
+    </DisclosureMenu>
   );
 }
 
@@ -176,5 +170,5 @@ function AdminLink({ href, children }: { href: string; children: React.ReactNode
 
 function Count({ n }: { n: number }) {
   if (n <= 0) return null;
-  return <span className="ml-2 rounded-full bg-red-600 px-2 text-xs font-semibold text-white">{n} waiting</span>;
+  return <span className="tabular ml-2 rounded-full bg-vermilion px-2 text-xs font-semibold text-paper">{n} waiting</span>;
 }
