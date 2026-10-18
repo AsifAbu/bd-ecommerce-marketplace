@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionForm, Field } from "@/components/action-form";
+import { buttonStyles } from "@/components/ui";
 import { adminComplaintAction, customerReplyAction, openComplaintAction, shopReplyAction } from "../actions";
 import { CATEGORY_LABELS, COMPLAINT_CATEGORIES } from "../rules";
 
@@ -44,7 +45,7 @@ export function ShopReplyForm({ shopId, ticketId }: { shopId: string; ticketId: 
 
 export function AdminComplaintForms({ ticketId, status }: { ticketId: string; status: string }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <ActionForm action={adminComplaintAction} submitLabel="Send reply" label="Admin reply" resetOnSubmit>
         <input type="hidden" name="ticketId" value={ticketId} />
         <input type="hidden" name="action" value="reply" />
@@ -60,10 +61,10 @@ export function AdminComplaintForms({ ticketId, status }: { ticketId: string; st
         <input type="hidden" name="ticketId" value={ticketId} />
         <Field as="textarea" name="resolution" label="Resolution (sent to the customer)" required rows={3} />
         <div className="flex flex-wrap gap-3">
-          <button type="submit" name="action" value="resolve" className="rounded bg-green-800 px-4 py-2 font-semibold text-white hover:bg-green-900 focus:outline-2 focus:outline-offset-2 focus:outline-green-800">
+          <button type="submit" name="action" value="resolve" className={buttonStyles()}>
             Mark resolved
           </button>
-          <button type="submit" name="action" value="close" className="rounded border border-gray-500 px-4 py-2 font-semibold hover:bg-gray-100 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700">
+          <button type="submit" name="action" value="close" className={buttonStyles({ variant: "secondary" })}>
             Close without resolution
           </button>
         </div>

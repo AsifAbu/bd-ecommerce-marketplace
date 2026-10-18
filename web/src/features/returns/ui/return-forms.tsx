@@ -99,7 +99,7 @@ export function ShopReturnActions({ shopId, view }: { shopId: string; view: Retu
 export function AdminReturnActions({ view }: { view: ReturnView }) {
   if (view.status === "escalated") {
     return (
-      <div className="flex flex-col gap-3">
+      <div className="grid gap-6 rounded-md bg-surface p-4 md:grid-cols-2 md:gap-10">
         <ActionForm action={adminReturnAction} submitLabel="Approve return" label={`Approve return of ${view.item.title}`}>
           <input type="hidden" name="returnId" value={view.id} />
           <input type="hidden" name="action" value="approve" />
@@ -115,5 +115,9 @@ export function AdminReturnActions({ view }: { view: ReturnView }) {
   }
   if (!refundable(view)) return null;
   // The platform holds COD money in production, so the admin may record the refund too.
-  return <RefundForm view={view} action={adminReturnAction} hidden={{ returnId: view.id }} />;
+  return (
+    <div className="rounded-md bg-surface p-4">
+      <RefundForm view={view} action={adminReturnAction} hidden={{ returnId: view.id }} />
+    </div>
+  );
 }

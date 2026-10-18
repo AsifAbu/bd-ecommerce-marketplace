@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { AdminLoading } from "@/components/admin/loading";
+import { AdminPageHeader } from "@/components/admin/page-header";
 import { complaintDetail } from "@/features/complaints/server";
 import { AdminComplaintForms } from "@/features/complaints/ui/complaint-forms";
 import { TicketThread } from "@/features/complaints/ui/ticket-views";
@@ -13,11 +14,9 @@ export const metadata = { title: "Complaint: admin" };
 /** US-072: one complaint for the admin: thread, reply, start, resolve or close. */
 export default function AdminComplaintPage({ params }: PageProps<"/admin/complaints/[ticketId]">) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-10">
-      <Suspense fallback={<p role="status">Loading…</p>}>
-        <Content params={params} />
-      </Suspense>
-    </main>
+    <Suspense fallback={<AdminLoading />}>
+      <Content params={params} />
+    </Suspense>
   );
 }
 
@@ -29,13 +28,11 @@ async function Content({ params }: { params: Promise<{ ticketId: string }> }) {
   if (!ticket) notFound();
   return (
     <>
-      <p className="text-sm">
-        <Link className="text-blue-800 underline" href="/admin/complaints">
-          Complaints queue
-        </Link>
-      </p>
-      <h1 className="text-2xl font-bold">{ticket.subject}</h1>
-      {ticket.customerName && <p className="text-sm">Customer: {ticket.customerName}</p>}
+      <AdminPageHeader
+        title={ticket.subject}
+        description={ticket.customerName ? `Customer: ${ticket.customerName}` : undefined}
+        crumbs={[{ label: "Complaints", href: "/admin/complaints" }, { label: ticket.ticketNo }]}
+      />
       <TicketThread ticket={ticket} />
       {ticket.active && <AdminComplaintForms ticketId={ticket.id} status={ticket.status} />}
     </>

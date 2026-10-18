@@ -9,7 +9,7 @@ export type ActionScope = { kind: "shop"; shopId: string } | { kind: "admin" };
  * courier and tracking number; cancel asks for a reason; refuse takes an optional note.
  */
 export function OrderActions({ scope, shopOrderId, shopOrderNo, actions }: { scope: ActionScope; shopOrderId: string; shopOrderNo: string; actions: LifecycleAction[] }) {
-  if (actions.length === 0) return <p className="text-sm text-gray-800">No actions left for this order.</p>;
+  if (actions.length === 0) return <p className="text-sm text-muted">No actions left for this order.</p>;
   const action = scope.kind === "shop" ? shopOrderAction : adminOrderAction;
   const hidden = (name: LifecycleAction) => (
     <>
@@ -31,7 +31,7 @@ export function OrderActions({ scope, shopOrderId, shopOrderNo, actions }: { sco
         </div>
       )}
       {actions.includes("hand_over") && (
-        <ActionForm action={action} submitLabel="Hand over to courier" label={`Hand over ${shopOrderNo}`} className="flex flex-col gap-3 rounded border border-gray-300 p-3">
+        <ActionForm action={action} submitLabel="Hand over to courier" label={`Hand over ${shopOrderNo}`} className="flex flex-col gap-3 rounded-lg border border-line bg-paper p-4">
           {hidden("hand_over")}
           <p className="text-sm">Record the courier and its tracking number. The customer gets them by SMS.</p>
           <Field name="courierName" label="Courier" required hint="For example RedX, Paperfly, Pathao, Steadfast or eCourier" />
@@ -39,7 +39,7 @@ export function OrderActions({ scope, shopOrderId, shopOrderNo, actions }: { sco
         </ActionForm>
       )}
       {actions.includes("refuse") && (
-        <details className="rounded border border-gray-300 p-3">
+        <details className="rounded-lg border border-line bg-paper p-4">
           <summary className="cursor-pointer font-medium">The customer refused the delivery</summary>
           <ActionForm action={action} submitLabel="Mark refused" variant="danger" label={`Mark ${shopOrderNo} refused`} className="mt-3 flex flex-col gap-3">
             {hidden("refuse")}
@@ -49,7 +49,7 @@ export function OrderActions({ scope, shopOrderId, shopOrderNo, actions }: { sco
         </details>
       )}
       {actions.includes("cancel") && (
-        <details className="rounded border border-gray-300 p-3">
+        <details className="rounded-lg border border-line bg-paper p-4">
           <summary className="cursor-pointer font-medium">Cancel this order</summary>
           <ActionForm action={action} submitLabel="Cancel order" variant="danger" label={`Cancel ${shopOrderNo}`} className="mt-3 flex flex-col gap-3">
             {hidden("cancel")}

@@ -67,7 +67,7 @@ export function ActionForm({
         </div>
       )}
       {state && "error" in state && (
-        <div role="alert" className="w-full text-sm font-medium text-vermilion">
+        <div role="alert" className="status-in w-full text-sm font-medium text-vermilion">
           <p>{state.error.message}</p>
           {listFieldErrors && Object.keys(fields).length > 0 && (
             <ul className="list-disc pl-5 font-normal">
@@ -81,7 +81,7 @@ export function ActionForm({
         </div>
       )}
       {state && "ok" in state && (
-        <p role="status" className="w-full text-sm font-medium text-jade">
+        <p role="status" className="status-in w-full text-sm font-medium text-jade">
           {state.message}
         </p>
       )}

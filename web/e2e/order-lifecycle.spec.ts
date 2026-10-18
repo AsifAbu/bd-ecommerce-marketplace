@@ -166,7 +166,7 @@ test("the admin sees an overdue order, then creates a payout for the shop and ma
   const overdue = await insertOrder({ title: SHIRT, optionKey: "colour=black;size=m", placedHoursAgo: 50 });
   const shopOrderNo = `${overdue.orderNo}-1`;
   await login(page, "admin@ecom.test", "/admin/orders?overdue=1");
-  await expect(page.getByRole("heading", { level: 1, name: "Orders: admin" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Orders" })).toBeVisible();
   const entry = page.getByRole("listitem", { name: `Shop order ${shopOrderNo}` });
   await expect(entry.getByTestId("overdue-badge")).toHaveText("Overdue");
   await expect(entry.getByTestId("handover-countdown")).toHaveText(/^Overdue by 2 h/);
@@ -175,7 +175,7 @@ test("the admin sees an overdue order, then creates a payout for the shop and ma
   // Payouts: the Tech shop has at least the collection of the order delivered above.
   const [tech] = await query<{ id: string; name: string }>(`SELECT id, name FROM shop WHERE slug = 'test-tech-shop'`);
   await page.goto("/admin/payouts");
-  await expect(page.getByRole("heading", { level: 1, name: "Payouts: admin" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Payouts" })).toBeVisible();
   const latestPending = async () =>
     (
       await query<{ id: string; net: string; gross: string; commission: string }>(

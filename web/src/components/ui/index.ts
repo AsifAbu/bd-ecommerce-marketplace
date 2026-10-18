@@ -16,7 +16,10 @@ export {
 } from "./dropdown-menu";
 export { EmptyState, type EmptyStateProps } from "./empty-state";
 export { controlStyles, FormField, Input, Select, Textarea, type FieldControlProps, type FormFieldProps } from "./form-field";
+export { FilterChips, type ChipItem } from "./filter-chips";
 export { IconButton, type IconButtonProps } from "./icon-button";
+export { Notice, type NoticeProps, type NoticeTone } from "./notice";
+export { Table, Tbody, Td, Th, Thead, Tr, type TableProps } from "./table";
 export { Pagination, type PaginationProps } from "./pagination";
 export { discountPercent, Price, type PriceProps } from "./price";
 export { ProductCard, ProductCardSkeleton, ProductGrid, ProductGridSkeleton, type ProductCardProps } from "./product-card";
