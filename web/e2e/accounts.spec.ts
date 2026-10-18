@@ -41,7 +41,7 @@ test("sign up with mobile, verify by OTP, save an address, log out", async ({ pa
 
   await page.goto("/account");
   await page.getByRole("button", { name: "Log out" }).click();
-  await expect(page.getByRole("link", { name: "Log in" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Log in" }).first()).toBeVisible();
   await page.goto("/account");
   await expect(page).toHaveURL(/\/login\?callbackUrl=%2Faccount/);
 });
@@ -75,7 +75,7 @@ test("sign up with email, verify it by link, reset the password by email link", 
   await page.goto(await linkFromEmail(page, email, "Verify your email"));
   await expect(page.getByText("Your email is verified.")).toBeVisible();
   await page.getByRole("button", { name: "Log out" }).click();
-  await expect(page.getByRole("link", { name: "Log in" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Log in" }).first()).toBeVisible();
 
   await page.goto("/forgot-password");
   await page.getByLabel("Mobile number or email").fill(email);

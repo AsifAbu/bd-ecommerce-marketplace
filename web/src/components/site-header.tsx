@@ -3,13 +3,15 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { auth } from "@/auth";
 import { CartLink } from "@/features/cart/ui/cart-link";
+import { AccountMenu, GuestLinks } from "./account-menu";
 import { CategoryLink, CategoryMenu } from "./category-menu";
 import { SiteSearch } from "./site-search";
 
 /**
- * Site header: the marketplace name, the categories link and search box (Sprint 5), for
- * logged-in users links to their orders and wishlist (guests: order tracking), and the cart
- * with its item count (guests too).
+ * Site header: the marketplace name, the categories menu and search box, quick links (guests:
+ * order tracking; users: orders and wishlist), the cart with its item count, and on the far right
+ * the Log in / Sign up buttons or, when logged in, the user's name with the account menu
+ * (profile, orders, their shops, and the admin pages for a Platform Admin).
  */
 export function SiteHeader() {
   return (
@@ -22,7 +24,7 @@ export function SiteHeader() {
           <CategoryMenu />
         </Suspense>
         <SiteSearch />
-        <nav aria-label="Your links" className="ml-auto flex flex-wrap gap-x-4 gap-y-1 text-sm">
+        <nav aria-label="Your links" className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
           <Suspense fallback={null}>
             <UserLinks />
           </Suspense>
@@ -34,6 +36,9 @@ export function SiteHeader() {
             }
           >
             <CartLink />
+          </Suspense>
+          <Suspense fallback={<GuestLinks />}>
+            <AccountMenu />
           </Suspense>
         </nav>
       </div>
