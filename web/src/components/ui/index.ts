@@ -4,7 +4,8 @@ export { Breadcrumbs, type Crumb } from "./breadcrumbs";
 export { Button, buttonStyles, type ButtonProps, type ButtonSize, type ButtonVariant } from "./button";
 export { cn } from "./cn";
 export { Container, PageMain, Section, type SectionProps } from "./container";
-export { DisclosureMenu, menuItemStyles, type DisclosureMenuProps } from "./disclosure-menu";
+export { DisclosureMenu, type DisclosureMenuProps } from "./disclosure-menu";
+export { menuItemStyles } from "./menu-styles";
 export {
   DropdownMenu,
   DropdownMenuContent,

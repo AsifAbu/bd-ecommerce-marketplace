@@ -71,7 +71,3 @@ export function DisclosureMenu({ summary, summaryLabel, summaryClassName, childr
     </details>
   );
 }
-
-/** Class for a row (link) inside a DisclosureMenu panel. */
-export const menuItemStyles =
-  "flex min-h-11 items-center justify-between gap-2 rounded-sm px-3 py-2 text-sm hover:bg-surface";
