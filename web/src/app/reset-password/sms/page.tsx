@@ -1,15 +1,15 @@
 import { Suspense } from "react";
 import { ResetPasswordSmsForm } from "@/features/accounts/ui/auth-forms";
-import { Loading, PageShell } from "@/features/accounts/ui/page-shell";
+import { AuthShell, FormSkeleton } from "@/features/accounts/ui/auth-shell";
 
 export const metadata = { title: "Reset password by SMS code" };
 
 export default function ResetPasswordSmsPage() {
   return (
-    <PageShell title="Reset password by SMS code">
-      <Suspense fallback={<Loading />}>
+    <AuthShell title="Reset password by SMS code">
+      <Suspense fallback={<FormSkeleton fields={3} />}>
         <ResetPasswordSmsForm />
       </Suspense>
-    </PageShell>
+    </AuthShell>
   );
 }

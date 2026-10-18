@@ -1,15 +1,15 @@
 import { Suspense } from "react";
 import { LoginForm } from "@/features/accounts/ui/auth-forms";
-import { Loading, PageShell } from "@/features/accounts/ui/page-shell";
+import { AuthShell, FormSkeleton } from "@/features/accounts/ui/auth-shell";
 
 export const metadata = { title: "Log in" };
 
 export default function LoginPage() {
   return (
-    <PageShell title="Log in">
-      <Suspense fallback={<Loading />}>
+    <AuthShell title="Log in" intro="Use the mobile number or email you signed up with.">
+      <Suspense fallback={<FormSkeleton />}>
         <LoginForm />
       </Suspense>
-    </PageShell>
+    </AuthShell>
   );
 }

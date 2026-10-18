@@ -8,7 +8,7 @@ export const writeReviewPath = (orderItemId: string) => `/account/reviews/${enco
 export function ItemReview({ orderItemId, state }: { orderItemId: string; state: ItemReviewState | undefined }) {
   if (!state || state.kind === "not_delivered") return null;
   if (state.kind === "shop_member") {
-    return <span className="block text-xs text-gray-700">Shop members can&apos;t review their own shop&apos;s products</span>;
+    return <span className="block text-xs text-muted">Shop members can&apos;t review their own shop&apos;s products</span>;
   }
   if (state.kind === "can_review") {
     return (
@@ -21,7 +21,7 @@ export function ItemReview({ orderItemId, state }: { orderItemId: string; state:
     <span className="flex flex-wrap items-center gap-2 text-sm">
       <span>Your review:</span>
       <Stars value={state.rating} />
-      {state.status === "hidden" && <span className="text-red-800">(hidden by the platform)</span>}
+      {state.status === "hidden" && <span className="text-vermilion">(hidden by the platform)</span>}
       <Link className={linkClass} href={writeReviewPath(orderItemId)}>
         {state.canEdit ? "Edit" : "View"}
         <span className="sr-only"> your review</span>

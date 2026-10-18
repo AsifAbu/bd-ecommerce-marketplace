@@ -1,12 +1,12 @@
 import { ForgotPasswordForm } from "@/features/accounts/ui/auth-forms";
-import { PageShell } from "@/features/accounts/ui/page-shell";
+import { AuthShell } from "@/features/accounts/ui/auth-shell";
 
 export const metadata = { title: "Forgot password" };
 
 export default function ForgotPasswordPage() {
   return (
-    <PageShell title="Forgot password">
+    <AuthShell title="Forgot password" intro="Tell us how to reach you and we will help you choose a new password.">
       <ForgotPasswordForm />
-    </PageShell>
+    </AuthShell>
   );
 }

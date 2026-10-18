@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button } from "@/components/ui";
 
 /**
  * US-057: moves one wishlist item into the cart (POST /api/wishlist/[id]/move-to-cart). On
@@ -30,18 +31,11 @@ export function MoveToCartButton({ itemId, title, describedBy }: { itemId: strin
 
   return (
     <>
-      <button
-        type="button"
-        onClick={move}
-        disabled={busy}
-        aria-label={`Move to cart: ${title}`}
-        aria-describedby={describedBy}
-        className="rounded bg-blue-700 px-3 py-1 font-semibold text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-      >
+      <Button block loading={busy} onClick={move} aria-label={`Move to cart: ${title}`} aria-describedby={describedBy}>
         Move to cart
-      </button>
+      </Button>
       {error && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm font-medium text-vermilion">
           {error}
         </p>
       )}

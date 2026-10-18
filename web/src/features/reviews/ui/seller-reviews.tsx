@@ -12,7 +12,7 @@ export function SellerReviews({ shopId, rating, data }: { shopId: string; rating
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-semibold">Shop rating</h2>
         <RatingSummary rating={rating} />
-        <p className="text-sm text-gray-700">
+        <p className="text-sm text-muted">
           Shop owners and staff can&apos;t review their own products, and only the platform can hide a review. You can reply publicly.
         </p>
       </div>
@@ -26,7 +26,7 @@ export function SellerReviews({ shopId, rating, data }: { shopId: string; rating
           </p>
           <ReviewItem review={r} />
           <details className="text-sm">
-            <summary className="cursor-pointer text-blue-800 underline">{r.reply ? "Change the reply" : "Reply"}</summary>
+            <summary className="inline-flex min-h-11 cursor-pointer items-center text-jade underline decoration-jade/40 underline-offset-4">{r.reply ? "Change the reply" : "Reply"}</summary>
             <ActionForm action={replyToReview} submitLabel="Publish reply" label={`Reply to the review of ${r.productTitle}`}>
               <input type="hidden" name="shopId" value={shopId} />
               <input type="hidden" name="reviewId" value={r.id} />

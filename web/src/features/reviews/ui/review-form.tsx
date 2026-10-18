@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionForm, Field } from "@/components/action-form";
+import { Radio } from "@/components/ui";
 import { editReview, writeReview } from "../actions";
 
 const STAR_LABELS = ["1 star: poor", "2 stars: fair", "3 stars: good", "4 stars: very good", "5 stars: excellent"];
@@ -20,18 +21,15 @@ export function ReviewForm({
   return (
     <ActionForm action={editing ? editReview : writeReview} submitLabel={editing ? "Save changes" : "Publish review"} label={editing ? "Edit your review" : "Write a review"}>
       {editing ? <input type="hidden" name="reviewId" value={review.id} /> : <input type="hidden" name="orderItemId" value={orderItemId} />}
-      <fieldset className="flex flex-col gap-1">
-        <legend className="font-medium">
+      <fieldset className="flex flex-col">
+        <legend className="mb-1 text-sm font-medium text-ink">
           Your rating<span aria-hidden="true"> *</span>
         </legend>
-        <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:gap-4">
-          {STAR_LABELS.map((label, i) => (
-            <label key={label} className="flex items-center gap-2">
-              <input type="radio" name="rating" value={i + 1} defaultChecked={review?.rating === i + 1} required className="h-4 w-4" />
-              <span>{label}</span>
-            </label>
-          ))}
-        </div>
+        {STAR_LABELS.map((label, i) => (
+          <Radio key={label} name="rating" value={i + 1} defaultChecked={review?.rating === i + 1} required>
+            {label}
+          </Radio>
+        ))}
       </fieldset>
       <Field name="title" label="Title (optional)" defaultValue={review?.title ?? ""} hint="For example: Fast and quiet" />
       <Field
