@@ -17,7 +17,7 @@ export function SiteFooter() {
             <p className="text-lg font-semibold tracking-tight">Marketplace</p>
             <p className="max-w-xs text-muted">All online products in one place, from shops across Bangladesh. Pay in cash on delivery.</p>
           </div>
-          <nav aria-label="Shop links">
+          <nav aria-label="Explore">
             <h2 className={heading}>Shop</h2>
             <ul>
               <li>
@@ -37,7 +37,7 @@ export function SiteFooter() {
               </li>
             </ul>
           </nav>
-          <nav aria-label="Sell links">
+          <nav aria-label="For sellers">
             <h2 className={heading}>Sell</h2>
             <ul>
               <li>
