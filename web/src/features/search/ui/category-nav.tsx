@@ -1,20 +1,26 @@
 import Link from "next/link";
+import { buttonStyles, EmptyState } from "@/components/ui";
 import type { VisibleCategory } from "../categories";
 import { getVisibleCategoryTree } from "../server";
-import { linkClass } from "./styles";
 
 /** US-040: categories with live, in-stock products only, each with its product count. */
 
-function Branch({ nodes, depth }: { nodes: VisibleCategory[]; depth: number }) {
+const link = "inline-flex min-h-11 items-center rounded-sm hover:underline underline-offset-4";
+
+function Children({ nodes }: { nodes: VisibleCategory[] }) {
   return (
-    <ul className={depth === 0 ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3" : "ml-4 flex flex-col gap-1"}>
+    <ul className="flex flex-col">
       {nodes.map((c) => (
-        <li key={c.id} className={depth === 0 ? "flex flex-col gap-2 rounded border border-gray-300 p-4" : ""}>
-          <Link className={depth === 0 ? `${linkClass} text-lg font-semibold` : linkClass} href={`/c/${c.slug}`}>
+        <li key={c.id}>
+          <Link className={`${link} text-muted hover:text-ink`} href={`/c/${c.slug}`}>
             {c.name}
           </Link>{" "}
-          <span className="text-sm text-gray-700">({c.count})</span>
-          {c.children.length > 0 && <Branch nodes={c.children} depth={depth + 1} />}
+          <span className="tabular text-sm text-muted">({c.count})</span>
+          {c.children.length > 0 && (
+            <div className="ml-4">
+              <Children nodes={c.children} />
+            </div>
+          )}
         </li>
       ))}
     </ul>
@@ -23,47 +29,34 @@ function Branch({ nodes, depth }: { nodes: VisibleCategory[]; depth: number }) {
 
 export async function CategoryTreeNav() {
   const tree = await getVisibleCategoryTree();
-  if (tree.length === 0) return <p>No products are listed yet. Please check back soon.</p>;
+  if (tree.length === 0) {
+    return (
+      <EmptyState
+        title="No products are listed yet"
+        description="Shops are getting ready. Please check back soon."
+        action={
+          <Link className={buttonStyles({ variant: "secondary" })} href="/shops/apply">
+            Open your shop
+          </Link>
+        }
+      />
+    );
+  }
   return (
     <nav aria-label="Categories">
-      <Branch nodes={tree} depth={0} />
-    </nav>
-  );
-}
-
-/** Home page: top-level categories and their direct children. */
-export async function CategoryShortcuts() {
-  const tree = await getVisibleCategoryTree();
-  if (tree.length === 0) return null;
-  return (
-    <section aria-labelledby="shop-by-category" className="flex flex-col gap-3">
-      <h2 id="shop-by-category" className="text-xl font-semibold">
-        Shop by category
-      </h2>
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
         {tree.map((c) => (
-          <li key={c.id} className="rounded border border-gray-300 p-3">
-            <Link className={`${linkClass} font-semibold`} href={`/c/${c.slug}`}>
-              {c.name}
-            </Link>{" "}
-            <span className="text-sm text-gray-700">({c.count})</span>
-            {c.children.length > 0 && (
-              <ul className="mt-1 flex flex-wrap gap-x-3 text-sm">
-                {c.children.map((child) => (
-                  <li key={child.id}>
-                    <Link className={linkClass} href={`/c/${child.slug}`}>
-                      {child.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+          <li key={c.id} className="flex flex-col">
+            <div>
+              <Link className={`${link} text-lg font-semibold`} href={`/c/${c.slug}`}>
+                {c.name}
+              </Link>{" "}
+              <span className="tabular text-sm text-muted">({c.count})</span>
+            </div>
+            {c.children.length > 0 && <Children nodes={c.children} />}
           </li>
         ))}
       </ul>
-      <Link className={linkClass} href="/categories">
-        All categories
-      </Link>
-    </section>
+    </nav>
   );
 }

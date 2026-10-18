@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
 import { getConfig } from "@/lib/config";
@@ -12,32 +13,36 @@ export const DEMO_LOGINS = [
 
 export const DEMO_PASSWORD = "Test@12345";
 
+const code = "rounded-sm bg-paper px-1 font-mono text-[0.9em]";
+
+/** Collapsed by default: one quiet line, the logins one tap away. */
 export async function DemoHint() {
   await connection(); // APP_MODE is read at request time
   if (getConfig().appMode !== "test") return null;
   return (
-    <section aria-labelledby="demo-hint" data-testid="demo-hint" className="rounded-lg border border-amber-500 bg-amber-50 p-4 text-sm">
-      <h2 id="demo-hint" className="text-base font-semibold">
+    <details data-testid="demo-hint" className="group rounded-lg bg-surface text-sm">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-4 font-medium [&::-webkit-details-marker]:hidden">
         Try the demo
-      </h2>
-      <p className="mt-1">
-        This site runs in test mode with dummy data. Log in at{" "}
-        <Link className="font-medium text-blue-800 underline" href="/login">
-          /login
-        </Link>{" "}
-        with password <code className="rounded bg-white px-1">{DEMO_PASSWORD}</code> (OTP code <code className="rounded bg-white px-1">123456</code>):
-      </p>
-      <ul className="mt-2 grid gap-2 sm:grid-cols-2">
-        {DEMO_LOGINS.map((l) => (
-          <li key={l.email} className="rounded border border-amber-300 bg-white p-2">
-            <span className="font-semibold">{l.role}</span>
-            <br />
-            <code>{l.email}</code>
-            <br />
-            <span className="text-gray-700">{l.tryThis}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
+        <ChevronDown aria-hidden="true" size={18} className="text-muted transition-transform duration-[var(--duration-base)] group-open:rotate-180" />
+      </summary>
+      <div className="flex flex-col gap-3 px-4 pb-4">
+        <p>
+          This site runs in test mode with dummy data. Log in at{" "}
+          <Link className="font-medium text-jade underline underline-offset-4" href="/login">
+            /login
+          </Link>{" "}
+          with password <code className={code}>{DEMO_PASSWORD}</code> (OTP code <code className={code}>123456</code>).
+        </p>
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {DEMO_LOGINS.map((l) => (
+            <li key={l.email} className="flex flex-col gap-0.5 rounded-md bg-paper p-3">
+              <span className="font-semibold">{l.role}</span>
+              <code className="break-all font-mono text-[0.9em]">{l.email}</code>
+              <span className="text-muted">{l.tryThis}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </details>
   );
 }

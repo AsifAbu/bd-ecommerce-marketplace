@@ -12,7 +12,7 @@ export function homeWhere(today: Date): Prisma.ProductWhereInput {
 const select = {
   id: true,
   title: true,
-  shop: { select: { slug: true, name: true } },
+  shop: { select: { slug: true, name: true, tier: true } },
   category: { select: { name: true } },
   variants: { where: { stock: { gt: 0 } }, select: { price: true } },
   images: { select: { id: true }, orderBy: [{ position: "asc" }, { createdAt: "asc" }], take: 1 },
@@ -29,6 +29,7 @@ export function toHomeProduct(p: Row): HomeProduct {
     priceMax: Math.max(...prices),
     shopName: p.shop.name,
     shopSlug: p.shop.slug,
+    shopVerified: p.shop.tier === "verified",
     categoryName: p.category.name,
     imageUrl: p.images[0] ? `/api/product-images/${encodeURIComponent(p.images[0].id)}` : null,
     rating: null,
