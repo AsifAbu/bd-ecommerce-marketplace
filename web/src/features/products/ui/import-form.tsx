@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useId, useRef, useState, type FormEvent } from "react";
+import { Notice, RowHeader, Table, Td, Th } from "@/components/ui";
 import type { ImportRowError } from "../errors";
 import { callApi } from "./api-client";
-import { buttonClass, errorTextClass, inputClass, linkClass } from "./styles";
+import { buttonClass, inputClass } from "./styles";
 
 /** CSV upload (US-034). All or nothing: on any problem, every row error is listed and nothing is imported. */
 export function ImportForm({ shopId, categoryId }: { shopId: string; categoryId: string }) {
@@ -29,59 +30,64 @@ export function ImportForm({ shopId, categoryId }: { shopId: string; categoryId:
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <form onSubmit={onSubmit} noValidate className="flex flex-wrap items-end gap-2">
-        <div className="flex flex-col gap-1">
-          <label htmlFor={id} className="font-medium">
+    <div className="flex flex-col gap-5">
+      <form onSubmit={onSubmit} noValidate className="flex max-w-xl flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={id} className="text-sm font-medium text-ink">
             CSV file
           </label>
-          <p id={`${id}-hint`} className="text-sm text-gray-700">
+          <p id={`${id}-hint`} className="text-sm text-muted">
             Up to 500 rows and 1 MB, saved as CSV (UTF-8).
           </p>
           <input id={id} name="file" type="file" accept=".csv,text/csv" required className={inputClass} aria-describedby={`${id}-hint`} />
         </div>
-        <button type="submit" disabled={pending} className={buttonClass}>
-          {pending ? "Importing…" : "Import products"}
-        </button>
+        <div>
+          <button type="submit" disabled={pending} aria-busy={pending || undefined} className={buttonClass}>
+            {pending ? (
+              <>
+                <span aria-hidden="true" className="spinner" />
+                Importing…
+              </>
+            ) : (
+              "Import products"
+            )}
+          </button>
+        </div>
       </form>
-      <div ref={resultRef} tabIndex={-1}>
+      <div ref={resultRef} tabIndex={-1} className="outline-none">
         {created !== null && (
-          <p role="status" className="font-medium text-green-800">
+          <Notice tone="success">
             Imported {created} {created === 1 ? "product" : "products"}.{" "}
-            <Link className={linkClass} href={`/seller/${shopId}/products`}>
+            <Link className="underline underline-offset-4" href={`/seller/${shopId}/products`}>
               See your products
             </Link>
-          </p>
+          </Notice>
         )}
         {error && (
-          <div role="alert" className="flex flex-col gap-2">
-            <p className="font-medium text-red-700">{error.message}</p>
+          <div role="alert" className="flex flex-col gap-3">
+            <Notice tone="error" role="presentation">
+              {error.message}
+            </Notice>
             {error.rows && error.rows.length > 0 && (
-              <table className="w-full border-collapse text-left text-sm">
+              <Table label="Problems in the file">
                 <caption className="sr-only">Problems in the file</caption>
                 <thead>
-                  <tr className="border-b border-gray-400">
-                    <th scope="col" className="py-1 pr-3">
-                      Line
-                    </th>
-                    <th scope="col" className="py-1 pr-3">
-                      Column
-                    </th>
-                    <th scope="col" className="py-1">
-                      Problem
-                    </th>
+                  <tr>
+                    <Th>Line</Th>
+                    <Th>Column</Th>
+                    <Th>Problem</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {error.rows.map((r, i) => (
-                    <tr key={i} className="border-b border-gray-200">
-                      <td className="py-1 pr-3">{r.row}</td>
-                      <td className="py-1 pr-3">{r.column ?? "—"}</td>
-                      <td className={`py-1 ${errorTextClass}`}>{r.message}</td>
+                    <tr key={i}>
+                      <RowHeader className="tabular whitespace-nowrap">{r.row}</RowHeader>
+                      <Td className="whitespace-nowrap">{r.column ?? "–"}</Td>
+                      <Td className="min-w-48 text-vermilion">{r.message}</Td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </Table>
             )}
           </div>
         )}

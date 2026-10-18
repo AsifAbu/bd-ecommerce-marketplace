@@ -36,6 +36,8 @@ const BY_STATUS: Record<string, BadgeTone> = {
   suspended: "sale",
   hidden: "sale",
   expired: "sale",
+  medicine_suspended: "sale",
+  shop_not_approved: "warning",
   // closed / off
   cancelled: "neutral",
   returned: "neutral",

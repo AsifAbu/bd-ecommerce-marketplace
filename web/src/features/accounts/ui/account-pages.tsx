@@ -37,7 +37,7 @@ export async function ProfilePage({ searchParams }: { searchParams: SearchParams
   return (
     <div className="flex max-w-xl flex-col gap-10">
       {notice && <Notice tone="success">{notice}</Notice>}
-      <Section title="Verification" aria-label="Verification">
+      <Section title="Verification">
         {!user.phone && !user.email && <p className="text-muted">Add a mobile number or an email below.</p>}
         {user.phone && (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -162,7 +162,7 @@ export async function AddressesPage({ searchParams }: { searchParams: SearchPara
 
   return (
     <div className="flex flex-col gap-10">
-      <Section title="Saved addresses" aria-label="Saved addresses">
+      <Section title="Saved addresses">
         {addresses.length === 0 ? (
           <p className="text-muted">No saved addresses yet. Add the first one below and checkout will use it.</p>
         ) : (

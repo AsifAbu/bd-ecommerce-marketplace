@@ -8,14 +8,14 @@ import { requireShopRole } from "@/lib/auth";
 
 export const metadata = { title: "Packing slip", robots: { index: false } };
 
-/** Printable packing slip for one shop order (owner and staff of that shop). */
+/** Printable packing slip for one shop order (owner and staff of that shop). Inside the seller layout's <main>; its nav is hidden when printing. */
 export default function PackingSlipPage({ params }: PageProps<"/seller/[shopId]/orders/[shopOrderId]/packing-slip">) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 print:max-w-none print:p-0">
+    <div className="flex max-w-3xl flex-col gap-6 print:max-w-none">
       <Suspense fallback={<p role="status">Loading the packing slip…</p>}>
         <Content params={params} />
       </Suspense>
-    </main>
+    </div>
   );
 }
 

@@ -1,16 +1,17 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { requireShopRole } from "@/lib/auth";
+import { ListSkeleton } from "@/features/accounts/ui/auth-shell";
 import { ImportView } from "@/features/products/ui/views";
 import { guardPage } from "@/features/shops/page-guard";
 
+export const metadata = { title: "Import products" };
+
 export default function ImportProductsPage({ params, searchParams }: PageProps<"/seller/[shopId]/products/import">) {
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-4 py-10">
-      <Suspense fallback={<p>Loading…</p>}>
-        <Content params={params} searchParams={searchParams} />
-      </Suspense>
-    </main>
+    <Suspense fallback={<ListSkeleton rows={4} />}>
+      <Content params={params} searchParams={searchParams} />
+    </Suspense>
   );
 }
 

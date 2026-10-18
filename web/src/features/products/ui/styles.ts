@@ -1,12 +1,14 @@
-/** Seller UI styles (same look as the shops forms). */
-export const inputClass =
-  "w-full rounded border border-gray-400 px-3 py-2 text-base focus:outline-2 focus:outline-offset-1 focus:outline-blue-700 aria-invalid:border-red-700";
-export const buttonClass =
-  "rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 disabled:opacity-60";
-export const secondaryButtonClass =
-  "rounded border border-gray-500 px-3 py-1 font-medium hover:bg-gray-100 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 disabled:opacity-60";
-export const dangerButtonClass =
-  "rounded border border-red-700 px-3 py-1 font-medium text-red-800 hover:bg-red-50 focus:outline-2 focus:outline-offset-2 focus:outline-red-700 disabled:opacity-60";
-export const linkClass = "text-blue-800 underline";
-export const sectionClass = "flex flex-col gap-3 rounded border border-gray-300 p-4";
-export const errorTextClass = "text-sm text-red-700";
+import { buttonStyles, controlStyles, linkStyles } from "@/components/ui";
+
+/** Seller product UI styles: the UI kit's looks under the names this feature already uses. */
+export const inputClass = controlStyles;
+export const buttonClass = buttonStyles();
+export const secondaryButtonClass = buttonStyles({ variant: "secondary" });
+/** A quiet destructive button (Delete): outlined in vermilion, not a solid red block. */
+export const dangerButtonClass = `${buttonStyles({ variant: "secondary" })} border-vermilion text-vermilion hover:bg-vermilion-soft`;
+/** The dense variants (36px) are for table rows on desktop only. */
+export const secondaryButtonCompactClass = buttonStyles({ variant: "secondary", size: "sm" });
+export const dangerButtonCompactClass = `${buttonStyles({ variant: "secondary", size: "sm" })} border-vermilion text-vermilion hover:bg-vermilion-soft`;
+export const linkClass = linkStyles;
+export const sectionClass = "flex flex-col gap-4";
+export const errorTextClass = "text-sm font-medium text-vermilion";

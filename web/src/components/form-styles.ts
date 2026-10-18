@@ -12,3 +12,7 @@ export const buttonClass =
 // Written out (not derived with replace) so Tailwind sees every class name.
 export const dangerButtonClass =
   "pressable inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-vermilion px-4 py-2 font-semibold text-paper hover:bg-vermilion-hover disabled:cursor-not-allowed disabled:opacity-50";
+
+// A quiet destructive action (Remove, Delete) that should not shout like the main action.
+export const dangerOutlineButtonClass =
+  "pressable inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-vermilion bg-paper px-4 py-2 font-semibold text-vermilion hover:bg-vermilion-soft disabled:cursor-not-allowed disabled:opacity-50";

@@ -1,111 +1,151 @@
+import { ChevronLeft, Package } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Badge, buttonStyles, EmptyState, Notice, PageHeader, RowHeader, Section, statusTone, Table, Td, Th } from "@/components/ui";
 import { CatalogError, getCategorySchema, listCategories, type CategorySchema } from "@/features/catalog";
 import { dhakaToday } from "@/features/shops";
 import { TIER_LIMITS } from "@/lib/shop-tiers";
 import { templateColumns } from "../csv";
 import { leafChoices, priceRange, variantLabel } from "../display";
 import { LISTING_STATE_LABELS, listingState } from "../live";
+import { LOW_STOCK_AT } from "../low-stock";
 import * as repo from "../repo";
 import { ImageManager } from "./image-manager";
 import { ImportForm } from "./import-form";
 import { ProductActions, StockForm } from "./product-actions";
 import { ProductForm } from "./product-form";
-import { linkClass, sectionClass } from "./styles";
+import { linkClass } from "./styles";
 
 /** Seller pages for products. Every view takes a `shopId` already checked by requireShopRole(). */
 
-function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+function BackLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <section aria-labelledby={id} className={sectionClass}>
-      <h2 id={id} className="text-xl font-semibold">
-        {title}
-      </h2>
+    <Link className={`${linkClass} -ml-1 inline-flex min-h-11 items-center gap-1 self-start px-1 text-sm`} href={href}>
+      <ChevronLeft aria-hidden="true" size={16} />
       {children}
-    </section>
+    </Link>
   );
 }
 
-function BackLinks({ shopId, toList = true }: { shopId: string; toList?: boolean }) {
+const stockOf = (variants: { stock: number }[]) => variants.reduce((sum, v) => sum + v.stock, 0);
+
+function StockCell({ variants }: { variants: { stock: number }[] }) {
+  const total = stockOf(variants);
+  const low = variants.some((v) => v.stock <= LOW_STOCK_AT);
   return (
-    <nav aria-label="Seller" className="flex flex-wrap gap-4 text-sm">
-      <Link className={linkClass} href={`/seller/${shopId}`}>
-        Shop dashboard
-      </Link>
-      {toList && (
-        <Link className={linkClass} href={`/seller/${shopId}/products`}>
-          All products
-        </Link>
-      )}
-    </nav>
+    <span className="flex flex-wrap items-center gap-2">
+      <span className="tabular">{total}</span>
+      {total === 0 ? <Badge tone="sale">Out of stock</Badge> : low ? <Badge tone="warning">Low</Badge> : null}
+    </span>
   );
 }
 
-/** /seller/[shopId]/products */
+/** /seller/[shopId]/products: a table from md, cards on phones. */
 export async function ProductListView({ shopId }: { shopId: string }) {
   const [shop, products] = await Promise.all([repo.getListingShop(shopId), repo.listProducts(shopId)]);
   if (!shop) notFound();
   const today = dhakaToday(new Date());
   const max = TIER_LIMITS[shop.tier].maxLiveListings;
   const live = products.filter((p) => listingState(p, today) === "live").length;
+  const rows = products.map((p) => {
+    const state = listingState(p, today);
+    return { p, stateLabel: LISTING_STATE_LABELS[state], tone: statusTone(state) };
+  });
 
   return (
-    <div className="flex flex-col gap-4">
-      <BackLinks shopId={shopId} toList={false} />
-      <h1 className="text-3xl font-bold">Products</h1>
-      <p>
-        {shop.name} · {live} live {live === 1 ? "listing" : "listings"}
-        {max !== null && ` of ${max} allowed on the Basic tier`}
-      </p>
-      {shop.status !== "approved" && (
-        <p role="status" className="font-medium text-amber-800">
-          Your shop is {shop.status}: you can list products once it is approved.
-        </p>
-      )}
-      <div className="flex flex-wrap gap-4">
-        <Link className={linkClass} href={`/seller/${shopId}/products/new`}>
-          Add a product
-        </Link>
-        <Link className={linkClass} href={`/seller/${shopId}/products/import`}>
-          Import products from CSV
-        </Link>
-      </div>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Products"
+        description={`${shop.name} has ${live} live ${live === 1 ? "listing" : "listings"}${max !== null ? ` of ${max} allowed on the Basic tier` : ""}.`}
+        actions={
+          <>
+            <Link className={buttonStyles()} href={`/seller/${shopId}/products/new`}>
+              Add a product
+            </Link>
+            <Link className={buttonStyles({ variant: "secondary" })} href={`/seller/${shopId}/products/import`}>
+              Import products from CSV
+            </Link>
+          </>
+        }
+      />
+      {shop.status !== "approved" && <Notice tone="warning">Your shop is {shop.status}: you can list products once it is approved.</Notice>}
       {products.length === 0 ? (
-        <p>No products yet.</p>
+        <EmptyState
+          icon={<Package aria-hidden="true" size={24} />}
+          title="No products yet"
+          description="Add your first product, or import many at once from a CSV file."
+        />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <caption className="sr-only">Your products</caption>
-            <thead>
-              <tr className="border-b border-gray-400">
-                <th scope="col" className="py-2 pr-3">Title</th>
-                <th scope="col" className="py-2 pr-3">Category</th>
-                <th scope="col" className="py-2 pr-3">Price</th>
-                <th scope="col" className="py-2 pr-3">Stock</th>
-                <th scope="col" className="py-2 pr-3">Status</th>
-                <th scope="col" className="py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((p) => (
-                <tr key={p.id} className="border-b border-gray-200 align-top">
-                  <td className="py-2 pr-3">
-                    <Link className={linkClass} href={`/seller/${shopId}/products/${p.id}`}>
-                      {p.title}
-                    </Link>
-                  </td>
-                  <td className="py-2 pr-3">{p.category.name}</td>
-                  <td className="py-2 pr-3 whitespace-nowrap">{priceRange(p.variants.map((v) => v.price))}</td>
-                  <td className="py-2 pr-3">{p.variants.reduce((sum, v) => sum + v.stock, 0)}</td>
-                  <td className="py-2 pr-3">{LISTING_STATE_LABELS[listingState(p, today)]}</td>
-                  <td className="py-2">
-                    <ProductActions shopId={shopId} productId={p.id} title={p.title} status={p.status} />
-                  </td>
+        <>
+          <div className="hidden md:block">
+            <Table label="Your products">
+              <caption className="sr-only">Your products</caption>
+              <thead>
+                <tr>
+                  <Th>Title</Th>
+                  <Th>Category</Th>
+                  <Th>Price</Th>
+                  <Th>Stock</Th>
+                  <Th>Status</Th>
+                  <Th>Actions</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.map(({ p, stateLabel, tone }) => (
+                  <tr key={p.id}>
+                    <RowHeader className="min-w-48">
+                      <Link className="underline decoration-line underline-offset-4 hover:decoration-ink" href={`/seller/${shopId}/products/${p.id}`}>
+                        {p.title}
+                      </Link>
+                    </RowHeader>
+                    <Td className="text-muted">{p.category.name}</Td>
+                    <Td className="tabular whitespace-nowrap">{priceRange(p.variants.map((v) => v.price))}</Td>
+                    <Td>
+                      <StockCell variants={p.variants} />
+                    </Td>
+                    <Td>
+                      <Badge tone={tone}>{stateLabel}</Badge>
+                    </Td>
+                    <Td>
+                      <ProductActions shopId={shopId} productId={p.id} title={p.title} status={p.status} compact />
+                    </Td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+          <ul className="divide-y divide-line border-y border-line md:hidden" aria-label="Your products">
+            {rows.map(({ p, stateLabel, tone }) => (
+              <li key={p.id} className="flex flex-col gap-3 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <Link className="min-w-0 break-words font-medium underline decoration-line underline-offset-4" href={`/seller/${shopId}/products/${p.id}`}>
+                    {p.title}
+                  </Link>
+                  <Badge tone={tone} className="shrink-0">
+                    {stateLabel}
+                  </Badge>
+                </div>
+                <dl className="grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <dt className="text-muted">Price</dt>
+                    <dd className="tabular font-medium">{priceRange(p.variants.map((v) => v.price))}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted">Stock</dt>
+                    <dd className="font-medium">
+                      <StockCell variants={p.variants} />
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted">Category</dt>
+                    <dd className="break-words">{p.category.name}</dd>
+                  </div>
+                </dl>
+                <ProductActions shopId={shopId} productId={p.id} title={p.title} status={p.status} />
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );
@@ -116,19 +156,22 @@ async function CategoryPicker({ shopId, hrefBase }: { shopId: string; hrefBase: 
   const [shop, categories] = await Promise.all([repo.getListingShop(shopId), listCategories()]);
   const choices = leafChoices(categories, { includeLicensed: shop?.type === "medicine" });
   return (
-    <Section id="choose-category" title="Choose a category">
-      <p>Every product sits in one leaf category; its form shows that category&apos;s fields.</p>
-      <ul className="flex flex-col gap-1">
+    <Section title="Choose a category" id="choose-category" className="max-w-2xl">
+      <p className="text-muted">Every product sits in one leaf category; its form shows that category&apos;s fields.</p>
+      <ul className="divide-y divide-line border-y border-line">
         {choices.map((c) => (
           <li key={c.id}>
-            <Link className={linkClass} href={`${hrefBase}?categoryId=${encodeURIComponent(c.id)}`}>
+            <Link
+              className="-mx-3 flex min-h-11 flex-wrap items-center gap-x-3 rounded-md px-3 py-2.5 transition-colors hover:bg-surface"
+              href={`${hrefBase}?categoryId=${encodeURIComponent(c.id)}`}
+            >
               {c.label}
+              {c.requiresLicence && <span className="text-sm text-muted">(needs a verified drug licence)</span>}
             </Link>
-            {c.requiresLicence && " (needs a verified drug licence)"}
           </li>
         ))}
       </ul>
-      <p className="text-sm">
+      <p className="text-muted">
         Can&apos;t find the right category?{" "}
         <Link className={linkClass} href="/catalog/requests/new">
           Request a new one
@@ -148,26 +191,28 @@ async function loadSchema(categoryId: string): Promise<CategorySchema | string> 
   }
 }
 
+function CategoryLine({ name, changeHref }: { name: string; changeHref: string }) {
+  return (
+    <p className="text-muted">
+      Category: <strong className="text-ink">{name}</strong>.{" "}
+      <Link className={linkClass} href={changeHref}>
+        Change category
+      </Link>
+    </p>
+  );
+}
+
 /** /seller/[shopId]/products/new: pick a leaf, then its generated form (US-030). */
 export async function NewProductView({ shopId, categoryId }: { shopId: string; categoryId?: string }) {
   const schema = categoryId ? await loadSchema(categoryId) : null;
   return (
-    <div className="flex flex-col gap-4">
-      <BackLinks shopId={shopId} />
-      <h1 className="text-3xl font-bold">Add a product</h1>
-      {typeof schema === "string" && (
-        <p role="alert" className="font-medium text-red-700">
-          {schema}
-        </p>
-      )}
+    <div className="flex max-w-3xl flex-col gap-6">
+      <BackLink href={`/seller/${shopId}/products`}>All products</BackLink>
+      <PageHeader title="Add a product" />
+      {typeof schema === "string" && <Notice tone="error">{schema}</Notice>}
       {schema && typeof schema !== "string" ? (
         <>
-          <p>
-            Category: <strong>{schema.name}</strong> ·{" "}
-            <Link className={linkClass} href={`/seller/${shopId}/products/new`}>
-              Change category
-            </Link>
-          </p>
+          <CategoryLine name={schema.name} changeHref={`/seller/${shopId}/products/new`} />
           <ProductForm shopId={shopId} schema={schema} />
         </>
       ) : (
@@ -202,22 +247,21 @@ export async function EditProductView({ shopId, productId, notice }: { shopId: s
   const formKey = `${product.updatedAt.toISOString()}:${product.variants.map((v) => `${v.id}=${v.stock}`).join(",")}`;
 
   return (
-    <div className="flex flex-col gap-6">
-      <BackLinks shopId={shopId} />
-      <header className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold">{product.title}</h1>
-        <p>
-          {product.category.name} · Status: <strong>{LISTING_STATE_LABELS[state]}</strong>
-        </p>
-        {notice && (
-          <p role="status" className="font-medium text-green-800">
-            {notice}
+    <div className="flex max-w-3xl flex-col gap-10">
+      <div className="flex flex-col gap-4">
+        <BackLink href={`/seller/${shopId}/products`}>All products</BackLink>
+        <header className="flex flex-col gap-2">
+          <h1 className="text-3xl font-semibold">{product.title}</h1>
+          <p className="flex flex-wrap items-center gap-2 text-muted">
+            {product.category.name}
+            <Badge tone={statusTone(state)}>{LISTING_STATE_LABELS[state]}</Badge>
           </p>
-        )}
-      </header>
+        </header>
+        {notice && <Notice tone="success">{notice}</Notice>}
+      </div>
 
-      <Section id="status" title="Status">
-        <p>{state === "live" ? "Customers can see this product." : "Customers can't see this product right now."}</p>
+      <Section title="Status" id="status">
+        <p className="text-muted">{state === "live" ? "Customers can see this product." : "Customers can't see this product right now."}</p>
         <ProductActions
           shopId={shopId}
           productId={product.id}
@@ -227,7 +271,7 @@ export async function EditProductView({ shopId, productId, notice }: { shopId: s
         />
       </Section>
 
-      <Section id="stock" title="Stock">
+      <Section title="Stock" id="stock">
         {product.variants.map((v) => (
           <StockForm
             key={v.id}
@@ -240,13 +284,13 @@ export async function EditProductView({ shopId, productId, notice }: { shopId: s
         ))}
       </Section>
 
-      <Section id="images" title="Images">
+      <Section title="Images" id="images">
         <ImageManager shopId={shopId} productId={product.id} images={product.images.map((i) => ({ id: i.id }))} />
       </Section>
 
-      <Section id="details" title="Details">
+      <Section title="Details" id="details">
         {typeof schema === "string" ? (
-          <p>{schema}: this product can&apos;t be edited, but you can still change its status, stock and images.</p>
+          <p className="text-muted">{schema}: this product can&apos;t be edited, but you can still change its status, stock and images.</p>
         ) : (
           <ProductForm key={formKey} shopId={shopId} schema={schema} productId={product.id} initial={initial} />
         )}
@@ -259,64 +303,53 @@ export async function EditProductView({ shopId, productId, notice }: { shopId: s
 export async function ImportView({ shopId, categoryId }: { shopId: string; categoryId?: string }) {
   const schema = categoryId ? await loadSchema(categoryId) : null;
   return (
-    <div className="flex flex-col gap-4">
-      <BackLinks shopId={shopId} />
-      <h1 className="text-3xl font-bold">Import products from CSV</h1>
-      {typeof schema === "string" && (
-        <p role="alert" className="font-medium text-red-700">
-          {schema}
-        </p>
-      )}
+    <div className="flex max-w-4xl flex-col gap-6">
+      <BackLink href={`/seller/${shopId}/products`}>All products</BackLink>
+      <PageHeader title="Import products from CSV" />
+      {typeof schema === "string" && <Notice tone="error">{schema}</Notice>}
       {schema && typeof schema !== "string" ? (
         <>
-          <p>
-            Category: <strong>{schema.name}</strong> ·{" "}
-            <Link className={linkClass} href={`/seller/${shopId}/products/import`}>
-              Change category
-            </Link>
-          </p>
-          <Section id="template" title="1. Download the template">
+          <CategoryLine name={schema.name} changeHref={`/seller/${shopId}/products/import`} />
+          <Section title="1. Download the template" id="template">
             <p>
               <a className={linkClass} href={`/api/shops/${shopId}/products/import/template?categoryId=${encodeURIComponent(schema.categoryId)}`}>
                 Download the {schema.name} template (CSV)
               </a>
             </p>
-            <p className="text-sm">
+            <p className="max-w-prose text-sm text-muted">
               One row per product. For variants, give the rows of one product the same <code>handle</code>; its product columns
               are read from its first row. Several values in one cell: separate with <code>|</code>. Yes/no columns accept yes, no,
               true, false, 1 or 0.
             </p>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left text-sm">
-                <caption className="sr-only">Template columns and allowed values</caption>
-                <thead>
-                  <tr className="border-b border-gray-400">
-                    <th scope="col" className="py-1 pr-3">Column</th>
-                    <th scope="col" className="py-1 pr-3">Field</th>
-                    <th scope="col" className="py-1 pr-3">Required</th>
-                    <th scope="col" className="py-1">Allowed values</th>
+            <Table label="Template columns and allowed values">
+              <caption className="sr-only">Template columns and allowed values</caption>
+              <thead>
+                <tr>
+                  <Th>Column</Th>
+                  <Th>Field</Th>
+                  <Th>Required</Th>
+                  <Th>Allowed values</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {templateColumns(schema).map((c) => (
+                  <tr key={c.key}>
+                    <Td className="whitespace-nowrap">
+                      <code>{c.key}</code>
+                    </Td>
+                    <Td className="min-w-32">
+                      {c.name}
+                      {c.level === "variant" && " (per variant row)"}
+                    </Td>
+                    <Td>{c.required ? "Yes" : "No"}</Td>
+                    <Td className="min-w-48">{c.help}</Td>
                   </tr>
-                </thead>
-                <tbody>
-                  {templateColumns(schema).map((c) => (
-                    <tr key={c.key} className="border-b border-gray-200 align-top">
-                      <td className="py-1 pr-3">
-                        <code>{c.key}</code>
-                      </td>
-                      <td className="py-1 pr-3">
-                        {c.name}
-                        {c.level === "variant" && " (per variant row)"}
-                      </td>
-                      <td className="py-1 pr-3">{c.required ? "Yes" : "No"}</td>
-                      <td className="py-1">{c.help}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </Table>
           </Section>
-          <Section id="upload" title="2. Upload the filled-in file">
-            <p>All or nothing: if any row has a problem, nothing is imported and every problem is listed.</p>
+          <Section title="2. Upload the filled-in file" id="upload">
+            <p className="text-muted">All or nothing: if any row has a problem, nothing is imported and every problem is listed.</p>
             <ImportForm shopId={shopId} categoryId={schema.categoryId} />
           </Section>
         </>

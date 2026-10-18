@@ -3,7 +3,7 @@
 import { createContext, startTransition, use, useActionState, useId, type ReactNode } from "react";
 import { resultFields, type ActionResult } from "@/lib/actions";
 import { Notice } from "./ui/notice";
-import { buttonClass, dangerButtonClass, inputClass } from "./form-styles";
+import { buttonClass, dangerButtonClass, dangerOutlineButtonClass, inputClass } from "./form-styles";
 
 type Action = (prev: ActionResult, formData: FormData) => Promise<ActionResult>;
 
@@ -29,7 +29,7 @@ export function ActionForm({
   submitLabel?: string;
   children?: ReactNode;
   className?: string;
-  variant?: "primary" | "danger";
+  variant?: "primary" | "danger" | "danger-outline";
   /** Accessible name of the form. */
   label?: string;
   /** List field errors under the message (for forms without <Field>). */
@@ -62,7 +62,7 @@ export function ActionForm({
       <FieldErrors value={fields}>{children}</FieldErrors>
       {submitLabel && (
         <div>
-          <button type="submit" disabled={pending} className={variant === "danger" ? dangerButtonClass : buttonClass}>
+          <button type="submit" disabled={pending} className={variant === "danger" ? dangerButtonClass : variant === "danger-outline" ? dangerOutlineButtonClass : buttonClass}>
             {pending ? <><span aria-hidden="true" className="spinner" />Please wait…</> : submitLabel}
           </button>
         </div>
