@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { cache, Suspense } from "react";
+import { PageMain, Skeleton } from "@/components/ui";
 import { AddToCartButton } from "@/features/cart/ui/add-to-cart-button";
+import { priceRange } from "@/features/products/display";
 import { loadProductPage } from "@/features/products/server";
 import { ProductDetailView } from "@/features/products/ui/product-page";
 import { reviewService } from "@/features/reviews/server";
@@ -30,11 +32,11 @@ export async function generateMetadata({ params }: PageProps<"/products/[product
 /** US-044: the public product page. Only live listings; anything else is "not found". */
 export default function ProductRoute({ params, searchParams }: PageProps<"/products/[productId]">) {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8">
-      <Suspense fallback={<p role="status">Loading product…</p>}>
+    <PageMain>
+      <Suspense fallback={<ProductSkeleton />}>
         <Content params={params} searchParams={searchParams} />
       </Suspense>
-    </main>
+    </PageMain>
   );
 }
 
@@ -79,8 +81,9 @@ async function Content({
       reviews={<ProductReviews data={reviews} pageHref={reviewsHref} />}
       cart={
         <AddToCartButton
-          variants={page.variants.map((v) => ({ id: v.id, stock: v.stock }))}
+          variants={page.variants.map((v) => ({ id: v.id, stock: v.stock, price: v.price }))}
           defaultVariantId={onlyVariant}
+          priceFallback={priceRange(page.variants.map((v) => v.price))}
           chooseHint={`Choose ${page.axes.map((a) => a.name.toLowerCase()).join(" and ") || "an option"} first.`}
         />
       }
@@ -97,5 +100,20 @@ async function Content({
         />
       }
     />
+  );
+}
+
+/** Shown while the product loads: the page's two columns as quiet blocks. */
+function ProductSkeleton() {
+  return (
+    <div role="status" aria-label="Loading product" className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-12">
+      <Skeleton className="aspect-square w-full" />
+      <div className="flex flex-col gap-4">
+        <Skeleton className="h-8 w-3/4" />
+        <Skeleton className="h-6 w-1/3" />
+        <Skeleton className="h-11 w-full" />
+        <Skeleton className="h-12 w-full" />
+      </div>
+    </div>
   );
 }

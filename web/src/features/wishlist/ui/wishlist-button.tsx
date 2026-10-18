@@ -1,8 +1,10 @@
 "use client";
 
+import { Heart } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { Button } from "@/components/ui";
 import { VARIANT_PARAM, wishlistLoginUrl } from "../intent";
 
 interface Saved {
@@ -73,24 +75,17 @@ export function WishlistButton({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        onClick={toggle}
-        disabled={busy}
-        className="flex items-center gap-2 rounded border border-gray-500 px-4 py-2 font-medium hover:bg-gray-100 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 disabled:opacity-60"
-      >
-        <span aria-hidden="true" className={current ? "text-red-700" : ""}>
-          {current ? "♥" : "♡"}
-        </span>
+    <div className="flex flex-wrap items-center gap-x-3">
+      <Button variant="ghost" onClick={toggle} disabled={busy} className="-ml-4">
+        <Heart aria-hidden="true" size={18} className={current ? "fill-vermilion text-vermilion" : ""} />
         {current ? "Remove from wishlist" : "Save to wishlist"}
-      </button>
-      <p role="status" className="text-sm">
+      </Button>
+      <p role="status" className="feedback-in text-sm text-muted">
         {message}
         {message && saved.length > 0 && (
           <>
             {" "}
-            <Link className="text-blue-800 underline" href="/account/wishlist">
+            <Link className="font-medium text-jade underline underline-offset-2" href="/account/wishlist">
               View wishlist
             </Link>
           </>
