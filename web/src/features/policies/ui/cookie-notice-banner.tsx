@@ -24,7 +24,7 @@ export function CookieNoticeBanner({ version }: { version: number | null }) {
           setHidden(true);
           await dismissCookieNoticeAction(formData);
         }}
-        className="mx-auto flex w-full max-w-[var(--container-page)] flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm"
+        className="mx-auto flex w-full max-w-[var(--container-page)] items-center justify-between gap-4 text-xs sm:text-sm"
       >
         <p>
           We use only the cookies needed to run this site, such as keeping you logged in. No advertising or tracking cookies.
@@ -35,7 +35,7 @@ export function CookieNoticeBanner({ version }: { version: number | null }) {
           .
         </p>
         <input type="hidden" name="version" value={version ?? 0} />
-        <button type="submit" className={buttonStyles({ variant: "secondary", size: "sm" })}>
+        <button type="submit" className={`${buttonStyles({ variant: "secondary", size: "sm" })} shrink-0`}>
           OK, got it
         </button>
       </form>

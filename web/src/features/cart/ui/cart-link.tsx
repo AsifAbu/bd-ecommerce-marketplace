@@ -20,8 +20,10 @@ export async function CartLink() {
       href="/cart"
     >
       <ShoppingBag aria-hidden="true" size={18} />
-      Cart (<span className="tabular">{count}</span>
-      <span className="sr-only"> {count === 1 ? "item" : "items"}</span>)
+      <span>
+        Cart (<span className="tabular">{count}</span>
+        <span className="sr-only"> {count === 1 ? "item" : "items"}</span>)
+      </span>
     </Link>
   );
 }

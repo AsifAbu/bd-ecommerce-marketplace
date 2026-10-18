@@ -27,7 +27,7 @@ export function Hero({ children }: { children?: React.ReactNode }) {
           name="q"
           type="search"
           maxLength={100}
-          placeholder="What are you looking for? e.g. processor, boi, শাড়ি"
+          placeholder="Search, e.g. processor, boi, শাড়ি"
           className="min-w-0 flex-1"
         />
         <button type="submit" className={buttonStyles()}>
