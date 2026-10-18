@@ -6,11 +6,11 @@ export async function OrderComplaints({ orderId, orderNo }: { orderId: string; o
   const tickets = await complaintsOfOrder(orderId);
   if (!tickets.length) return null;
   return (
-    <section id="complaints" aria-labelledby="order-complaints-heading" className="flex flex-col gap-3">
-      <h2 id="order-complaints-heading" className="text-xl font-semibold">
+    <section id="complaints" aria-labelledby="order-complaints-heading" className="flex flex-col gap-4">
+      <h2 id="order-complaints-heading" className="text-xl">
         Complaints about order {orderNo}
       </h2>
-      <p className="text-sm">Every complaint is answered and resolved within 72 hours. You get an SMS when its status changes.</p>
+      <p className="text-sm text-muted">Every complaint is answered and resolved within 72 hours. You get an SMS when its status changes.</p>
       <TicketList tickets={tickets} href={(t) => `/complaints/${t.id}`} />
     </section>
   );

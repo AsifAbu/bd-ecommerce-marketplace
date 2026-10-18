@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { buttonClass, inputClass } from "@/components/form-styles";
+import { Button, FormField, Input } from "@/components/ui";
 
 /**
  * US-008: track an order without an account. Step 1 sends a code to the order's mobile, step 2
@@ -47,52 +47,37 @@ export function TrackForm({ initialOrderNo }: { initialOrderNo: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <form onSubmit={send} className="flex flex-col gap-3" noValidate aria-label="Send a code">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="track-order-no" className="font-medium">
-            Order number
-          </label>
-          <input
-            id="track-order-no"
-            name="orderNo"
-            value={orderNo}
-            onChange={(e) => setOrderNo(e.target.value)}
-            placeholder="BD-261017-7KQ2M"
-            autoCapitalize="characters"
-            className={inputClass}
-            required
-          />
-          <p className="text-sm text-gray-700">It is in your confirmation SMS and email.</p>
-        </div>
-        <button type="submit" className={`${buttonClass} self-start`} disabled={busy || !orderNo.trim()}>
+    <div className="flex flex-col gap-6">
+      <form onSubmit={send} className="flex flex-col gap-4" noValidate aria-label="Send a code">
+        <FormField label="Order number" hint="It is in your confirmation SMS and email." required>
+          {(p) => (
+            <Input
+              {...p}
+              name="orderNo"
+              value={orderNo}
+              onChange={(e) => setOrderNo(e.target.value)}
+              placeholder="BD-261017-7KQ2M"
+              autoCapitalize="characters"
+            />
+          )}
+        </FormField>
+        <Button type="submit" variant={sent ? "secondary" : "primary"} className="self-start" disabled={busy || !orderNo.trim()}>
           {sent ? "Send a new code" : "Send code by SMS"}
-        </button>
+        </Button>
       </form>
       {sent && (
-        <form onSubmit={verify} className="flex flex-col gap-3" noValidate aria-label="Check the code">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="track-code" className="font-medium">
-              6-digit code
-            </label>
-            <input
-              id="track-code"
-              name="code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className={`${inputClass} w-40`}
-              required
-            />
-          </div>
-          <button type="submit" className={`${buttonClass} self-start`} disabled={busy || code.trim().length !== 6}>
+        <form onSubmit={verify} className="feedback-in flex flex-col gap-4" noValidate aria-label="Check the code">
+          <FormField label="6-digit code" required className="max-w-40">
+            {(p) => (
+              <Input {...p} name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value)} />
+            )}
+          </FormField>
+          <Button type="submit" className="self-start" disabled={busy || code.trim().length !== 6}>
             View order
-          </button>
+          </Button>
         </form>
       )}
-      <p role="status" aria-live="polite" className={`text-sm ${message?.error ? "font-semibold text-red-800" : "text-green-900"}`}>
+      <p role="status" aria-live="polite" className={`text-sm ${message?.error ? "font-medium text-vermilion" : "text-jade"}`}>
         {message?.text}
       </p>
     </div>
