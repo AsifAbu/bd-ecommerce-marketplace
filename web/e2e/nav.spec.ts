@@ -24,6 +24,8 @@ async function login(page: Page, identifier: string) {
 }
 
 const header = (page: Page) => page.getByRole("banner");
+// The header has two dropdowns (categories and account); this picks the account one.
+const accountMenu = (page: Page) => header(page).locator("details").filter({ has: page.getByLabel(/Account menu for/) });
 
 test("a guest sees Log in and Sign up in the header", async ({ page }) => {
   await page.goto("/");
@@ -37,7 +39,7 @@ test("a logged-in customer sees their name in the header and can open their prof
   await login(page, "customer.verified@ecom.test");
   await page.goto("/");
   await expect(header(page).getByRole("link", { name: "Log in" })).toHaveCount(0);
-  const menu = header(page).getByRole("group").filter({ has: page.locator("summary") });
+  const menu = accountMenu(page);
   await menu.locator("summary").click();
   await expect(menu.getByRole("link", { name: "My profile" })).toBeVisible();
   await expect(menu.getByRole("link", { name: "My orders" })).toBeVisible();
@@ -50,7 +52,7 @@ test("a logged-in customer sees their name in the header and can open their prof
 test("a shop owner finds their shop in the menu", async ({ page }) => {
   await login(page, "owner.tech@ecom.test");
   await page.goto("/");
-  const menu = header(page).getByRole("group").filter({ has: page.locator("summary") });
+  const menu = accountMenu(page);
   await menu.locator("summary").click();
   await menu.getByRole("link", { name: /Test Tech Shop/ }).click();
   await expect(page).toHaveURL(/\/seller\/[^/]+$/);
@@ -70,7 +72,7 @@ test("the admin approves a newly applied shop from the header menu", async ({ pa
 
   await login(page, "admin@ecom.test");
   await page.goto("/");
-  const menu = header(page).getByRole("group").filter({ has: page.locator("summary") });
+  const menu = accountMenu(page);
   await menu.locator("summary").click();
   await expect(menu.getByRole("link", { name: /Approve shops/ })).toContainText("waiting");
   await menu.getByRole("link", { name: /Approve shops/ }).click();
