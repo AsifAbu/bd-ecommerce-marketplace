@@ -33,18 +33,18 @@ function Field({
     "aria-describedby": describedBy,
   };
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="font-medium">
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-sm font-medium">
         {label}
       </label>
       {hint && (
-        <p id={`${id}-hint`} className="text-sm text-gray-700">
+        <p id={`${id}-hint`} className="text-sm text-muted">
           {hint}
         </p>
       )}
-      {as === "textarea" ? <textarea {...common} rows={rows} className={`${inputClass} font-mono text-sm`} /> : <input {...common} type={type} />}
+      {as === "textarea" ? <textarea {...common} rows={rows} className={`${inputClass} font-mono text-sm leading-6`} /> : <input {...common} type={type} />}
       {error && (
-        <p id={`${id}-error`} className="text-sm text-red-700">
+        <p id={`${id}-error`} className="text-sm text-vermilion">
           {error}
         </p>
       )}
@@ -68,7 +68,7 @@ export function DraftEditor({
   draft: { id: string; version: number; title: string; body: string; changeSummary: string | null };
 }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <ActionForm action={saveDraftAction} label={`Edit draft version ${draft.version}`}>
         <input type="hidden" name="id" value={draft.id} />
         <Field name="title" label="Title" defaultValue={draft.title} />
@@ -89,8 +89,8 @@ export function DraftEditor({
         <SubmitButton variant="secondary">Save draft</SubmitButton>
       </ActionForm>
 
-      <ActionForm action={publishAction} label={`Publish version ${draft.version}`} className="flex flex-col gap-3 rounded border border-gray-300 p-4">
-        <h4 className="text-lg font-semibold">Publish version {draft.version}</h4>
+      <ActionForm action={publishAction} label={`Publish version ${draft.version}`} className="flex flex-col gap-4 rounded-lg bg-surface p-4 sm:p-5">
+        <h3 className="text-lg font-semibold">Publish version {draft.version}</h3>
         <p className="text-sm">
           Save the draft first. Publishing is final: the version can no longer be edited, and it replaces the current version
           from its effective date. Users accept the new version at their next sign-up or checkout.

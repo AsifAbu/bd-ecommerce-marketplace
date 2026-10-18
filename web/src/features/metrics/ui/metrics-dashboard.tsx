@@ -1,4 +1,6 @@
+import { Check, Info, Minus, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { Badge, EmptyState, FilterChips, Table, Tbody, Td, Th, Thead, Tr } from "@/components/ui";
 import { STATUS_LABELS } from "../calculators";
 import { WINDOW_CHOICES } from "../config";
 import type { MetricsDashboard, Tile } from "../service";
@@ -14,26 +16,35 @@ function show(t: Tile, n: number | null): string {
   return n.toLocaleString("en-US");
 }
 
-const STATUS_STYLE = {
-  met: "border-green-700 bg-green-50 text-green-900",
-  not_met: "border-red-700 bg-red-50 text-red-900",
-  no_data: "border-gray-400 bg-gray-50 text-gray-900",
-  tracked: "border-blue-700 bg-blue-50 text-blue-900",
-} as const;
-const STATUS_ICON = { met: "✓", not_met: "✗", no_data: "–", tracked: "i" } as const;
+// Status is always an icon shape plus words; the colour only supports it.
+const STATUS_VIEW = {
+  met: { icon: Check, tone: "text-jade" },
+  not_met: { icon: X, tone: "text-vermilion" },
+  no_data: { icon: Minus, tone: "text-muted" },
+  tracked: { icon: Info, tone: "text-muted" },
+} as const satisfies Record<Tile["status"], { icon: LucideIcon; tone: string }>;
 
-function KpiTile({ tile }: { tile: Tile }) {
+function KpiRow({ tile }: { tile: Tile }) {
+  const { icon: Icon, tone } = STATUS_VIEW[tile.status];
   return (
-    <li data-testid={`tile-${tile.key}`} data-status={tile.status} className="flex flex-col gap-1 rounded border border-gray-300 p-4">
-      <h3 className="text-sm font-medium text-gray-800">{tile.label}</h3>
-      <p className="text-2xl font-bold">{show(tile, tile.value)}</p>
-      <p className={`inline-flex w-fit items-center gap-1 rounded border px-2 py-0.5 text-xs font-semibold ${STATUS_STYLE[tile.status]}`}>
-        <span aria-hidden="true">{STATUS_ICON[tile.status]}</span>
-        {STATUS_LABELS[tile.status]}
-        {tile.target !== null && ` (target ${show(tile, tile.target)})`}
-      </p>
-      <p className="text-xs text-gray-700">{tile.detail}</p>
-    </li>
+    <Tr data-testid={`tile-${tile.key}`} data-status={tile.status}>
+      <Th scope="row" className="text-base sm:w-1/4">
+        {tile.label}
+      </Th>
+      <Td label="Value" align="right" className="text-lg font-semibold sm:whitespace-nowrap">
+        {show(tile, tile.value)}
+      </Td>
+      <Td label="Status">
+        <span className={`inline-flex items-center gap-1.5 font-medium ${tone}`}>
+          <Icon aria-hidden="true" size={16} />
+          {STATUS_LABELS[tile.status]}
+        </span>
+        {tile.target !== null && <span className="block text-muted">target {show(tile, tile.target)}</span>}
+      </Td>
+      <Td label="What it measures" className="text-muted sm:w-2/5">
+        {tile.detail}
+      </Td>
+    </Tr>
   );
 }
 
@@ -46,99 +57,159 @@ function GmvChart({ data }: { data: MetricsDashboard["gmv"]["byDay"] }) {
   const bar = (W - gap * (data.length - 1)) / data.length;
   const best = data.reduce((a, d) => (d.amount > a.amount ? d : a), data[0]);
   return (
-    <>
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`GMV per day, ${data.length} days, highest ${tk(best?.amount ?? 0)} on ${best?.day ?? "n/a"}. The table below has every day.`} className="h-32 w-full">
-        <line x1="0" y1={H - 0.5} x2={W} y2={H - 0.5} stroke="currentColor" strokeOpacity="0.4" />
-        {data.map((d, i) => {
-          const h = (d.amount / max) * (H - 4);
-          return <rect key={d.day} x={i * (bar + gap)} y={H - h} width={bar} height={h} className="fill-blue-700"><title>{`${d.day}: ${tk(d.amount)}`}</title></rect>;
-        })}
-      </svg>
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          preserveAspectRatio="none"
+          role="img"
+          aria-label={`GMV per day, ${data.length} days, highest ${tk(best?.amount ?? 0)} on ${best?.day ?? "n/a"}. The table below has every day.`}
+          className="h-36 w-full rounded-lg bg-surface text-edge"
+        >
+          <line x1="0" y1={H - 0.5} x2={W} y2={H - 0.5} stroke="currentColor" />
+          {data.map((d, i) => {
+            const h = (d.amount / max) * (H - 8);
+            return (
+              <rect key={d.day} x={i * (bar + gap)} y={H - h} width={bar} height={h} className="fill-jade">
+                <title>{`${d.day}: ${tk(d.amount)}`}</title>
+              </rect>
+            );
+          })}
+        </svg>
+        <p className="tabular flex justify-between text-xs text-muted" aria-hidden="true">
+          <span>{data[0]?.day}</span>
+          <span>highest day {tk(best?.amount ?? 0)}</span>
+          <span>{data[data.length - 1]?.day}</span>
+        </p>
+      </div>
       <details className="text-sm">
-        <summary className="cursor-pointer text-blue-800 underline">Show GMV by day as a table</summary>
-        <table className="mt-2 w-full max-w-md border-collapse text-left" data-testid="gmv-table">
-          <caption className="sr-only">GMV by day (Asia/Dhaka)</caption>
-          <thead>
-            <tr>
-              <th scope="col" className="border-b border-gray-400 py-1 pr-4">Day</th>
-              <th scope="col" className="border-b border-gray-400 py-1 pr-4 text-right">Delivered orders</th>
-              <th scope="col" className="border-b border-gray-400 py-1 text-right">GMV</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((d) => (
-              <tr key={d.day}>
-                <th scope="row" className="py-0.5 pr-4 font-normal">{d.day}</th>
-                <td className="py-0.5 pr-4 text-right">{d.orders}</td>
-                <td className="py-0.5 text-right">{tk(d.amount)}</td>
+        <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium text-jade underline underline-offset-4 sm:min-h-9">Show GMV by day as a table</summary>
+        <div className="mt-2 max-w-xl" data-testid="gmv-table">
+          <Table caption="GMV by day (Asia/Dhaka)">
+            <Thead>
+              <tr>
+                <Th>Day</Th>
+                <Th align="right">Delivered orders</Th>
+                <Th align="right">GMV</Th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </Thead>
+            <Tbody>
+              {data.map((d) => (
+                <Tr key={d.day}>
+                  <Th scope="row" className="py-1.5 font-normal">
+                    {d.day}
+                  </Th>
+                  <Td align="right" className="py-1.5">
+                    {d.orders}
+                  </Td>
+                  <Td align="right" className="py-1.5">
+                    {tk(d.amount)}
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </div>
       </details>
-    </>
+    </div>
   );
 }
 
 /** US-083: the admin marketplace metrics page body. */
 export function MetricsDashboardView({ data }: { data: MetricsDashboard }) {
+  const attentionTotal = data.attention.reduce((n, a) => n + a.count, 0);
   return (
-    <div className="flex flex-col gap-8">
-      <nav aria-label="Time window" className="flex flex-wrap items-center gap-2">
-        <span className="font-medium">Window:</span>
-        {WINDOW_CHOICES.map((d) => (
-          <Link
-            key={d}
-            href={`/admin/metrics?days=${d}`}
-            aria-current={d === data.days ? "page" : undefined}
-            className={d === data.days ? "rounded border border-blue-800 bg-blue-800 px-3 py-1 font-semibold text-white" : "rounded border border-gray-500 px-3 py-1 text-blue-800 underline"}
-          >
-            {d} days
-          </Link>
-        ))}
-        <span className="text-sm text-gray-700">Days are Asia/Dhaka calendar days. Updated {new Date(data.generatedAt).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })}.</span>
-      </nav>
+    <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-2">
+        <FilterChips label="Time window" items={WINDOW_CHOICES.map((d) => ({ label: `${d} days`, href: `/admin/metrics?days=${d}`, current: d === data.days }))} />
+        <p className="text-sm text-muted">Days are Asia/Dhaka calendar days. Updated {new Date(data.generatedAt).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })}.</p>
+      </div>
 
-      <section aria-labelledby="attention-heading" className="flex flex-col gap-2 rounded border border-gray-300 p-4">
-        <h2 id="attention-heading" className="text-xl font-semibold">Needs attention</h2>
-        <ul className="flex flex-col gap-1" data-testid="attention">
+      <section aria-labelledby="attention-heading" className="flex flex-col gap-3">
+        <h2 id="attention-heading" className="text-xl font-semibold">
+          Needs attention
+        </h2>
+        {attentionTotal === 0 && <p className="text-muted">Nothing needs attention right now.</p>}
+        <ul className="overflow-hidden rounded-lg border border-line" data-testid="attention">
           {data.attention.map((a) => (
-            <li key={a.label}>
-              <Link className="text-blue-800 underline" href={a.href}>{a.label}</Link>:{" "}
-              <strong className={a.count > 0 ? "text-red-800" : "text-green-800"}>{a.count}</strong>
-              {a.examples.length > 0 && <span className="text-sm text-gray-700"> (e.g. {a.examples.join(", ")})</span>}
+            <li key={a.label} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-line px-4 py-3 first:border-t-0">
+              <div className="min-w-0">
+                <Link className="font-medium text-jade underline-offset-4 hover:underline" href={a.href}>
+                  {a.label}
+                </Link>
+                {a.examples.length > 0 && <p className="text-sm text-muted">For example {a.examples.join(", ")}</p>}
+              </div>
+              <p className="flex items-center gap-2">
+                <strong className="tabular text-lg">{a.count}</strong>
+                <Badge tone={a.count > 0 ? "sale" : "brand"}>{a.count > 0 ? "To look at" : "All clear"}</Badge>
+              </p>
             </li>
           ))}
         </ul>
       </section>
 
       <section aria-labelledby="kpi-heading" className="flex flex-col gap-3">
-        <h2 id="kpi-heading" className="text-xl font-semibold">Key figures, last {data.days} days</h2>
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {data.tiles.map((t) => (
-            <KpiTile key={t.key} tile={t} />
-          ))}
-        </ul>
+        <h2 id="kpi-heading" className="text-xl font-semibold">
+          Key figures, last {data.days} days
+        </h2>
+        <Table caption={`Key figures, last ${data.days} days`} stack>
+          <Thead>
+            <tr>
+              <Th>Measure</Th>
+              <Th align="right">Value</Th>
+              <Th>Status</Th>
+              <Th>What it measures</Th>
+            </tr>
+          </Thead>
+          <Tbody>
+            {data.tiles.map((t) => (
+              <KpiRow key={t.key} tile={t} />
+            ))}
+          </Tbody>
+        </Table>
       </section>
 
-      <section aria-labelledby="gmv-heading" className="flex flex-col gap-2">
-        <h2 id="gmv-heading" className="text-xl font-semibold">GMV by day</h2>
-        <p className="text-sm text-gray-700">Total {tk(data.gmv.total)} from {data.gmv.orders} delivered shop orders.</p>
+      <section aria-labelledby="gmv-heading" className="flex flex-col gap-3">
+        <h2 id="gmv-heading" className="text-xl font-semibold">
+          GMV by day
+        </h2>
+        <p className="text-sm text-muted">
+          Total {tk(data.gmv.total)} from {data.gmv.orders} delivered shop orders.
+        </p>
         <GmvChart data={data.gmv.byDay} />
       </section>
 
-      <section aria-labelledby="top-heading" className="flex flex-col gap-2">
-        <h2 id="top-heading" className="text-xl font-semibold">Top shops by GMV</h2>
+      <section aria-labelledby="top-heading" className="flex flex-col gap-3">
+        <h2 id="top-heading" className="text-xl font-semibold">
+          Top shops by GMV
+        </h2>
         {data.topShops.length === 0 ? (
-          <p>No delivered orders in this window.</p>
+          <EmptyState title="No delivered orders in this window" description="Choose a longer window to see more shops." />
         ) : (
-          <ol className="list-decimal pl-6" data-testid="top-shops">
-            {data.topShops.map((s) => (
-              <li key={s.shopId}>
-                {s.name}: {tk(s.gmv)} ({s.orders} delivered)
-              </li>
-            ))}
-          </ol>
+          <div data-testid="top-shops">
+            <Table caption="Top shops by GMV" stack>
+              <Thead>
+                <tr>
+                  <Th>Shop</Th>
+                  <Th align="right">GMV</Th>
+                  <Th align="right">Delivered orders</Th>
+                </tr>
+              </Thead>
+              <Tbody>
+                {data.topShops.map((s) => (
+                  <Tr key={s.shopId}>
+                    <Th scope="row">{s.name}</Th>
+                    <Td label="GMV" align="right">
+                      {tk(s.gmv)}
+                    </Td>
+                    <Td label="Delivered orders" align="right">
+                      {s.orders}
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </div>
         )}
       </section>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, startTransition, use, useActionState, type ReactNode } from "react";
+import { buttonStyles, controlStyles } from "@/components/ui";
 import type { ActionState } from "../action-state";
 
 const FieldErrors = createContext<Record<string, string>>({});
@@ -39,12 +40,12 @@ export function ActionForm({
     >
       <FieldErrors value={state?.error?.fields ?? {}}>{children}</FieldErrors>
       {state?.ok && (
-        <p role="status" className="text-sm font-medium text-green-800">
+        <p role="status" className="status-in text-sm font-medium text-jade">
           {state.ok}
         </p>
       )}
       {state?.error && (
-        <div role="alert" className="text-sm text-red-700">
+        <div role="alert" className="status-in text-sm text-vermilion">
           <p className="font-medium">{state.error.message}</p>
           {state.error.fields && (
             <ul className="list-disc pl-5">
@@ -60,19 +61,11 @@ export function ActionForm({
 }
 
 export function SubmitButton({ children, variant = "primary" }: { children: ReactNode; variant?: "primary" | "secondary" }) {
-  const styles =
-    variant === "primary"
-      ? "bg-blue-700 text-white hover:bg-blue-800"
-      : "border border-gray-500 bg-white text-gray-900 hover:bg-gray-100";
   return (
-    <button
-      type="submit"
-      className={`self-start rounded px-4 py-2 text-sm font-semibold focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 ${styles}`}
-    >
+    <button type="submit" className={`${buttonStyles({ variant })} self-start`}>
       {children}
     </button>
   );
 }
 
-export const inputClass =
-  "w-full rounded border border-gray-400 px-3 py-2 text-base focus:outline-2 focus:outline-offset-1 focus:outline-blue-700 aria-invalid:border-red-700";
+export const inputClass = controlStyles;

@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminPageHeader } from "@/components/admin/page-header";
+import { StatusBadge } from "@/components/admin/status";
+import { Badge, buttonStyles, Notice, Table, Tbody, Td, Th, Thead, Tr } from "@/components/ui";
 import { getConfig } from "@/lib/config";
 import { isPolicySlug, policyPath, policyTitle } from "../catalog";
 import { formatDateTime } from "../dates";
@@ -8,47 +11,44 @@ import { policyService } from "../server";
 import { DraftEditor, NewDraftForm } from "./draft-editor";
 import { PolicyMarkdown } from "./policy-markdown";
 
-const cell = "border-b border-gray-300 px-2 py-2 text-left align-top";
+const link = "font-medium text-jade underline-offset-4 hover:underline";
 
 /** /admin/policies: every policy with its current, scheduled and draft version. */
 export async function AdminPolicyList() {
   const rows = await policyService.adminOverview();
   return (
-    <table className="w-full border-collapse text-sm">
-      <caption className="sr-only">Policies and their versions</caption>
-      <thead>
+    <Table caption="Policies and their versions" stack>
+      <Thead>
         <tr>
-          <th scope="col" className={cell}>Policy</th>
-          <th scope="col" className={cell}>Current version</th>
-          <th scope="col" className={cell}>Scheduled</th>
-          <th scope="col" className={cell}>Draft</th>
+          <Th>Policy</Th>
+          <Th>Current version</Th>
+          <Th>Scheduled</Th>
+          <Th>Draft</Th>
         </tr>
-      </thead>
-      <tbody>
+      </Thead>
+      <Tbody>
         {rows.map((r) => (
-          <tr key={r.slug}>
-            <th scope="row" className={cell}>
-              <Link className="underline" href={`/admin/policies/${r.slug}`}>
+          <Tr key={r.slug}>
+            <Th scope="row">
+              <Link className={link} href={`/admin/policies/${r.slug}`}>
                 {r.title}
               </Link>
-            </th>
-            <td className={cell}>
+            </Th>
+            <Td label="Current version">
               {r.current ? (
                 <>
                   Version {r.current.version}, effective {formatDateTime(r.current.effectiveAt!)}
                 </>
               ) : (
-                <span className="font-semibold text-red-700">Not published</span>
+                <Badge tone="sale">Not published</Badge>
               )}
-            </td>
-            <td className={cell}>
-              {r.scheduled ? `Version ${r.scheduled.version} from ${formatDateTime(r.scheduled.effectiveAt!)}` : "—"}
-            </td>
-            <td className={cell}>{r.draft ? `Version ${r.draft.version}` : "—"}</td>
-          </tr>
+            </Td>
+            <Td label="Scheduled">{r.scheduled ? `Version ${r.scheduled.version} from ${formatDateTime(r.scheduled.effectiveAt!)}` : "—"}</Td>
+            <Td label="Draft">{r.draft ? <StatusBadge status="draft">{`Version ${r.draft.version}`}</StatusBadge> : "—"}</Td>
+          </Tr>
         ))}
-      </tbody>
-    </table>
+      </Tbody>
+    </Table>
   );
 }
 
@@ -76,35 +76,36 @@ export async function AdminPolicyDetail({
   const nextVersion = (history[0]?.version ?? 0) + 1;
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold">{policyTitle(slug)}</h2>
-        <p className="text-sm">
-          Public page:{" "}
-          <Link className="underline" href={policyPath(slug)}>
-            {policyPath(slug)}
+    <>
+      <AdminPageHeader
+        title={policyTitle(slug)}
+        description="Published versions never change. Write the next version as a draft, then publish it."
+        crumbs={[{ label: "Policies", href: "/admin/policies" }, { label: policyTitle(slug) }]}
+        action={
+          <Link className={buttonStyles({ variant: "secondary" })} href={policyPath(slug)}>
+            View public page
           </Link>
-        </p>
-      </div>
+        }
+      />
 
       {justPublished && (
-        <p role="status" className="rounded border border-green-700 bg-green-50 px-3 py-2 text-green-900">
+        <Notice tone="success" role="status">
           Version {justPublished.version} published, effective {formatDateTime(justPublished.effectiveAt!)}.
-        </p>
+        </Notice>
       )}
 
-      <section aria-labelledby="draft-heading" className="flex flex-col gap-3">
-        <h3 id="draft-heading" className="text-xl font-semibold">
+      <section aria-labelledby="draft-heading" className="flex flex-col gap-4">
+        <h2 id="draft-heading" className="text-xl font-semibold">
           {draft ? `Draft version ${draft.version}` : "New version"}
-        </h3>
+        </h2>
         {draft ? (
           <>
             <DraftEditor
               draft={{ id: draft.id, version: draft.version, title: draft.title, body: draft.body, changeSummary: draft.changeSummary }}
             />
-            <details className="rounded border border-gray-300 p-4">
+            <details className="rounded-lg border border-line p-4">
               <summary className="cursor-pointer font-medium">Preview the saved draft</summary>
-              <div className="mt-3">
+              <div className="mt-4 max-w-[70ch]">
                 <PolicyMarkdown body={draft.body} vars={{ DBID: getConfig().dbid ?? "(DBID not set)" }} />
               </div>
             </details>
@@ -114,47 +115,51 @@ export async function AdminPolicyDetail({
         )}
       </section>
 
-      <section aria-labelledby="history-heading" className="flex flex-col gap-3">
-        <h3 id="history-heading" className="text-xl font-semibold">
+      <section aria-labelledby="history-heading" className="flex flex-col gap-4">
+        <h2 id="history-heading" className="text-xl font-semibold">
           Version history
-        </h3>
+        </h2>
         {history.length === 0 ? (
-          <p>No versions yet.</p>
+          <p className="text-muted">No versions yet.</p>
         ) : (
-          <table className="w-full border-collapse text-sm">
-            <thead>
+          <Table caption={`Version history of ${policyTitle(slug)}`} stack>
+            <Thead>
               <tr>
-                <th scope="col" className={cell}>Version</th>
-                <th scope="col" className={cell}>State</th>
-                <th scope="col" className={cell}>Effective from</th>
-                <th scope="col" className={cell}>Published</th>
-                <th scope="col" className={cell}>Acceptances</th>
-                <th scope="col" className={cell}>What changed</th>
+                <Th>Version</Th>
+                <Th>State</Th>
+                <Th>Effective from</Th>
+                <Th>Published</Th>
+                <Th align="right">Acceptances</Th>
+                <Th>What changed</Th>
               </tr>
-            </thead>
-            <tbody>
+            </Thead>
+            <Tbody>
               {history.map((v) => (
-                <tr key={v.id}>
-                  <th scope="row" className={cell}>
+                <Tr key={v.id}>
+                  <Th scope="row">
                     {v.state === "current" || v.state === "superseded" ? (
-                      <Link className="underline" href={`${policyPath(slug)}?version=${v.version}`}>
+                      <Link className={link} href={`${policyPath(slug)}?version=${v.version}`}>
                         Version {v.version}
                       </Link>
                     ) : (
                       `Version ${v.version}`
                     )}
-                  </th>
-                  <td className={cell}>{STATE_LABEL[v.state]}</td>
-                  <td className={cell}>{v.effectiveAt ? formatDateTime(v.effectiveAt) : "—"}</td>
-                  <td className={cell}>{v.publishedAt ? formatDateTime(v.publishedAt) : "—"}</td>
-                  <td className={cell}>{v.acceptances}</td>
-                  <td className={cell}>{v.changeSummary ?? "—"}</td>
-                </tr>
+                  </Th>
+                  <Td label="State">
+                    <StatusBadge status={v.state}>{STATE_LABEL[v.state]}</StatusBadge>
+                  </Td>
+                  <Td label="Effective from">{v.effectiveAt ? formatDateTime(v.effectiveAt) : "—"}</Td>
+                  <Td label="Published">{v.publishedAt ? formatDateTime(v.publishedAt) : "—"}</Td>
+                  <Td label="Acceptances" align="right">
+                    {v.acceptances}
+                  </Td>
+                  <Td label="What changed">{v.changeSummary ?? "—"}</Td>
+                </Tr>
               ))}
-            </tbody>
-          </table>
+            </Tbody>
+          </Table>
         )}
       </section>
-    </div>
+    </>
   );
 }
