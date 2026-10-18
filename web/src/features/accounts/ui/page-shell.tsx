@@ -19,7 +19,7 @@ export function PageShell({ title, wide, children }: { title: string; wide?: boo
 export function LogoutButton() {
   return (
     <form action={logoutAction}>
-      <button type="submit" className="underline">
+      <button type="submit" className="min-h-11 text-left font-medium text-jade hover:underline">
         Log out
       </button>
     </form>

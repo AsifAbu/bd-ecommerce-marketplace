@@ -1,25 +1,348 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Fonts are self-hosted by the npm packages (no external requests). Each file is split by
+   unicode-range, so a page downloads only the scripts it shows (Latin, and Bengali when used). */
+@import "@fontsource-variable/instrument-sans/wght.css";
+@import "@fontsource-variable/anek-bangla/wght.css";
+
+/*
+ * Design tokens. Full reference with contrast ratios: .claude/knowledge/design-direction.md
+ * Rule: new code uses the semantic tokens below (bg-paper, text-ink, border-line, bg-jade ...).
+ * The app is intentionally light only.
+ */
+@theme {
+  /* Colour */
+  --color-ink: #1b1f1d;
+  --color-paper: #ffffff;
+  --color-surface: #f4f5f3;
+  --color-line: #e3e6e2; /* hairline between groups; not enough contrast for a control edge */
+  --color-edge: #7d8680; /* edge of inputs and other controls (3.75:1 on paper) */
+  --color-muted: #5b645f;
+  --color-jade: #0e6b57;
+  --color-jade-hover: #0a5444;
+  --color-jade-soft: #e6f2ee; /* quiet brand tint (selected, info) */
+  --color-vermilion: #c93319; /* sale price, errors, danger */
+  --color-vermilion-hover: #a82812;
+  --color-vermilion-soft: #fceae6;
+  --color-gold: #e7a91c; /* rating stars only, never text */
+  --color-gold-ink: #8a5f00; /* text on gold-tinted areas (warnings) */
+
+  /* Legacy remap: the pages built before the redesign use Tailwind's blue/gray/red/green.
+     Remapping the palette makes them pick up the new look. New code must not use these names. */
+  --color-blue-50: #eef6f3;
+  --color-blue-100: #d9ece5;
+  --color-blue-200: #b5d8cc;
+  --color-blue-300: #85bdab;
+  --color-blue-400: #4f9d86;
+  --color-blue-500: #25816a;
+  --color-blue-600: #14705c;
+  --color-blue-700: #0e6b57;
+  --color-blue-800: #0a5444;
+  --color-blue-900: #07382d;
+  --color-blue-950: #04231c;
+  --color-green-50: #eef6f3;
+  --color-green-100: #d9ece5;
+  --color-green-200: #b5d8cc;
+  --color-green-300: #85bdab;
+  --color-green-400: #4f9d86;
+  --color-green-500: #25816a;
+  --color-green-600: #14705c;
+  --color-green-700: #0e6b57;
+  --color-green-800: #0a5444;
+  --color-green-900: #07382d;
+  --color-green-950: #04231c;
+  --color-red-50: #fdf0ed;
+  --color-red-100: #fadbd4;
+  --color-red-200: #f5b8ab;
+  --color-red-300: #ee8c78;
+  --color-red-400: #e4604a;
+  --color-red-500: #d7442c;
+  --color-red-600: #c93319;
+  --color-red-700: #a82812;
+  --color-red-800: #8f2210;
+  --color-red-900: #6e1a0d;
+  --color-red-950: #4a1008;
+  --color-gray-50: #f9faf8;
+  --color-gray-100: #f4f5f3;
+  --color-gray-200: #e8ebe7;
+  --color-gray-300: #d3d8d4;
+  --color-gray-400: #7d8680;
+  --color-gray-500: #68716c;
+  --color-gray-600: #5b645f;
+  --color-gray-700: #444c48;
+  --color-gray-800: #2d3330;
+  --color-gray-900: #1b1f1d;
+  --color-gray-950: #111412;
+
+  /* Type */
+  --font-sans: "Instrument Sans Variable", "Anek Bangla Variable", sans-serif;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.875rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.375rem;
+  --text-4xl--line-height: 2.625rem;
+  --tracking-tight: -0.02em;
+  --tracking-tighter: -0.03em;
+
+  /* Breakpoints (defined once; same as Tailwind's defaults) */
+  --breakpoint-sm: 40rem; /* 640 */
+  --breakpoint-md: 48rem; /* 768 */
+  --breakpoint-lg: 64rem; /* 1024 */
+  --breakpoint-xl: 80rem; /* 1280 */
+  --breakpoint-2xl: 96rem; /* 1536 */
+
+  /* Radii: small and consistent. Pills only for counts and avatars. */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius-2xl: 8px;
+  --radius-3xl: 8px;
+
+  /* Shadows: almost none. Only floating layers (menus, sheets, toasts) get one. */
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: 0 6px 20px -4px rgb(27 31 29 / 0.14), 0 1px 3px rgb(27 31 29 / 0.08);
+  --shadow-lg: 0 6px 20px -4px rgb(27 31 29 / 0.14), 0 1px 3px rgb(27 31 29 / 0.08);
+  --shadow-xl: 0 6px 20px -4px rgb(27 31 29 / 0.14), 0 1px 3px rgb(27 31 29 / 0.08);
+  --shadow-2xl: 0 6px 20px -4px rgb(27 31 29 / 0.14), 0 1px 3px rgb(27 31 29 / 0.08);
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.6, 0, 0.2, 1);
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Layout */
+  --container-page: 76rem;
+  --height-topbar: 3.5rem;
+  --height-tabbar: 3.5rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-}
-
-/* The whole interface is designed for a light background (white cards, tinted panels).
-   Keep it light even when the browser is in dark mode, so text is never light-on-light. */
 :root {
   color-scheme: light;
+  --tabbar-space: calc(var(--height-tabbar) + env(safe-area-inset-bottom));
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "kern", "liga";
+    text-rendering: optimizeLegibility;
+    /* Room for the fixed bottom tab bar on phones. */
+    padding-bottom: var(--tabbar-space);
+  }
+
+  @media (min-width: 64rem) {
+    body {
+      padding-bottom: 0;
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  /* Bengali conjuncts need normal spacing and a little more line height. */
+  :lang(bn),
+  :lang(bn) h1,
+  :lang(bn) h2,
+  :lang(bn) h3 {
+    letter-spacing: 0;
+  }
+  :lang(bn) {
+    line-height: 1.65;
+  }
+
+  a {
+    text-underline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--color-jade-soft);
+  }
+
+  /* One visible focus ring everywhere: 2px jade with a 2px offset. */
+  :focus-visible {
+    outline: 2px solid var(--color-jade);
+    outline-offset: 2px;
+  }
+
+  input[type="search"]::-webkit-search-cancel-button {
+    appearance: none;
+  }
+}
+
+@layer components {
+  /* Prices and counts line up in columns. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Press feedback for tappable things: a tiny scale, cheap and instant. */
+  .pressable {
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+  .pressable:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: scale(0.97);
+  }
+
+  .spinner {
+    width: 1em;
+    height: 1em;
+    border-radius: 9999px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    animation: spin 700ms linear infinite;
+  }
+
+  /* Sheet (Radix Dialog): fade the overlay, slide the panel from its edge. */
+  .sheet-overlay {
+    background: rgb(27 31 29 / 0.4);
+  }
+  .sheet-overlay[data-state="open"] {
+    animation: fade-in var(--duration-base) var(--ease-out);
+  }
+  .sheet-overlay[data-state="closed"] {
+    animation: fade-out var(--duration-fast) var(--ease-in-out) forwards;
+  }
+  .sheet-panel[data-side="left"][data-state="open"] {
+    animation: slide-in-left var(--duration-slow) var(--ease-out);
+  }
+  .sheet-panel[data-side="left"][data-state="closed"] {
+    animation: slide-out-left var(--duration-base) var(--ease-in-out) forwards;
+  }
+  .sheet-panel[data-side="right"][data-state="open"] {
+    animation: slide-in-right var(--duration-slow) var(--ease-out);
+  }
+  .sheet-panel[data-side="right"][data-state="closed"] {
+    animation: slide-out-right var(--duration-base) var(--ease-in-out) forwards;
+  }
+  .sheet-panel[data-side="bottom"][data-state="open"] {
+    animation: slide-in-bottom var(--duration-slow) var(--ease-out);
+  }
+  .sheet-panel[data-side="bottom"][data-state="closed"] {
+    animation: slide-out-bottom var(--duration-base) var(--ease-in-out) forwards;
+  }
+
+  /* Menus and toasts. */
+  .menu-panel[data-state="open"],
+  .toast-in {
+    animation: pop-in var(--duration-base) var(--ease-out);
+  }
+  .menu-panel[data-state="closed"] {
+    animation: fade-out var(--duration-fast) var(--ease-in-out) forwards;
+  }
+
+  /* Native <details> menus: the panel eases in when opened. */
+  details[open] > .details-panel {
+    animation: pop-in var(--duration-base) var(--ease-out);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes slide-out-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes slide-out-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes slide-in-bottom {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes slide-out-bottom {
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+/* Reduced motion: no transforms, no animation, no transitions. State changes are instant. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  .pressable:active {
+    transform: none !important;
+  }
 }
 
 /* Printable invoices (features/orders): print only the invoice, not the site header, footer or banners. */
@@ -30,5 +353,6 @@ body {
   body {
     background: #fff;
     color: #000;
+    padding-bottom: 0;
   }
 }

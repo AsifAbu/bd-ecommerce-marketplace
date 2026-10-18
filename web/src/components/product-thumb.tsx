@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { initialOf, toneFor } from "./product-thumb-style";
+import { initialOf } from "./product-thumb-style";
 
 /**
- * A square product picture. With no image, or when the image fails to load (storage down: 503),
- * shows a coloured tile with the product's initial and category name instead of a broken image.
+ * A product picture. With no image, or when the image fails to load (storage down: 503), shows a
+ * calm `surface` tile with a light monogram of the title and the category name instead of a broken
+ * image. Give it the size and shape with classes, e.g. `aspect-[4/5] w-full`.
  */
 export function ProductThumb({
   src,
@@ -36,13 +37,13 @@ export function ProductThumb({
       <div
         data-testid="product-placeholder"
         {...a11y}
-        className={`flex flex-col items-center justify-center gap-1 ${toneFor(category ?? title)} ${className}`}
+        className={`flex flex-col items-center justify-center gap-1 bg-surface text-muted ${className}`}
       >
-        <span aria-hidden="true" className="text-5xl font-bold leading-none">
+        <span aria-hidden="true" className="text-5xl font-medium leading-none text-edge/70">
           {initialOf(title)}
         </span>
         {category && (
-          <span aria-hidden="true" className="max-w-[90%] truncate text-xs font-medium opacity-80">
+          <span aria-hidden="true" className="max-w-[85%] truncate text-xs">
             {category}
           </span>
         )}
@@ -57,8 +58,9 @@ export function ProductThumb({
       src={src}
       alt={decorative ? "" : title}
       loading="lazy"
+      decoding="async"
       onError={() => setFailed(true)}
-      className={`bg-gray-100 object-cover ${className}`}
+      className={`bg-surface object-cover ${className}`}
     />
   );
 }

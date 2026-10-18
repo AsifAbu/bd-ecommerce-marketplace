@@ -1,9 +1,11 @@
+import { Search } from "lucide-react";
 import Form from "next/form";
+import { controlStyles } from "./ui";
 
-/** The header's product search box (US-041). Static: no session reads. */
+/** The header's product search box (US-041). Static: no session reads. Shown from lg; phones use the Search tab. */
 export function SiteSearch() {
   return (
-    <Form action="/search" role="search" aria-label="Site search" className="flex min-w-0 flex-1 basis-full gap-2 sm:basis-80">
+    <Form action="/search" role="search" aria-label="Site search" className="relative min-w-0 flex-1">
       <label htmlFor="site-search-q" className="sr-only">
         Search products
       </label>
@@ -13,13 +15,14 @@ export function SiteSearch() {
         type="search"
         maxLength={100}
         placeholder="Search products, e.g. processor, boi, শাড়ি"
-        className="min-w-0 flex-1 rounded border border-gray-400 px-3 py-1.5 focus:outline-2 focus:outline-offset-1 focus:outline-blue-700"
+        className={`${controlStyles} !min-h-10 border-line bg-surface pr-11 hover:border-edge focus-visible:bg-paper`}
       />
       <button
         type="submit"
-        className="rounded bg-blue-700 px-3 py-1.5 font-semibold text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700"
+        aria-label="Search"
+        className="pressable absolute right-0 top-0 inline-flex h-10 w-11 items-center justify-center rounded-md text-muted hover:text-jade"
       >
-        Search
+        <Search aria-hidden="true" size={18} />
       </button>
     </Form>
   );

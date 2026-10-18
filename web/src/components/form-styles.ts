@@ -1,10 +1,14 @@
-/** Shared form styles (shops and accounts forms; catalog admin uses a compact variant in its own styles.ts). */
+/**
+ * Legacy shared form class names (shops and accounts forms; catalog admin has its own compact set).
+ * They now map to the UI kit look. New code should use <Button>, <Input> and <FormField> from
+ * "@/components/ui" instead.
+ */
 export const inputClass =
-  "w-full rounded border border-gray-400 px-3 py-2 text-base focus:outline-2 focus:outline-offset-1 focus:outline-blue-700 aria-invalid:border-red-700";
+  "block w-full min-h-11 rounded-md border border-edge bg-paper px-3 py-2 text-base text-ink placeholder:text-muted/80 focus-visible:border-jade disabled:bg-surface aria-invalid:border-vermilion";
 
 export const buttonClass =
-  "rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 disabled:opacity-60";
+  "pressable inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-jade px-4 py-2 font-semibold text-paper hover:bg-jade-hover disabled:cursor-not-allowed disabled:opacity-50";
 
 // Written out (not derived with replace) so Tailwind sees every class name.
 export const dangerButtonClass =
-  "rounded bg-red-700 px-4 py-2 font-semibold text-white hover:bg-red-800 focus:outline-2 focus:outline-offset-2 focus:outline-red-700 disabled:opacity-60";
+  "pressable inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-vermilion px-4 py-2 font-semibold text-paper hover:bg-vermilion-hover disabled:cursor-not-allowed disabled:opacity-50";
