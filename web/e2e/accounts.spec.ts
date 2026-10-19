@@ -27,7 +27,7 @@ test("sign up with mobile, verify by OTP, save an address, log out", async ({ pa
   await page.getByRole("button", { name: "Verify" }).click();
   await expect(page.getByText("Your mobile number is verified.")).toBeVisible();
 
-  await page.getByRole("link", { name: "My addresses" }).click();
+  await page.getByRole("navigation", { name: "Account" }).getByRole("link", { name: "Addresses" }).click();
   await page.getByLabel("Division").selectOption("Dhaka");
   await page.getByLabel("District").selectOption("Dhaka");
   // The upazila list loads after the district is chosen (a text input until then).
