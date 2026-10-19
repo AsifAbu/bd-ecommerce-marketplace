@@ -6,7 +6,7 @@
 
 ## What the project is
 
-"All online products in one place": an open marketplace where anyone can open a shop and sell; the platform owner doesn't sell. Bangladesh only. Its edge over Daraz: every product sits in one leaf category with a typed attribute schema, so search filters are always category-correct. Four roles: Platform Admin, Shop Owner, Shop Staff, Customer (guests can buy without an account; every other role must log in). Later: virtual try-on for tops and bottoms.
+**Dokan** (site name and logo, a cart whose body is the letter D; components in `web/src/components/brand/`, name in `web/src/lib/brand.ts`). **Dokan** (site name and logo, a cart whose body is the letter D; components in `web/src/components/brand/`, name in `web/src/lib/brand.ts`). "All online products in one place": an open marketplace where anyone can open a shop and sell; the platform owner doesn't sell. Bangladesh only. Its edge over Daraz: every product sits in one leaf category with a typed attribute schema, so search filters are always category-correct. Four roles: Platform Admin, Shop Owner, Shop Staff, Customer (guests can buy without an account; every other role must log in). Later: virtual try-on for tops and bottoms.
 
 ## Status (17 Oct 2026)
 

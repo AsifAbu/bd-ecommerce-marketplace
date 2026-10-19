@@ -95,3 +95,13 @@ Product page, cart, checkout, order, track, My orders and invoice use the kit ab
 - Touch: `Button size="sm"` is 44px below lg and on coarse pointers. Stand-alone links outside running text use `.tap` (44px below lg). Footer links are 44px on phones.
 - A11y: skip link first in `<body>` (every `<main>` has `id="main"`), titled `Section`s are labelled regions, one `<main>` per page, card and return headings take a level so the outline never skips.
 - Performance: Latin font via `next/font/local` (preload plus metric-matched fallback; Bengali still by unicode-range CSS). Client components must not import zod (use a constants file like `features/shops/shop-types.ts`).
+
+
+## Brand (Dokan)
+
+Name: Dokan (Bangla দোকান, "shop", written in English). Logo: a flat cart whose body is the letter D, jade body, vermilion and gold items, ink wheels, three speed lines. `LogoMark` and `Logo` in `src/components/brand/logo.tsx`; favicon `src/app/icon.svg` (white mark on a jade tile), `apple-icon.png`, `favicon.ico`. Use `SITE_NAME` from `src/lib/brand.ts` in titles, invoices and shared links.
+
+
+## Brand (Dokan)
+
+Name: Dokan (Bangla দোকান, "shop", written in English). Logo: a flat cart whose body is the letter D, jade body, vermilion and gold items, ink wheels, three speed lines. `LogoMark` and `Logo` in `src/components/brand/logo.tsx`; favicon `src/app/icon.svg` (white mark on a jade tile), `apple-icon.png`, `favicon.ico`. Use `SITE_NAME` from `src/lib/brand.ts` in titles, invoices and shared links.

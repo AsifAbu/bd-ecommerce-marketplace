@@ -2,6 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { POLICIES, policyPath } from "@/features/policies/client";
+import { Logo } from "./brand/logo";
 import { getConfig } from "@/lib/config";
 
 const link = "inline-flex min-h-11 items-center lg:min-h-8 text-muted hover:text-ink hover:underline";
@@ -14,7 +15,7 @@ export function SiteFooter() {
       <div className="mx-auto flex w-full max-w-[var(--container-page)] flex-col gap-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-2">
-            <p className="text-lg font-semibold tracking-tight">Marketplace</p>
+            <Logo markClassName="h-8 w-auto" nameClassName="text-lg" />
             <p className="max-w-xs text-muted">All online products in one place, from shops across Bangladesh. Pay in cash on delivery.</p>
           </div>
           <nav aria-label="Explore">

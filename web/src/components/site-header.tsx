@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { CartLink } from "@/features/cart/ui/cart-link";
 import { AccountMenu, GuestLinks } from "./account-menu";
 import { CategoryLink, CategoryMenu, loadCategoryTree } from "./category-menu";
+import { Logo } from "./brand/logo";
 import { MobileMenu } from "./mobile-menu";
 import { SiteSearch } from "./site-search";
 
@@ -26,9 +27,7 @@ export function SiteHeader() {
             <MobileDrawer />
           </Suspense>
         </div>
-        <Link href="/" className="inline-flex min-h-11 items-center rounded-md px-1 text-xl font-semibold tracking-tight lg:px-0 lg:text-2xl">
-          Marketplace
-        </Link>
+        <Logo href="/" className="min-h-11 px-1 lg:px-0" markClassName="h-8 w-auto lg:h-9" nameClassName="text-xl lg:text-2xl" />
         <div className="hidden lg:block">
           <Suspense fallback={<CategoryLink />}>
             <CategoryMenu />
