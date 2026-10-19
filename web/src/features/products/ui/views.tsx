@@ -94,7 +94,7 @@ export async function ProductListView({ shopId }: { shopId: string }) {
                 {rows.map(({ p, stateLabel, tone }) => (
                   <tr key={p.id}>
                     <RowHeader className="min-w-48">
-                      <Link className="underline decoration-line underline-offset-4 hover:decoration-ink" href={`/seller/${shopId}/products/${p.id}`}>
+                      <Link className="tap underline decoration-line underline-offset-4 hover:decoration-ink" href={`/seller/${shopId}/products/${p.id}`}>
                         {p.title}
                       </Link>
                     </RowHeader>
@@ -118,7 +118,7 @@ export async function ProductListView({ shopId }: { shopId: string }) {
             {rows.map(({ p, stateLabel, tone }) => (
               <li key={p.id} className="flex flex-col gap-3 py-4">
                 <div className="flex items-start justify-between gap-3">
-                  <Link className="min-w-0 break-words font-medium underline decoration-line underline-offset-4" href={`/seller/${shopId}/products/${p.id}`}>
+                  <Link className="tap min-w-0 break-words font-medium underline decoration-line underline-offset-4" href={`/seller/${shopId}/products/${p.id}`}>
                     {p.title}
                   </Link>
                   <Badge tone={tone} className="shrink-0">

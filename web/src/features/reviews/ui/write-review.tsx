@@ -115,14 +115,14 @@ export function MyReviews({ awaiting, reviews }: { awaiting: AwaitingItem[]; rev
               <li key={r.id} className="flex flex-col gap-1.5 py-4">
                 <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <Stars value={r.rating} />
-                  <Link className={`${linkClass} font-medium`} href={`/products/${encodeURIComponent(r.productId)}`}>
+                  <Link className={`${linkClass} tap font-medium`} href={`/products/${encodeURIComponent(r.productId)}`}>
                     {r.productTitle}
                   </Link>
                   {r.status === "hidden" && <Badge tone="sale">Hidden by the platform</Badge>}
                 </span>
                 {r.title && <span className="font-semibold">{r.title}</span>}
                 {r.text && <span className="line-clamp-3 whitespace-pre-line text-muted">{r.text}</span>}
-                <Link className={`${linkClass} inline-flex min-h-11 items-center self-start text-sm`} href={writeReviewPath(r.orderItemId)}>
+                <Link className={`${linkClass} inline-flex min-h-11 min-w-11 items-center self-start text-sm`} href={writeReviewPath(r.orderItemId)}>
                   {r.canEdit ? "Edit" : "View"}
                   <span className="sr-only"> your review of {r.productTitle}</span>
                 </Link>

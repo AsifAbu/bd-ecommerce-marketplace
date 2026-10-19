@@ -56,6 +56,7 @@ function Item({ item }: { item: WishlistItemView }) {
   const [min, max] = pricesOf(item.priceText);
   return (
     <ProductCard
+      headingLevel={2}
       href={item.href}
       title={item.title}
       imageUrl={item.imageId ? `/api/product-images/${item.imageId}` : null}

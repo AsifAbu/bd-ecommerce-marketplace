@@ -5,7 +5,7 @@ import { getVisibleCategoryTree } from "../server";
 
 /** US-040: categories with live, in-stock products only, each with its product count. */
 
-const link = "inline-flex min-h-11 items-center rounded-sm hover:underline underline-offset-4";
+const link = "inline-flex min-h-11 min-w-11 items-center rounded-sm hover:underline underline-offset-4";
 
 function Children({ nodes }: { nodes: VisibleCategory[] }) {
   return (

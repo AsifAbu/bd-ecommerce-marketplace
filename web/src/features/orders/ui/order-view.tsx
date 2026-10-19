@@ -169,7 +169,7 @@ export function OrderList({ orders }: { orders: OrderView[] }) {
       {orders.map((o) => (
         <li key={o.id} className="flex flex-col gap-2 py-5">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <Link className="text-lg font-semibold underline-offset-4 hover:underline" href={`/orders/${o.orderNo}`}>
+            <Link className="tap text-lg font-semibold underline-offset-4 hover:underline" href={`/orders/${o.orderNo}`}>
               {o.orderNo}
             </Link>
             <span className="tabular font-semibold">{formatTk(o.grandTotal)}</span>

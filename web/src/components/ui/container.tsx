@@ -31,7 +31,7 @@ export function Section({ title, level = 2, more, className, children, ...rest }
         <div className="flex items-baseline justify-between gap-4">
           {title && <Heading className="text-xl font-semibold sm:text-2xl">{title}</Heading>}
           {more && (
-            <Link href={more.href} className="shrink-0 py-1 text-sm font-medium text-jade underline-offset-4 hover:underline">
+            <Link href={more.href} className="tap shrink-0 text-sm font-medium text-jade underline-offset-4 hover:underline">
               {more.label}
             </Link>
           )}

@@ -222,7 +222,7 @@ export function CheckoutForm(props: CheckoutFormProps) {
                 <li key={r}>{r}</li>
               ))}
             </ul>
-            <Link className="mt-1 inline-block py-1 font-medium underline underline-offset-2" href="/cart">
+            <Link className="tap mt-1 font-medium underline underline-offset-2" href="/cart">
               Back to your cart
             </Link>
           </Notice>

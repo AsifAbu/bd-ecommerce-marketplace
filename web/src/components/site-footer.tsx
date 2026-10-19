@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { POLICIES, policyPath } from "@/features/policies/client";
 import { getConfig } from "@/lib/config";
 
-const link = "inline-flex min-h-8 items-center text-muted hover:text-ink hover:underline";
+const link = "inline-flex min-h-11 items-center lg:min-h-8 text-muted hover:text-ink hover:underline";
 const heading = "mb-1 text-sm font-semibold text-ink";
 
 /** Site footer on every page: a few real links, the policies, and the DBID (US-080, US-081). */

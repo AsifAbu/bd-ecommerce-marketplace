@@ -223,6 +223,18 @@
     transform: scale(0.97);
   }
 
+  /* Stand-alone link that is not inside running text: 44px tall on phones and tablets. */
+  .tap {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+  @media (min-width: 64rem) {
+    .tap {
+      min-height: 0;
+    }
+  }
+
   .spinner {
     width: 1em;
     height: 1em;

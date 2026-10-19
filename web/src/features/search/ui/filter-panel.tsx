@@ -209,7 +209,7 @@ export function FilterFields({ response, basePath, onCategoryPage, formId, autoA
     <div className="flex flex-col gap-6 text-sm">
       {mode === "cross" && facets.categories.length > 0 && (
         <nav aria-label="Narrow by category" className="flex flex-col gap-1">
-          <h3 className={legend}>Narrow by category</h3>
+          <h2 className={legend}>Narrow by category</h2>
           <ul className="flex flex-col">
             {facets.categories.map((c) => (
               <li key={c.id}>

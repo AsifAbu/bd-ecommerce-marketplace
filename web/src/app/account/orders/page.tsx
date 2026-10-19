@@ -11,12 +11,12 @@ export const metadata = { title: "My orders" };
 /** US-052: the customer's orders with each shop order's status (guest orders linked by US-009 included). */
 export default function MyOrdersPage() {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+    <div className="flex flex-col gap-6">
       <h1 className="text-3xl sm:text-4xl">My orders</h1>
       <Suspense fallback={<Skeleton role="status" aria-label="Loading your orders" aria-hidden={false} className="h-48 w-full" />}>
         <Content />
       </Suspense>
-    </main>
+    </div>
   );
 }
 

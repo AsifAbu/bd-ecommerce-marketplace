@@ -7,15 +7,16 @@ const dt = "text-sm text-muted sm:pt-0.5";
 const dd = "min-w-0 break-words";
 
 /** One return request: item, reason, timeline and refund. Action forms go in `children`. */
-export function ReturnCard({ view, audience, children, photoUrls = [] }: { view: ReturnView; audience: "customer" | "shop" | "admin"; children?: ReactNode; photoUrls?: string[] }) {
+export function ReturnCard({ view, audience, children, photoUrls = [], headingLevel = 3 }: { view: ReturnView; audience: "customer" | "shop" | "admin"; children?: ReactNode; photoUrls?: string[]; headingLevel?: 2 | 3 }) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   const headingId = `return-${view.id}`;
   return (
     <article aria-labelledby={headingId} className="flex flex-col gap-4 rounded-lg border border-line p-4 sm:p-5" data-testid="return-card">
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <h3 id={headingId} className="min-w-0 text-base font-semibold">
+        <Heading id={headingId} className="min-w-0 text-base font-semibold">
           Return: {view.quantity} × {view.item.title}
           {view.item.variantLabel ? ` (${view.item.variantLabel})` : ""}
-        </h3>
+        </Heading>
         <Badge tone={statusTone(view.status)} data-testid="return-status">
           {view.statusLabel}
         </Badge>
