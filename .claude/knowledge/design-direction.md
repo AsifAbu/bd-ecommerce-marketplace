@@ -82,5 +82,10 @@ Sticky header (wordmark "Marketplace", category menu, search, Track order / My o
 
 Not added: `motion` (CSS covers everything here), tabs, popover, any UI framework.
 
+## Browse pages (phase 2a)
+- Home, `/categories`, `/c/[slug]`, `/search`, `/s/[slug]` use only the kit; no new dependencies. Additive kit change: `ProductGrid` and `ProductGridSkeleton` take `dense` (max 4 columns, for a grid beside the filter column).
+- Filters: one `FilterFields` renders in the desktop column (`lg+`, ticking applies at once) and in a bottom `Sheet` below `lg` (one "Apply filters"; the sheet closes when the URL changes). Active filters show as removable chips; the URL stays the only state.
+- Result cards get the Verified badge from `features/search/shop-tiers.ts` (one query per page); search documents and search logic are unchanged.
+
 ## Buying path (phase 2b)
 Product page, cart, checkout, order, track, My orders and invoice use the kit above; no new dependencies. Gallery crossfades (opacity), swipes and takes arrow keys; the phone add-to-cart bar sits at `bottom-[var(--tabbar-space)]` and only mounts while the main button is off screen (so desktop and tests see one Add to cart). Free action slot for a later "Try on": `actionsExtra` on `ProductDetailView` (renders `data-slot="product-actions-extra"` beside the wishlist button). Disclosures use `<details class="disclosure">` (CSS fade and chevron in `globals.css`). Cart summary is one element: sticky panel from lg, pinned bar above the tab bar below lg. `Stars` (reviews) now draws lucide stars. The product page has no original/compare-at price in its data, so it shows no sale price.

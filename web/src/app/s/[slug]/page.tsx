@@ -5,7 +5,8 @@ import { Suspense } from "react";
 import { storefrontMetadata } from "@/features/storefront/metadata";
 import { parseStorefrontQuery } from "@/features/storefront/query";
 import { getStorefrontShop, loadStorefront } from "@/features/storefront/service";
-import { StorefrontView } from "@/features/storefront/ui/storefront-view";
+import { StorefrontSkeleton, StorefrontView } from "@/features/storefront/ui/storefront-view";
+import { Container } from "@/components/ui";
 import { storefrontUrl } from "@/lib/storefront-link";
 
 // US-014: a shop's public storefront, the link sellers share on Facebook. Approved shops only;
@@ -21,11 +22,11 @@ export async function generateMetadata({ params }: PageProps<"/s/[slug]">): Prom
 
 export default function StorefrontPage({ params, searchParams }: PageProps<"/s/[slug]">) {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-4 px-4 py-8">
-      <Suspense fallback={<p>Loading shop…</p>}>
+    <Container as="main" className="flex flex-1 flex-col py-6 sm:py-8">
+      <Suspense fallback={<StorefrontSkeleton />}>
         <Storefront params={params} searchParams={searchParams} />
       </Suspense>
-    </main>
+    </Container>
   );
 }
 

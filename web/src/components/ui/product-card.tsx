@@ -116,11 +116,26 @@ export function ProductCardSkeleton() {
  * The responsive product grid: 2 columns on phones, 3 from sm, 4 from lg, 5 from xl. Children are
  * <ProductCard>s; each is wrapped in an <li>. `label` names the list for screen readers.
  */
-export function ProductGrid({ label, children, className }: { label: string; children: ReactNode[]; className?: string }) {
+export function ProductGrid({
+  label,
+  children,
+  className,
+  dense,
+}: {
+  label: string;
+  children: ReactNode[];
+  className?: string;
+  /** For a grid beside a filter column: never more than 4 columns. */
+  dense?: boolean;
+}) {
   return (
     <ul
       aria-label={label}
-      className={cn("grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-4 xl:grid-cols-5", className)}
+      className={cn(
+        "grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-4",
+        !dense && "xl:grid-cols-5",
+        className,
+      )}
     >
       {children.map((child, i) => (
         <li key={i}>{child}</li>
@@ -130,9 +145,15 @@ export function ProductGrid({ label, children, className }: { label: string; chi
 }
 
 /** A grid of skeletons for a Suspense fallback. */
-export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
+export function ProductGridSkeleton({ count = 8, dense }: { count?: number; dense?: boolean }) {
   return (
-    <div role="status" className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-4 xl:grid-cols-5">
+    <div
+      role="status"
+      className={cn(
+        "grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-4",
+        !dense && "xl:grid-cols-5",
+      )}
+    >
       <span className="sr-only">Loading products…</span>
       {Array.from({ length: count }, (_, i) => (
         <ProductCardSkeleton key={i} />
