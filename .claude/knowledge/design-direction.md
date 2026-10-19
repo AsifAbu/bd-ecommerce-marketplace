@@ -78,3 +78,8 @@ Sticky header (wordmark "Marketplace", category menu, search, Track order / My o
 | @radix-ui/react-dropdown-menu | 2.2.1 | MIT | Keyboard-complete action menus. |
 
 Not added: `motion` (CSS covers everything here), tabs, popover, any UI framework.
+
+## Browse pages (phase 2a)
+- Home, `/categories`, `/c/[slug]`, `/search`, `/s/[slug]` use only the kit; no new dependencies. Additive kit change: `ProductGrid` and `ProductGridSkeleton` take `dense` (max 4 columns, for a grid beside the filter column).
+- Filters: one `FilterFields` renders in the desktop column (`lg+`, ticking applies at once) and in a bottom `Sheet` below `lg` (one "Apply filters"; the sheet closes when the URL changes). Active filters show as removable chips; the URL stays the only state.
+- Result cards get the Verified badge from `features/search/shop-tiers.ts` (one query per page); search documents and search logic are unchanged.
