@@ -47,7 +47,7 @@ async function Content() {
   return (
     <div className="flex max-w-3xl flex-col gap-4">
       {returns.map((r) => (
-        <ReturnCard key={r.id} view={r} audience="customer">
+        <ReturnCard headingLevel={2} key={r.id} view={r} audience="customer">
           <p className="text-sm">
             <TextLink href={`/orders/${r.orderNo}`}>Order {r.orderNo}</TextLink>
           </p>

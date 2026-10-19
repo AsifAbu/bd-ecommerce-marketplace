@@ -12,7 +12,7 @@ export const metadata = { title: "Join a shop as staff" };
 
 export default function InvitePage({ params }: PageProps<"/seller/invite/[token]">) {
   return (
-    <Container as="main" className="flex max-w-xl flex-1 flex-col gap-6 py-6 sm:py-10">
+    <Container as="main" id="main" className="flex max-w-xl flex-1 flex-col gap-6 py-6 sm:py-10">
       <PageHeader title="Join a shop as staff" />
       <Suspense fallback={<FormSkeleton fields={0} />}>
         <Accept params={params} />

@@ -65,7 +65,7 @@ export async function CategoryTree() {
           Category tree
         </h2>
         <p className="text-sm text-muted">Sub-categories are indented under their parent. Open a category to rename, move or archive it, and to choose the attributes sellers fill in.</p>
-        <Table caption="Category tree">
+        <Table caption="Categories and their commission">
           <Thead>
             <tr>
               <Th>Category</Th>

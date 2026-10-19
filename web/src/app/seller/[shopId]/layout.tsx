@@ -13,6 +13,7 @@ export default function SellerLayout({ children, params }: LayoutProps<"/seller/
   return (
     <Container
       as="main"
+      id="main"
       className="flex flex-1 flex-col gap-6 py-4 sm:py-8 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:items-start lg:gap-14 print:block print:max-w-none print:p-0"
     >
       <div className="lg:sticky lg:top-24 print:hidden">

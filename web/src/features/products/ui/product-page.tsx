@@ -55,7 +55,7 @@ export function ProductDetailView({
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
               <span>
                 Sold by{" "}
-                <Link className="inline-block py-1 font-medium text-jade underline-offset-4 hover:underline" href={page.shop.href}>
+                <Link className="tap font-medium text-jade underline-offset-4 hover:underline" href={page.shop.href}>
                   {page.shop.name}
                 </Link>
               </span>
@@ -143,7 +143,7 @@ export function ProductDetailView({
           <SellerScore score={page.shop.score} testId="about-seller-score" />
         </p>
         <p>
-          <Link className="inline-block py-2 font-medium text-jade underline-offset-4 hover:underline" href={page.shop.href}>
+          <Link className="tap font-medium text-jade underline-offset-4 hover:underline" href={page.shop.href}>
             Visit the shop
           </Link>
         </p>

@@ -8,6 +8,7 @@ interface ToastItem {
   id: number;
   message: string;
   tone: "success" | "error";
+  leaving?: boolean;
 }
 
 interface ToastApi {
@@ -26,7 +27,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
   const nextId = useRef(1);
 
-  const dismiss = useCallback((id: number) => setItems((all) => all.filter((t) => t.id !== id)), []);
+  const dismiss = useCallback((id: number) => {
+    // Fade out first, then remove (the fade is skipped by prefers-reduced-motion).
+    setItems((all) => all.map((t) => (t.id === id ? { ...t, leaving: true } : t)));
+    setTimeout(() => setItems((all) => all.filter((t) => t.id !== id)), 140);
+  }, []);
   const toast = useCallback(
     (message: string, tone: "success" | "error" = "success") => {
       const id = nextId.current++;
@@ -49,13 +54,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={t.id}
             className={cn(
-              "toast-in pointer-events-auto flex max-w-sm items-center gap-3 rounded-md px-4 py-3 text-sm shadow-md",
+              t.leaving ? "toast-out" : "toast-in",
+              "pointer-events-auto flex max-w-sm items-center gap-3 rounded-md px-4 py-3 text-sm shadow-md",
               t.tone === "success" ? "bg-ink text-paper" : "bg-vermilion text-paper",
             )}
           >
             {t.tone === "success" && <Check aria-hidden="true" size={16} />}
             <span>{t.message}</span>
-            <button type="button" aria-label="Dismiss" onClick={() => dismiss(t.id)} className="-mr-2 inline-flex size-8 items-center justify-center rounded-sm hover:bg-paper/15">
+            <button type="button" aria-label="Dismiss" onClick={() => dismiss(t.id)} className="-mr-2 inline-flex size-8 pointer-coarse:size-11 items-center justify-center rounded-sm hover:bg-paper/15">
               <X aria-hidden="true" size={14} />
             </button>
           </div>

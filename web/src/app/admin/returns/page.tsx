@@ -48,7 +48,7 @@ async function Content({ searchParams }: { searchParams: Promise<Record<string, 
       ) : (
         <div className="flex flex-col gap-4">
           {returns.map((r) => (
-            <ReturnCard key={r.id} view={r} audience="admin" photoUrls={photos.get(r.id)}>
+            <ReturnCard headingLevel={2} key={r.id} view={r} audience="admin" photoUrls={photos.get(r.id)}>
               <AdminReturnActions view={r} />
             </ReturnCard>
           ))}

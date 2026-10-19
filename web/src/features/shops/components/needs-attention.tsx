@@ -11,7 +11,7 @@ import { DueBadge } from "@/features/complaints/ui/ticket-views";
 const MAX_ROWS = 4;
 
 const row = "flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4";
-const rowLink = "font-medium text-ink underline decoration-line underline-offset-4 hover:decoration-ink";
+const rowLink = "tap font-medium text-ink underline decoration-line underline-offset-4 hover:decoration-ink";
 
 function Group({ title, count, seeAll, children }: { title: string; count: number; seeAll: { href: string; label: string }; children: React.ReactNode }) {
   return (

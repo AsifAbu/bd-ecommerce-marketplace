@@ -53,7 +53,7 @@ export function AdminReviews({ status, data }: { status: ReviewStatus; data: Pag
                   {r.hiddenBy ? ` by ${r.hiddenBy}` : ""}: {r.hiddenReason}
                 </p>
                 <div className="rounded-md bg-surface p-4 md:max-w-md">
-                  <ActionForm action={unhideReview} submitLabel="Show again" label={`Show the review of ${r.productTitle} again`}>
+                  <ActionForm action={unhideReview} submitLabel="Show again" label={`Show the review of ${r.productTitle} by ${r.authorName} again`}>
                     <input type="hidden" name="reviewId" value={r.id} />
                     <Field name="reason" label="Reason for showing it again" required />
                   </ActionForm>
@@ -61,7 +61,7 @@ export function AdminReviews({ status, data }: { status: ReviewStatus; data: Pag
               </>
             ) : (
               <div className="rounded-md bg-surface p-4 md:max-w-md">
-                <ActionForm action={hideReview} submitLabel="Hide review" variant="danger" label={`Hide the review of ${r.productTitle}`}>
+                <ActionForm action={hideReview} submitLabel="Hide review" variant="danger" label={`Hide the review of ${r.productTitle} by ${r.authorName}`}>
                   <input type="hidden" name="reviewId" value={r.id} />
                   <Field name="reason" label="Reason for hiding" hint="Logged in the audit log and shown to the author." required />
                 </ActionForm>

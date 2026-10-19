@@ -12,7 +12,7 @@ export const metadata = { title: "Your complaint", robots: { index: false } };
 /** US-072: the customer's complaint and its thread (account, or a guest with the order open). */
 export default function CustomerComplaintPage({ params, searchParams }: PageProps<"/complaints/[ticketId]">) {
   return (
-    <Container as="main" className="flex max-w-2xl flex-1 flex-col gap-6 py-6 sm:py-10">
+    <Container as="main" id="main" className="flex max-w-2xl flex-1 flex-col gap-6 py-6 sm:py-10">
       <Suspense fallback={<ListSkeleton rows={4} />}>
         <Content params={params} searchParams={searchParams} />
       </Suspense>

@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { applyForShop } from "../actions";
-import { SHOP_TYPE_LABELS, SHOP_TYPES } from "../schemas";
+import { SHOP_TYPE_LABELS, SHOP_TYPES } from "../shop-types";
 import { ActionForm, Field } from "@/components/action-form";
 
 const FILE_HINT = "PDF, JPG, PNG or WebP, up to 4 MB. In test mode any file is accepted.";

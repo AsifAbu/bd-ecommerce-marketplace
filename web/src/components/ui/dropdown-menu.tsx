@@ -41,7 +41,7 @@ export function DropdownMenuItem({ className, ...p }: ComponentProps<typeof Menu
   return (
     <Menu.Item
       className={cn(
-        "flex min-h-11 cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-surface",
+        "flex min-h-11 cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-surface data-[highlighted]:outline-2 data-[highlighted]:-outline-offset-2 data-[highlighted]:outline-jade",
         className,
       )}
       {...p}

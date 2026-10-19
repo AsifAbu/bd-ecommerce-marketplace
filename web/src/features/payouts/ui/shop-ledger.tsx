@@ -42,7 +42,7 @@ export function ShopLedgerView({ ledger }: { ledger: ShopLedger }) {
         {ledger.collections.length === 0 ? (
           <p className="text-muted">No collections yet. A collection is recorded when an order is delivered.</p>
         ) : (
-          <Table label="Cash collections">
+          <Table label="Cash collections table">
             <caption className="sr-only">Cash collections</caption>
             <thead>
               <tr>

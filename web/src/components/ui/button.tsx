@@ -14,9 +14,9 @@ const variants: Record<ButtonVariant, string> = {
   danger: "bg-vermilion text-paper hover:bg-vermilion-hover",
 };
 
-// md and lg meet the 44px touch target; sm is 36px and is for dense desktop toolbars only.
+// md and lg meet the 44px touch target; sm is 36px with a mouse and 44px on touch screens (dense desktop toolbars).
 const sizes: Record<ButtonSize, string> = {
-  sm: "min-h-9 px-3 text-sm",
+  sm: "min-h-9 px-3 text-sm max-lg:min-h-11 pointer-coarse:min-h-11",
   md: "min-h-11 px-4 text-base",
   lg: "min-h-12 px-6 text-base",
 };

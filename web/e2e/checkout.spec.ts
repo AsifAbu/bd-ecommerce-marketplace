@@ -247,5 +247,5 @@ test("a shop sees only its own shop orders, and can print their invoices", async
 
   // Another shop's orders page is "not found" for this owner.
   await page.goto(`/seller/${books}/orders`);
-  await expect(page.getByText("This page could not be found.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "We could not find that page" })).toBeVisible();
 });

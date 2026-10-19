@@ -8,7 +8,7 @@ import { getConfig } from "@/lib/config";
 
 export default function Home() {
   return (
-    <Container as="main" className="flex flex-1 flex-col gap-10 py-6 sm:py-8">
+    <Container as="main" id="main" className="flex flex-1 flex-col gap-10 py-6 sm:py-8">
       <Hero />
       <Suspense fallback={null}>
         <DemoHint />

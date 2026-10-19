@@ -19,7 +19,7 @@ export const metadata = { title: "Request a return", robots: { index: false } };
  */
 export default function ReturnRequestPage({ params, searchParams }: PageProps<"/orders/[orderNo]/return">) {
   return (
-    <Container as="main" className="flex max-w-2xl flex-1 flex-col gap-6 py-6 sm:py-10">
+    <Container as="main" id="main" className="flex max-w-2xl flex-1 flex-col gap-6 py-6 sm:py-10">
       <PageHeader title="Request a return" />
       <Suspense fallback={<ListSkeleton rows={4} />}>
         <Content params={params} searchParams={searchParams} />

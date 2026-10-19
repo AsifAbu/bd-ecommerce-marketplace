@@ -15,7 +15,7 @@ const ITEMS = [
 /** Every /account page: the section nav (tab row on phones, sidebar from lg) and the page in <main>. */
 export default function AccountLayout({ children }: LayoutProps<"/account">) {
   return (
-    <Container as="main" className="flex flex-1 flex-col gap-6 py-4 sm:py-8 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:items-start lg:gap-14">
+    <Container as="main" id="main" className="flex flex-1 flex-col gap-6 py-4 sm:py-8 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:items-start lg:gap-14">
       <div className="lg:sticky lg:top-24">
         <Suspense fallback={<SectionNavSkeleton />}>
           <SectionNav label="Account" items={ITEMS} />

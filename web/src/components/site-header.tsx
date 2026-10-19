@@ -26,7 +26,7 @@ export function SiteHeader() {
             <MobileDrawer />
           </Suspense>
         </div>
-        <Link href="/" className="rounded-md px-1 text-xl font-semibold tracking-tight lg:px-0 lg:text-2xl">
+        <Link href="/" className="inline-flex min-h-11 items-center rounded-md px-1 text-xl font-semibold tracking-tight lg:px-0 lg:text-2xl">
           Marketplace
         </Link>
         <div className="hidden lg:block">

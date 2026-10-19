@@ -220,6 +220,7 @@ export async function SearchResultsView({ basePath, raw, trail, subcategories }:
             <ProductGrid label="Products" dense={showPanel}>
               {items.map((item) => (
                 <ProductCard
+                  headingLevel={2}
                   key={item.id}
                   href={item.url}
                   title={item.title}

@@ -21,7 +21,7 @@ export async function CartLink() {
     >
       <ShoppingBag aria-hidden="true" size={18} />
       <span>
-        Cart (<span className="tabular">{count}</span>
+        Cart (<span key={count} className="tabular count-bump">{count}</span>
         <span className="sr-only"> {count === 1 ? "item" : "items"}</span>)
       </span>
     </Link>
@@ -33,7 +33,7 @@ export async function CartTabBadge() {
   const count = await cartCount();
   if (count === 0) return null;
   return (
-    <span className="tabular absolute -right-2.5 -top-1.5 min-w-4 rounded-full bg-jade px-1 text-center text-[0.6875rem] font-semibold leading-4 text-paper">
+    <span key={count} className="count-bump tabular absolute -right-2.5 -top-1.5 min-w-4 rounded-full bg-jade px-1 text-center text-[0.6875rem] font-semibold leading-4 text-paper">
       {count > 99 ? "99+" : count}
       <span className="sr-only"> {count === 1 ? "item in cart" : "items in cart"}</span>
     </span>

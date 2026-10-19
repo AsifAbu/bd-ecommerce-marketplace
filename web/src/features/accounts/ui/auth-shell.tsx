@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui";
  */
 export function AuthShell({ title, intro, children }: { title: string; intro?: ReactNode; children: ReactNode }) {
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-14">
+    <main id="main" className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-14">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold">{title}</h1>
         {intro && <p className="text-muted">{intro}</p>}

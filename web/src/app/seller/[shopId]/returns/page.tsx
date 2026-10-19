@@ -43,7 +43,7 @@ async function Content({ params }: { params: Promise<{ shopId: string }> }) {
         <p className="text-muted">{empty}</p>
       ) : (
         list.map((r) => (
-          <ReturnCard key={r.id} view={r} audience="shop" photoUrls={photos.get(r.id)}>
+          <ReturnCard headingLevel={2} key={r.id} view={r} audience="shop" photoUrls={photos.get(r.id)}>
             <ShopReturnActions shopId={access.shopId} view={r} />
           </ReturnCard>
         ))
