@@ -14,16 +14,16 @@ export function InvoiceView({ order, shopOrder: so, platform }: { order: OrderVi
     <article data-invoice className="flex flex-col gap-5 text-sm print:text-xs">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Invoice</h1>
+          <h1 className="text-3xl">Invoice</h1>
           <p>
             Invoice no. <strong>{so.shopOrderNo}</strong>
           </p>
           <p>Order {order.orderNo}</p>
           <p>Date: {formatDhakaTime(order.placedAt)}</p>
         </div>
-        <div className="flex gap-3 print:hidden">
+        <div className="flex flex-wrap items-center gap-3 print:hidden">
           <PrintButton />
-          <Link className="self-center text-blue-800 underline" href={`/orders/${order.orderNo}`}>
+          <Link className="inline-flex min-h-11 items-center font-medium text-jade underline underline-offset-2" href={`/orders/${order.orderNo}`}>
             Back to the order
           </Link>
         </div>
@@ -31,18 +31,18 @@ export function InvoiceView({ order, shopOrder: so, platform }: { order: OrderVi
 
       <div className="grid gap-4 sm:grid-cols-2">
         <section aria-labelledby="seller-heading">
-          <h2 id="seller-heading" className="font-semibold">
+          <h2 id="seller-heading" className="text-base">
             Seller
           </h2>
           <p>{so.shopName}</p>
           <p>{so.shopRegistration ?? "Basic seller (no trade registration on file)"}</p>
-          <p className="text-gray-700">
+          <p className="text-muted print:text-black">
             Sold through {platform.name}
             {platform.dbid ? `, DBID ${platform.dbid}` : ""}
           </p>
         </section>
         <section aria-labelledby="customer-heading">
-          <h2 id="customer-heading" className="font-semibold">
+          <h2 id="customer-heading" className="text-base">
             Customer
           </h2>
           <p>{order.contactName}</p>
@@ -54,10 +54,10 @@ export function InvoiceView({ order, shopOrder: so, platform }: { order: OrderVi
         </section>
       </div>
 
-      <table className="w-full text-left">
+      <div className="overflow-x-auto print:overflow-visible"><table className="w-full min-w-[34rem] text-left print:min-w-0">
         <caption className="sr-only">Items</caption>
         <thead>
-          <tr className="border-b-2 border-gray-400">
+          <tr className="border-b border-ink">
             <th scope="col" className="py-1">
               Item
             </th>
@@ -80,7 +80,7 @@ export function InvoiceView({ order, shopOrder: so, platform }: { order: OrderVi
         </thead>
         <tbody>
           {so.items.map((i) => (
-            <tr key={i.id} className="border-b border-gray-200">
+            <tr key={i.id} className="border-b border-line">
               <td className="py-1">
                 {i.title}
                 {i.variantLabel && <span> ({i.variantLabel})</span>}
@@ -93,7 +93,7 @@ export function InvoiceView({ order, shopOrder: so, platform }: { order: OrderVi
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
 
       <dl className="ml-auto grid w-full max-w-sm grid-cols-[1fr_auto] gap-x-4 gap-y-1" aria-label="Invoice total">
         <dt>Items</dt>
@@ -102,13 +102,13 @@ export function InvoiceView({ order, shopOrder: so, platform }: { order: OrderVi
         <dd className="text-right">{formatTk(so.vatAmount)}</dd>
         <dt>Delivery charge</dt>
         <dd className="text-right">{so.freeDelivery ? "Free (Tk 0)" : formatTk(so.deliveryCharge)}</dd>
-        <dt className="text-base font-bold">Total</dt>
-        <dd className="text-right text-base font-bold">{formatTk(so.total)}</dd>
+        <dt className="text-base font-semibold">Total</dt>
+        <dd className="text-right text-base font-semibold">{formatTk(so.total)}</dd>
         <dt>Payment</dt>
         <dd className="text-right">Cash on delivery</dd>
       </dl>
 
-      <p className="text-gray-700">
+      <p className="text-muted print:text-black">
         Keep this invoice for returns (7 days from delivery) and warranty claims. Delivery charge is for this shop order only; other shops in
         the same order send their own invoice.
       </p>

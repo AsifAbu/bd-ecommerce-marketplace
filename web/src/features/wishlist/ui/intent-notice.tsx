@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { Notice } from "@/components/ui";
 import { withoutIntent } from "../intent";
 
 /**
@@ -14,18 +15,14 @@ export function WishlistIntentNotice({ result }: { result: "saved" | "failed" })
   }, []);
 
   if (result === "failed") {
-    return (
-      <p role="alert" className="rounded border border-red-700 bg-red-50 px-3 py-2 text-red-900">
-        We couldn&apos;t save this item to your wishlist. Please try again.
-      </p>
-    );
+    return <Notice tone="error">We couldn&apos;t save this item to your wishlist. Please try again.</Notice>;
   }
   return (
-    <p role="status" className="rounded border border-green-700 bg-green-50 px-3 py-2 text-green-900">
+    <Notice tone="success">
       Saved to your wishlist.{" "}
-      <Link className="underline" href="/account/wishlist">
+      <Link className="font-medium underline underline-offset-2" href="/account/wishlist">
         View wishlist
       </Link>
-    </p>
+    </Notice>
   );
 }

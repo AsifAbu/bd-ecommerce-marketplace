@@ -274,6 +274,31 @@
   details[open] > .details-panel {
     animation: pop-in var(--duration-base) var(--ease-out);
   }
+
+  /* Buying path: a disclosure (<details class="disclosure">) fades its content in; the chevron turns. */
+  details.disclosure[open] > :not(summary) {
+    animation: fade-in var(--duration-base) var(--ease-out);
+  }
+  details.disclosure > summary {
+    list-style: none;
+  }
+  details.disclosure > summary::-webkit-details-marker {
+    display: none;
+  }
+  details.disclosure[open] > summary .disclosure-chevron {
+    transform: rotate(180deg);
+  }
+  .disclosure-chevron {
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+
+  /* Sticky add-to-cart bar on phones slides up; inline feedback after adding fades in. */
+  .bar-in {
+    animation: slide-in-bottom var(--duration-slow) var(--ease-out);
+  }
+  .feedback-in {
+    animation: pop-in var(--duration-base) var(--ease-out);
+  }
 }
 
 @keyframes spin {

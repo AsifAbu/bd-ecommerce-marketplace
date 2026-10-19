@@ -6,7 +6,19 @@ import { useEffect, useRef, useState } from "react";
  * A product image served by /api/product-images/[id] (302 to a signed URL). Shows a neutral
  * placeholder when there is no image or it fails to load (e.g. storage is down: 503).
  */
-export function ProductImage({ imageId, alt, className = "" }: { imageId: string | null; alt: string; className?: string }) {
+export function ProductImage({
+  imageId,
+  alt,
+  className = "",
+  fit = "contain",
+  loading,
+}: {
+  imageId: string | null;
+  alt: string;
+  className?: string;
+  fit?: "contain" | "cover";
+  loading?: "lazy" | "eager";
+}) {
   const [failed, setFailed] = useState(false);
   const ref = useRef<HTMLImageElement>(null);
 
@@ -31,8 +43,10 @@ export function ProductImage({ imageId, alt, className = "" }: { imageId: string
       ref={ref}
       src={`/api/product-images/${encodeURIComponent(imageId)}`}
       alt={alt}
+      loading={loading}
+      decoding="async"
       onError={() => setFailed(true)}
-      className={`bg-surface object-contain ${className}`}
+      className={`bg-surface ${fit === "cover" ? "object-cover" : "object-contain"} ${className}`}
     />
   );
 }
