@@ -13,7 +13,7 @@ export const metadata = { title: "My shops" };
 
 export default function SellerHome() {
   return (
-    <Container as="main" className="flex max-w-3xl flex-1 flex-col gap-8 py-6 sm:py-10">
+    <Container as="main" id="main" className="flex max-w-3xl flex-1 flex-col gap-8 py-6 sm:py-10">
       <PageHeader
         title="My shops"
         actions={

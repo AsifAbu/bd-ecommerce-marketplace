@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: "Category · Marketplace" };
  */
 export default function CategoryPage({ params, searchParams }: PageProps<"/c/[slug]">) {
   return (
-    <Container as="main" className="flex flex-1 flex-col py-6 sm:py-8">
+    <Container as="main" id="main" className="flex flex-1 flex-col py-6 sm:py-8">
       <Suspense fallback={<ResultsSkeleton />}>
         <Content params={params} searchParams={searchParams} />
       </Suspense>

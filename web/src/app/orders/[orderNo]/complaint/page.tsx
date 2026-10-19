@@ -12,7 +12,7 @@ export const metadata = { title: "Report a problem", robots: { index: false } };
 /** US-072: open a complaint about an order (account, or a guest with the order open). Resolved within 72 h. */
 export default function ComplaintPage({ params, searchParams }: PageProps<"/orders/[orderNo]/complaint">) {
   return (
-    <Container as="main" className="flex max-w-2xl flex-1 flex-col gap-6 py-6 sm:py-10">
+    <Container as="main" id="main" className="flex max-w-2xl flex-1 flex-col gap-6 py-6 sm:py-10">
       <PageHeader title="Report a problem" />
       <Suspense fallback={<ListSkeleton rows={4} />}>
         <Content params={params} searchParams={searchParams} />

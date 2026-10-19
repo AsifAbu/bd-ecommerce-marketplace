@@ -4,7 +4,7 @@ import { logoutAction } from "../actions";
 
 export function PageShell({ title, wide, children }: { title: string; wide?: boolean; children: ReactNode }) {
   return (
-    <main className={`mx-auto flex w-full flex-1 flex-col gap-6 px-4 py-10 ${wide ? "max-w-5xl" : "max-w-md"}`}>
+    <main id="main" className={`mx-auto flex w-full flex-1 flex-col gap-6 px-4 py-10 ${wide ? "max-w-5xl" : "max-w-md"}`}>
       <p className="text-sm">
         <Link className="underline" href="/">
           Marketplace home

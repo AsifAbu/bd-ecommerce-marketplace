@@ -79,7 +79,7 @@ export function ProductCard({
           )}
         </div>
         <div className="flex flex-col gap-1">
-          <Heading className="line-clamp-2 text-sm font-medium leading-5 tracking-normal sm:text-base sm:leading-6">{title}</Heading>
+          <Heading className="card-title line-clamp-2 text-sm font-medium leading-5 tracking-normal sm:text-base sm:leading-6">{title}</Heading>
           <Price min={priceMin} max={priceMax} original={originalPrice} size="sm" className="sm:text-base" />
           <Rating value={rating} count={ratingCount} />
           {shopName && (
@@ -132,7 +132,7 @@ export function ProductGrid({
     <ul
       aria-label={label}
       className={cn(
-        "grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-4",
+        "reveal grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-4",
         !dense && "xl:grid-cols-5",
         className,
       )}

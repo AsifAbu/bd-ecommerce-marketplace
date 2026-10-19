@@ -48,7 +48,7 @@ const swatches = [
 export function Gallery() {
   const { toast } = useToast();
   return (
-    <Container as="main" className="flex flex-col gap-12 py-8">
+    <Container as="main" id="main" className="flex flex-col gap-12 py-8">
       <h1 className="text-3xl font-semibold">UI kit</h1>
 
       <Section title="Colour">

@@ -11,7 +11,7 @@ export const metadata = { title: "Invoice", robots: { index: false } };
 /** Printable invoice per shop order (US-051): the customer (or guest with access) and that shop's members. */
 export default function InvoicePage({ params }: PageProps<"/orders/[orderNo]/invoice/[shopOrderId]">) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 print:max-w-none print:p-0">
+    <main id="main" className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 print:max-w-none print:p-0">
       <Suspense fallback={<p role="status" className="text-muted">Loading the invoice…</p>}>
         <Content params={params} />
       </Suspense>

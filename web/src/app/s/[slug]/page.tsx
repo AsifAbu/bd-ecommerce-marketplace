@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: PageProps<"/s/[slug]">): Prom
 
 export default function StorefrontPage({ params, searchParams }: PageProps<"/s/[slug]">) {
   return (
-    <Container as="main" className="flex flex-1 flex-col py-6 sm:py-8">
+    <Container as="main" id="main" className="flex flex-1 flex-col py-6 sm:py-8">
       <Suspense fallback={<StorefrontSkeleton />}>
         <Storefront params={params} searchParams={searchParams} />
       </Suspense>

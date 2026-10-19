@@ -9,7 +9,7 @@ export function Container({ as: Tag = "div", className, ...rest }: { as?: Elemen
 
 /** The page's <main>: a Container with vertical rhythm. Use once per page. */
 export function PageMain({ className, ...rest }: HTMLAttributes<HTMLElement>) {
-  return <Container as="main" className={cn("flex flex-1 flex-col gap-10 py-6 sm:py-8", className)} {...rest} />;
+  return <Container as="main" id="main" className={cn("flex flex-1 flex-col gap-10 py-6 sm:py-8", className)} {...rest} />;
 }
 
 export interface SectionProps extends Omit<HTMLAttributes<HTMLElement>, "title"> {

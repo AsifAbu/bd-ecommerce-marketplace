@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleCheck } from "lucide-react";
+import { Check, CircleCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
@@ -33,6 +33,7 @@ export function AddToCartButton({
   const variant = variants.find((v) => v.id === fromUrl) ?? variants.find((v) => v.id === defaultVariantId) ?? null;
   const [quantity, setQuantity] = useState("1");
   const [busy, setBusy] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
   const [message, setMessage] = useState<{ text: string; ok: boolean; n: number } | null>(null);
   const [barVisible, setBarVisible] = useState(false);
   const inlineRef = useRef<HTMLDivElement>(null);
@@ -80,12 +81,17 @@ export function AddToCartButton({
       if (!res.ok) throw new Error(data.error?.message ?? "");
       setMessage({ text: data.message ?? "Added to your cart.", ok: true, n: Date.now() });
       router.refresh(); // the header count
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 1600);
     } catch (err) {
       setMessage({ text: err instanceof Error && err.message ? err.message : "Could not add to your cart. Please try again.", ok: false, n: Date.now() });
     } finally {
       setBusy(false);
     }
   }
+
+  // A small tick beside the label for a moment after a successful add (the label never changes).
+  const tick = justAdded && <Check aria-hidden="true" size={18} className="feedback-in" />;
 
   const status = (
     <p key={message?.n} role="status" className={cn("flex items-start gap-1.5 text-sm", message && "feedback-in", message && !message.ok && "font-medium text-vermilion")}>
@@ -120,6 +126,7 @@ export function AddToCartButton({
         />
         <Button size="lg" className="flex-1" onClick={add} loading={busy} disabled={outOfStock}>
           Add to cart
+          {tick}
         </Button>
       </div>
       {!barVisible && status}
@@ -140,6 +147,7 @@ export function AddToCartButton({
             </div>
             <Button size="lg" onClick={add} loading={busy} disabled={outOfStock}>
               Add to cart
+              {tick}
             </Button>
           </div>
         </div>

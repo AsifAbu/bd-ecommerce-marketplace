@@ -13,7 +13,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
       <Suspense fallback={<div aria-hidden="true" className="h-11 border-b border-line max-lg:-mx-4 sm:max-lg:-mx-6 lg:hidden" />}>
         <AdminNav />
       </Suspense>
-      <main className="flex min-w-0 flex-1 flex-col gap-8 lg:pb-0">{children}</main>
+      <main id="main" className="flex min-w-0 flex-1 flex-col gap-8 lg:pb-0">{children}</main>
     </Container>
   );
 }

@@ -21,7 +21,7 @@ export const metadata = { title: "Your order", robots: { index: false } };
  */
 export default function OrderPage({ params, searchParams }: PageProps<"/orders/[orderNo]">) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8">
+    <main id="main" className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8">
       <Suspense fallback={<Skeleton role="status" aria-label="Loading your order" className="h-64 w-full" />}>
         <Content params={params} searchParams={searchParams} />
       </Suspense>

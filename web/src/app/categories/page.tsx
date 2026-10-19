@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Categories · Marketplace" };
 /** US-040: every category that has products (empty ones stay hidden). */
 export default function CategoriesPage() {
   return (
-    <Container as="main" className="flex flex-1 flex-col gap-6 py-6 sm:py-8">
+    <Container as="main" id="main" className="flex flex-1 flex-col gap-6 py-6 sm:py-8">
       <header className="flex flex-col gap-1">
         <h1 className="text-3xl font-semibold sm:text-4xl">All categories</h1>
         <p className="text-muted">Every category with products in stock right now.</p>
