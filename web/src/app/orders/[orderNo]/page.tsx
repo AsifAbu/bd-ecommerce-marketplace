@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { Skeleton } from "@/components/ui";
 import { currentUserOrNull } from "@/features/cart/server";
 import { buildTimeline } from "@/features/orders/lifecycle";
 import { orderTimelines } from "@/features/orders/lifecycle/server";
@@ -20,8 +21,8 @@ export const metadata = { title: "Your order", robots: { index: false } };
  */
 export default function OrderPage({ params, searchParams }: PageProps<"/orders/[orderNo]">) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8">
-      <Suspense fallback={<p role="status">Loading your order…</p>}>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8">
+      <Suspense fallback={<Skeleton role="status" aria-label="Loading your order" className="h-64 w-full" />}>
         <Content params={params} searchParams={searchParams} />
       </Suspense>
     </main>
@@ -43,20 +44,20 @@ async function Content({
     const user = await currentUserOrNull();
     return (
       <>
-        <h1 className="text-3xl font-bold">Order not found</h1>
-        <p>
+        <h1 className="text-3xl sm:text-4xl">Order not found</h1>
+        <p className="max-w-prose">
           We can&apos;t show this order here.{" "}
           {user ? (
-            <Link className="text-blue-800 underline" href="/account/orders">
+            <Link className="font-medium text-jade underline underline-offset-2" href="/account/orders">
               See your orders
             </Link>
           ) : (
             <>
-              <Link className="text-blue-800 underline" href={`/login?callbackUrl=${encodeURIComponent(`/orders/${orderNo}`)}`}>
+              <Link className="font-medium text-jade underline underline-offset-2" href={`/login?callbackUrl=${encodeURIComponent(`/orders/${orderNo}`)}`}>
                 Log in
               </Link>{" "}
               or{" "}
-              <Link className="text-blue-800 underline" href={`/track?orderNo=${encodeURIComponent(orderNo)}`}>
+              <Link className="font-medium text-jade underline underline-offset-2" href={`/track?orderNo=${encodeURIComponent(orderNo)}`}>
                 track it with a code sent to your mobile
               </Link>
             </>
@@ -75,7 +76,7 @@ async function Content({
   const timelines = new Map((await orderTimelines(order.id)).map((t) => [t.id, t]));
   return (
     <>
-      <h1 className="text-3xl font-bold">Order {order.orderNo}</h1>
+      <h1 className="text-3xl sm:text-4xl">Order {order.orderNo}</h1>
       <OrderDetail
         order={order}
         placed={placed === "1"}

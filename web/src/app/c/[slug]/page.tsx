@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { getVisibleCategory } from "@/features/search/server";
-import { SearchResultsView } from "@/features/search/ui/search-view";
+import { Container } from "@/components/ui";
+import { ResultsSkeleton, SearchResultsView } from "@/features/search/ui/search-view";
 
 export const metadata: Metadata = { title: "Category · Marketplace" };
 
@@ -13,11 +14,11 @@ export const metadata: Metadata = { title: "Category · Marketplace" };
  */
 export default function CategoryPage({ params, searchParams }: PageProps<"/c/[slug]">) {
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-6">
-      <Suspense fallback={<p>Loading products…</p>}>
+    <Container as="main" className="flex flex-1 flex-col py-6 sm:py-8">
+      <Suspense fallback={<ResultsSkeleton />}>
         <Content params={params} searchParams={searchParams} />
       </Suspense>
-    </main>
+    </Container>
   );
 }
 

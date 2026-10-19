@@ -1,11 +1,13 @@
 "use client";
 
-import { buttonClass } from "@/components/form-styles";
+import { Printer } from "lucide-react";
+import { Button } from "@/components/ui";
 
 export function PrintButton() {
   return (
-    <button type="button" className={buttonClass} onClick={() => window.print()}>
+    <Button onClick={() => window.print()}>
+      <Printer aria-hidden="true" size={18} />
       Print invoice
-    </button>
+    </Button>
   );
 }

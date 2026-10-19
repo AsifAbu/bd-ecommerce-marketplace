@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { SearchResultsView } from "@/features/search/ui/search-view";
+import { Container } from "@/components/ui";
+import { ResultsSkeleton, SearchResultsView } from "@/features/search/ui/search-view";
 
 export const metadata: Metadata = { title: "Search · Marketplace" };
 
 /** US-041, US-042: /search?q=&category=&f.<key>=&price_min=&price_max=&shop=&sort=&page= */
 export default function SearchPage({ searchParams }: PageProps<"/search">) {
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-6">
-      <Suspense fallback={<p>Loading results…</p>}>
+    <Container as="main" className="flex flex-1 flex-col py-6 sm:py-8">
+      <Suspense fallback={<ResultsSkeleton />}>
         <Results searchParams={searchParams} />
       </Suspense>
-    </main>
+    </Container>
   );
 }
 

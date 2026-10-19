@@ -1,20 +1,24 @@
+import { Star } from "lucide-react";
 import Form from "next/form";
 import Link from "next/link";
+import { Button, cn, Input } from "@/components/ui";
 import { hasFilters, searchHref, toSearchParams, type SearchParams } from "../params";
 import type { AttributeFacet, FacetOption, SearchFacets, SearchResponse } from "../service";
 import { AutoSubmit } from "./auto-submit";
 import { formatTk } from "./format";
-import { linkClass, secondaryButtonClass, smallInputClass } from "./styles";
 
 /**
  * The filter panel (US-042): the leaf category's filterable attributes plus the common filters
- * (price, shop, rating), or for a search across categories only the common
- * filters and "Narrow by category". A plain GET form: the URL holds the whole state.
+ * (price, shop, rating), or for a search across categories only the common filters and
+ * "Narrow by category". A plain GET form: the URL holds the whole state. The same fields render
+ * in the desktop column (auto-submits) and in the mobile sheet (one "Apply filters" at the end).
  */
 
-const FORM_ID = "search-filters";
-const legendClass = "font-semibold";
-const fieldsetClass = "flex flex-col gap-1 border-t border-gray-300 pt-3";
+const legend = "text-sm font-semibold text-ink";
+const group = "flex min-w-0 flex-col gap-1 border-0 p-0";
+const row = "flex min-h-11 cursor-pointer items-center gap-3 rounded-md lg:min-h-9";
+const box = "size-5 shrink-0 accent-jade";
+const textLink = "inline-flex min-h-11 items-center rounded-sm text-jade underline-offset-4 hover:underline lg:min-h-9";
 
 function Hidden({ params, onCategoryPage }: { params: SearchParams; onCategoryPage: boolean }) {
   return (
@@ -26,17 +30,17 @@ function Hidden({ params, onCategoryPage }: { params: SearchParams; onCategoryPa
   );
 }
 
-function CheckboxList({ name, legend, options }: { name: string; legend: string; options: FacetOption[] }) {
+function CheckboxList({ name, title, options }: { name: string; title: string; options: FacetOption[] }) {
   return (
-    <fieldset className={fieldsetClass}>
-      <legend className={legendClass}>{legend}</legend>
-      <ul className="flex max-h-64 flex-col gap-1 overflow-y-auto">
+    <fieldset className={group}>
+      <legend className={cn(legend, "mb-1")}>{title}</legend>
+      <ul className="flex max-h-72 flex-col overflow-y-auto">
         {options.map((o) => (
           <li key={o.value}>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" name={name} value={o.value} defaultChecked={o.selected} className="h-4 w-4" />
+            <label className={row}>
+              <input type="checkbox" name={name} value={o.value} defaultChecked={o.selected} className={box} />
               <span>
-                {o.label} <span className="text-gray-700">({o.count})</span>
+                {o.label} <span className="text-muted">({o.count})</span>
               </span>
             </label>
           </li>
@@ -47,7 +51,7 @@ function CheckboxList({ name, legend, options }: { name: string; legend: string;
 }
 
 function RangeInputs(props: {
-  legend: string;
+  title: string;
   minName: string;
   maxName: string;
   min: number;
@@ -55,47 +59,39 @@ function RangeInputs(props: {
   selectedMin: number | null;
   selectedMax: number | null;
   format: (n: number) => string;
+  idPrefix: string;
 }) {
-  const id = props.minName.replace(/\W/g, "-");
+  // One value in the results: a range filter would offer nothing to choose.
+  if (props.min === props.max && props.selectedMin === null && props.selectedMax === null) return null;
+  const id = `${props.idPrefix}-${props.minName.replace(/\W/g, "-")}`;
+  const field = (name: string, label: string, selected: number | null, placeholder: number) => (
+    <label className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
+      <span>
+        {label}
+        <span className="sr-only"> {props.title}</span>
+      </span>
+      <Input
+        type="number"
+        inputMode="decimal"
+        min={0}
+        step="any"
+        name={name}
+        defaultValue={selected ?? ""}
+        placeholder={String(placeholder)}
+        aria-describedby={`${id}-hint`}
+        className="lg:min-h-10"
+      />
+    </label>
+  );
   return (
-    <fieldset className={fieldsetClass}>
-      <legend className={legendClass}>{props.legend}</legend>
-      <p className="text-sm text-gray-700" id={`${id}-hint`}>
+    <fieldset className={group}>
+      <legend className={cn(legend, "mb-1")}>{props.title}</legend>
+      <p className="mb-1 text-sm text-muted" id={`${id}-hint`}>
         {props.format(props.min)} to {props.format(props.max)} in these results
       </p>
-      <div className="flex items-center gap-2">
-        <label className="flex flex-1 flex-col text-sm">
-          <span>
-            Min<span className="sr-only"> {props.legend}</span>
-          </span>
-          <input
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="any"
-            name={props.minName}
-            defaultValue={props.selectedMin ?? ""}
-            placeholder={String(props.min)}
-            aria-describedby={`${id}-hint`}
-            className={smallInputClass}
-          />
-        </label>
-        <label className="flex flex-1 flex-col text-sm">
-          <span>
-            Max<span className="sr-only"> {props.legend}</span>
-          </span>
-          <input
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="any"
-            name={props.maxName}
-            defaultValue={props.selectedMax ?? ""}
-            placeholder={String(props.max)}
-            aria-describedby={`${id}-hint`}
-            className={smallInputClass}
-          />
-        </label>
+      <div className="flex items-end gap-2">
+        {field(props.minName, "Min", props.selectedMin, props.min)}
+        {field(props.maxName, "Max", props.selectedMax, props.max)}
       </div>
     </fieldset>
   );
@@ -104,26 +100,29 @@ function RangeInputs(props: {
 /** US-055: "N stars & up" (one choice at a time) plus "Any rating". */
 function RatingFilter({ facet }: { facet: NonNullable<SearchFacets["rating"]> }) {
   return (
-    <fieldset className={fieldsetClass}>
-      <legend className={legendClass}>Customer rating</legend>
-      <ul className="flex flex-col gap-1">
+    <fieldset className={group}>
+      <legend className={cn(legend, "mb-1")}>Customer rating</legend>
+      <ul className="flex flex-col">
         {facet.options.map((o) => (
           <li key={o.min}>
-            <label className="flex items-center gap-2">
-              <input type="radio" name="rating" value={o.min} defaultChecked={o.selected} className="h-4 w-4" />
-              <span>
-                <span aria-hidden="true" className="text-amber-700">
-                  {"★".repeat(o.min)}
-                  <span className="text-gray-400">{"★".repeat(5 - o.min)}</span>
-                </span>{" "}
-                {o.label} <span className="text-gray-700">({o.count})</span>
+            <label className={row}>
+              <input type="radio" name="rating" value={o.min} defaultChecked={o.selected} className={box} />
+              <span className="flex items-center gap-2">
+                <span aria-hidden="true" className="flex">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star key={n} size={14} className={n <= o.min ? "fill-gold text-gold" : "text-edge/60"} />
+                  ))}
+                </span>
+                <span>
+                  {o.label} <span className="text-muted">({o.count})</span>
+                </span>
               </span>
             </label>
           </li>
         ))}
         <li>
-          <label className="flex items-center gap-2">
-            <input type="radio" name="rating" value="" defaultChecked={facet.selected === null} className="h-4 w-4" />
+          <label className={row}>
+            <input type="radio" name="rating" value="" defaultChecked={facet.selected === null} className={box} />
             <span>Any rating</span>
           </label>
         </li>
@@ -132,16 +131,16 @@ function RatingFilter({ facet }: { facet: NonNullable<SearchFacets["rating"]> })
   );
 }
 
-function AttributeFilter({ facet }: { facet: AttributeFacet }) {
+function AttributeFilter({ facet, idPrefix }: { facet: AttributeFacet; idPrefix: string }) {
   const name = `f.${facet.key}`;
   switch (facet.widget) {
     case "checkbox_list":
-      return <CheckboxList name={name} legend={facet.name} options={facet.options} />;
+      return <CheckboxList name={name} title={facet.name} options={facet.options} />;
     case "range_slider": {
       const unit = facet.unit ? ` ${facet.unit}` : "";
       return (
         <RangeInputs
-          legend={`${facet.name}${facet.unit ? ` (${facet.unit})` : ""}`}
+          title={`${facet.name}${facet.unit ? ` (${facet.unit})` : ""}`}
           minName={`${name}.min`}
           maxName={`${name}.max`}
           min={facet.min}
@@ -149,16 +148,17 @@ function AttributeFilter({ facet }: { facet: AttributeFacet }) {
           selectedMin={facet.selectedMin}
           selectedMax={facet.selectedMax}
           format={(n) => `${n}${unit}`}
+          idPrefix={idPrefix}
         />
       );
     }
     case "toggle":
       return (
-        <div className={fieldsetClass}>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name={name} value="1" defaultChecked={facet.selected} className="h-4 w-4" />
+        <div className={group}>
+          <label className={row}>
+            <input type="checkbox" name={name} value="1" defaultChecked={facet.selected} className={box} />
             <span>
-              {facet.name} <span className="text-gray-700">({facet.count})</span>
+              {facet.name} <span className="text-muted">({facet.count})</span>
             </span>
           </label>
         </div>
@@ -166,7 +166,30 @@ function AttributeFilter({ facet }: { facet: AttributeFacet }) {
   }
 }
 
-export function FilterPanel({ response, basePath, onCategoryPage }: { response: SearchResponse; basePath: string; onCategoryPage: boolean }) {
+/** True when the panel has anything to show (so the column and the Filters button can be left out). */
+export function hasPanel(response: SearchResponse): boolean {
+  const { facets, mode, params } = response;
+  return (
+    hasFilters(params) ||
+    facets.attributes.length > 0 ||
+    facets.price !== null ||
+    facets.shops.length > 0 ||
+    facets.rating !== null ||
+    (mode === "cross" && facets.categories.length > 0)
+  );
+}
+
+export interface FilterFieldsProps {
+  response: SearchResponse;
+  basePath: string;
+  onCategoryPage: boolean;
+  /** Unique per rendering of the panel (the desktop column and the sheet both exist). */
+  formId: string;
+  /** Desktop column: ticking a box applies right away. The sheet applies once, with the button. */
+  autoApply?: boolean;
+}
+
+export function FilterFields({ response, basePath, onCategoryPage, formId, autoApply = false }: FilterFieldsProps) {
   const { params, facets, mode } = response;
   const linkOptions = { omitCategory: onCategoryPage };
   // Remount the form when the URL changes so every control shows the URL's state.
@@ -175,50 +198,45 @@ export function FilterPanel({ response, basePath, onCategoryPage }: { response: 
     onCategoryPage
       ? searchHref(`/c/${slug}`, params, (d) => ((d.attrs = {}), (d.category = null)), { omitCategory: true })
       : searchHref(basePath, params, (d) => ((d.attrs = {}), (d.category = slug)));
+  const clearHref = searchHref(
+    basePath,
+    params,
+    (d) => ((d.attrs = {}), (d.priceMin = null), (d.priceMax = null), (d.shops = []), (d.minRating = null)),
+    linkOptions,
+  );
 
   return (
-    <aside aria-label="Filters" className="flex flex-col gap-3 text-sm md:w-64 md:shrink-0">
-      <h2 className="text-lg font-semibold">Filters</h2>
-      {hasFilters(params) && (
-        <Link
-          className={linkClass}
-          href={searchHref(basePath, params, (d) => ((d.attrs = {}), (d.priceMin = null), (d.priceMax = null), (d.shops = []), (d.minRating = null)), linkOptions)}
-        >
-          Clear all filters
-        </Link>
-      )}
+    <div className="flex flex-col gap-6 text-sm">
       {mode === "cross" && facets.categories.length > 0 && (
-        <nav aria-labelledby="narrow-heading" className="flex flex-col gap-1">
-          <h3 id="narrow-heading" className={legendClass}>
-            Narrow by category
-          </h3>
-          <ul className="flex flex-col gap-1">
+        <nav aria-label="Narrow by category" className="flex flex-col gap-1">
+          <h3 className={legend}>Narrow by category</h3>
+          <ul className="flex flex-col">
             {facets.categories.map((c) => (
               <li key={c.id}>
-                <Link className={linkClass} href={narrowHref(c.slug)}>
+                <Link className={textLink} href={narrowHref(c.slug)}>
                   {c.name}
                 </Link>{" "}
-                <span className="text-gray-700">({c.count})</span>
+                <span className="text-muted">({c.count})</span>
               </li>
             ))}
           </ul>
         </nav>
       )}
       {mode === "category" && !onCategoryPage && params.category && (
-        <Link className={linkClass} href={searchHref(basePath, params, (d) => ((d.attrs = {}), (d.category = null)))}>
+        <Link className={textLink} href={searchHref(basePath, params, (d) => ((d.attrs = {}), (d.category = null)))}>
           Search all categories
         </Link>
       )}
       {/* next/form ignores `key`, so the wrapper carries it. */}
       <div key={formKey} className="contents">
-        <Form id={FORM_ID} action={basePath} className="flex flex-col gap-3">
+        <Form id={formId} action={basePath} className="flex flex-col gap-6">
           <Hidden params={params} onCategoryPage={onCategoryPage} />
           {facets.attributes.map((f) => (
-            <AttributeFilter key={f.key} facet={f} />
+            <AttributeFilter key={f.key} facet={f} idPrefix={formId} />
           ))}
           {facets.price && (
             <RangeInputs
-              legend="Price (Tk)"
+              title="Price (Tk)"
               minName="price_min"
               maxName="price_max"
               min={facets.price.min}
@@ -226,18 +244,29 @@ export function FilterPanel({ response, basePath, onCategoryPage }: { response: 
               selectedMin={facets.price.selectedMin}
               selectedMax={facets.price.selectedMax}
               format={formatTk}
+              idPrefix={formId}
             />
           )}
-          {facets.shops.length > 0 && <CheckboxList name="shop" legend="Shop" options={facets.shops} />}
+          {facets.shops.length > 0 && <CheckboxList name="shop" title="Shop" options={facets.shops} />}
           {facets.rating && <RatingFilter facet={facets.rating} />}
-          <div className="border-t border-gray-300 pt-3">
-            <button type="submit" className={secondaryButtonClass}>
+          <div
+            className={cn(
+              "flex flex-wrap items-center gap-3",
+              !autoApply && "sticky bottom-0 -mx-4 bg-paper px-4 pb-4 pt-3 shadow-[0_-1px_0_var(--color-line)]",
+            )}
+          >
+            <Button type="submit" variant={autoApply ? "secondary" : "primary"} className={autoApply ? undefined : "flex-1"}>
               Apply filters
-            </button>
+            </Button>
+            {hasFilters(params) && !autoApply && (
+              <Link className={textLink} href={clearHref}>
+                Clear all filters
+              </Link>
+            )}
           </div>
         </Form>
-        <AutoSubmit formId={FORM_ID} />
+        {autoApply && <AutoSubmit formId={formId} />}
       </div>
-    </aside>
+    </div>
   );
 }
