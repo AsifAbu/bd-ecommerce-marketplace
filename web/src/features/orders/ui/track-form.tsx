@@ -49,10 +49,11 @@ export function TrackForm({ initialOrderNo }: { initialOrderNo: string }) {
   return (
     <div className="flex flex-col gap-6">
       <form onSubmit={send} className="flex flex-col gap-4" noValidate aria-label="Send a code">
-        <FormField label="Order number" hint="It is in your confirmation SMS and email." required>
+        <FormField label="Order number" hint="It is in your confirmation SMS and email.">
           {(p) => (
             <Input
               {...p}
+              aria-required="true"
               name="orderNo"
               value={orderNo}
               onChange={(e) => setOrderNo(e.target.value)}
@@ -67,9 +68,9 @@ export function TrackForm({ initialOrderNo }: { initialOrderNo: string }) {
       </form>
       {sent && (
         <form onSubmit={verify} className="feedback-in flex flex-col gap-4" noValidate aria-label="Check the code">
-          <FormField label="6-digit code" required className="max-w-40">
+          <FormField label="6-digit code" className="max-w-40">
             {(p) => (
-              <Input {...p} name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value)} />
+              <Input {...p} aria-required="true" name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value)} />
             )}
           </FormField>
           <Button type="submit" className="self-start" disabled={busy || code.trim().length !== 6}>

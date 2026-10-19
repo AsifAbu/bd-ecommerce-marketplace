@@ -416,13 +416,14 @@ function GuestContact({ fields, verified, onVerified }: { fields: Record<string,
         </Link>{" "}
         to use your saved addresses.
       </p>
-      <FormField label="Full name" error={fields["contact.name"]} required>
-        {(p) => <Input {...p} name="contact.name" autoComplete="name" />}
+      <FormField label="Full name" error={fields["contact.name"]}>
+        {(p) => <Input {...p} aria-required="true" name="contact.name" autoComplete="name" />}
       </FormField>
-      <FormField label="Mobile number" error={fields["contact.phone"]} required>
+      <FormField label="Mobile number" error={fields["contact.phone"]}>
         {(p) => (
           <Input
             {...p}
+            aria-required="true"
             name="contact.phone"
             type="tel"
             inputMode="numeric"
@@ -457,8 +458,8 @@ function GuestContact({ fields, verified, onVerified }: { fields: Record<string,
           verified its mobile number.
         </Notice>
       )}
-      <FormField label="Email (for your invoice)" error={fields["contact.email"]} required>
-        {(p) => <Input {...p} name="contact.email" type="email" autoComplete="email" />}
+      <FormField label="Email (for your invoice)" error={fields["contact.email"]}>
+        {(p) => <Input {...p} aria-required="true" name="contact.email" type="email" autoComplete="email" />}
       </FormField>
     </fieldset>
   );
