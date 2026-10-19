@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 
 test("home page looks like a store: category tiles, new arrivals, rows, shops, sell call to action", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Marketplace");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Dokan");
   await expect(page.getByRole("search", { name: "Search the marketplace" })).toBeVisible();
 
   const tiles = page.getByRole("list", { name: "Category tiles" });

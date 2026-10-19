@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Container, Skeleton } from "@/components/ui";
 import { CategoryTreeNav } from "@/features/search/ui/category-nav";
 
-export const metadata: Metadata = { title: "Categories · Marketplace" };
+export const metadata: Metadata = { title: "Categories · Dokan" };
 
 /** US-040: every category that has products (empty ones stay hidden). */
 export default function CategoriesPage() {

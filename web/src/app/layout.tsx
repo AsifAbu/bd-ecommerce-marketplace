@@ -20,7 +20,7 @@ const instrumentSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Marketplace",
+  title: "Dokan",
   description: "All online products in one place, from shops across Bangladesh.",
 };
 

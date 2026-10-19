@@ -77,7 +77,7 @@ export function MobileMenu({ categories }: { categories: DrawerCategory[] }) {
           <li>
             <SheetClose asChild>
               <Link href="/shops/apply" className={row}>
-                Sell on Marketplace
+                Sell on Dokan
               </Link>
             </SheetClose>
           </li>

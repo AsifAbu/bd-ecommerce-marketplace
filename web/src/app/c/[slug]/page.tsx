@@ -6,7 +6,7 @@ import { getVisibleCategory } from "@/features/search/server";
 import { Container } from "@/components/ui";
 import { ResultsSkeleton, SearchResultsView } from "@/features/search/ui/search-view";
 
-export const metadata: Metadata = { title: "Category · Marketplace" };
+export const metadata: Metadata = { title: "Category · Dokan" };
 
 /**
  * US-040 / US-042: a category's products with its filters. Only categories with live, in-stock

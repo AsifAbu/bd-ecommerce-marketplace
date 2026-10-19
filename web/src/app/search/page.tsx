@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Container } from "@/components/ui";
 import { ResultsSkeleton, SearchResultsView } from "@/features/search/ui/search-view";
 
-export const metadata: Metadata = { title: "Search · Marketplace" };
+export const metadata: Metadata = { title: "Search · Dokan" };
 
 /** US-041, US-042: /search?q=&category=&f.<key>=&price_min=&price_max=&shop=&sort=&page= */
 export default function SearchPage({ searchParams }: PageProps<"/search">) {

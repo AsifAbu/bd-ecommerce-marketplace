@@ -5,7 +5,9 @@ import type { Metadata } from "next";
  * shop's name, description and banner (or logo). Pure: the caller passes the full page URL.
  */
 
-export const SITE_NAME = "Marketplace";
+import { SITE_NAME } from "@/lib/brand";
+
+export { SITE_NAME };
 const DESCRIPTION_MAX = 200;
 
 interface MetadataShop {

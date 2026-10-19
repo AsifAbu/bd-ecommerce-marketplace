@@ -1,6 +1,7 @@
 import { BadgeCheck, Search } from "lucide-react";
 import Form from "next/form";
 import Link from "next/link";
+import { LogoMark } from "@/components/brand/logo";
 import { Button, buttonStyles, EmptyState, Input, ProductGridSkeleton, Section, Skeleton } from "@/components/ui";
 import { storefrontPath } from "@/lib/storefront-link";
 import type { HomeData } from "../loader";
@@ -21,8 +22,9 @@ export function Hero() {
   return (
     <section aria-labelledby="home-title" className="flex flex-col gap-5 pt-2 sm:pt-6">
       <div className="flex flex-col gap-1">
-        <h1 id="home-title" className="text-4xl font-semibold">
-          Marketplace
+        <h1 id="home-title" className="flex items-center gap-1 text-4xl font-semibold">
+          <LogoMark className="h-11 w-auto" />
+          Dokan
         </h1>
         <p className="max-w-xl text-lg text-muted">All online products in one place, from shops across Bangladesh.</p>
       </div>
@@ -81,7 +83,7 @@ export function SellCta() {
     <section aria-labelledby="sell-cta" className="flex flex-col items-start gap-4 rounded-lg bg-surface p-6 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-col gap-1">
         <h2 id="sell-cta" className="text-lg font-semibold">
-          Sell on Marketplace
+          Sell on Dokan
         </h2>
         <p className="text-muted">Anyone can open a shop and reach customers across Bangladesh.</p>
       </div>

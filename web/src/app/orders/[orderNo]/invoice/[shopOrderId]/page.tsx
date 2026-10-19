@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { invoiceOrder } from "@/features/orders/server";
 import { InvoiceView } from "@/features/orders/ui/invoice-view";
 import { requireShopRole } from "@/lib/auth";
+import { SITE_NAME } from "@/lib/brand";
 import { getConfig } from "@/lib/config";
 
 export const metadata = { title: "Invoice", robots: { index: false } };
@@ -31,5 +32,5 @@ async function Content({ params }: { params: Promise<{ orderNo: string; shopOrde
   const order = await invoiceOrder(decodeURIComponent(orderNo), shopOrderId, isMember);
   const shopOrder = order?.shopOrders.find((so) => so.id === shopOrderId);
   if (!order || !shopOrder) notFound();
-  return <InvoiceView order={order} shopOrder={shopOrder} platform={{ name: "Marketplace", dbid: getConfig().dbid ?? null }} />;
+  return <InvoiceView order={order} shopOrder={shopOrder} platform={{ name: SITE_NAME, dbid: getConfig().dbid ?? null }} />;
 }
