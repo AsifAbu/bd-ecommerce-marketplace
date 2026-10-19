@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import { Breadcrumbs, FilterChips, Notice } from "@/components/ui";
 import { getConfig } from "@/lib/config";
 import { isPolicySlug, POLICIES, policyPath, policyTitle } from "../catalog";
 import { formatDate } from "../dates";
@@ -9,7 +10,8 @@ import { PolicyMarkdown } from "./policy-markdown";
 
 /**
  * /policies/[slug]: the current version with its effective date, or an earlier published
- * version with ?version=N (so anyone can see the exact text they accepted).
+ * version with ?version=N (so anyone can see the exact text they accepted). Long-form reading
+ * layout: about 70 characters per line, one h1, the version switcher above the text.
  */
 export async function PublicPolicy({
   slug: slugPromise,
@@ -27,54 +29,65 @@ export async function PublicPolicy({
   const history = (await policyService.history(slug)).filter((v) => v.state === "current" || v.state === "superseded");
   const current = history.find((v) => v.state === "current") ?? null;
   const shown = versionNo === null ? current : (history.find((v) => v.version === versionNo) ?? null);
+  const crumbs = (
+    <Breadcrumbs items={[{ label: "Policies", href: "/policies" }, { label: policyTitle(slug) }]} />
+  );
 
   if (!shown) {
     return (
-      <>
-        <h1 className="text-3xl font-bold">{policyTitle(slug)}</h1>
-        <p role="status">{versionNo === null ? "This policy is not published yet." : "This version does not exist."}</p>
-      </>
+      <div className="flex max-w-[70ch] flex-col gap-4">
+        {crumbs}
+        <h1 className="text-3xl font-semibold sm:text-4xl">{policyTitle(slug)}</h1>
+        <p role="status" className="text-muted">
+          {versionNo === null ? "This policy is not published yet. Please check back soon." : "This version does not exist."}{" "}
+          {versionNo !== null && (
+            <Link className="font-medium text-jade underline-offset-4 hover:underline" href={policyPath(slug)}>
+              Read the current version
+            </Link>
+          )}
+        </p>
+      </div>
     );
   }
 
   return (
-    <article className="flex flex-col gap-4" aria-labelledby="policy-title">
-      <header className="flex flex-col gap-1">
-        <h1 id="policy-title" className="text-3xl font-bold">
+    <article className="flex flex-col gap-8" aria-labelledby="policy-title">
+      <header className="flex max-w-[70ch] flex-col gap-3">
+        {crumbs}
+        <h1 id="policy-title" className="text-3xl font-semibold sm:text-4xl">
           {shown.title}
         </h1>
-        <p className="text-sm text-gray-700" data-testid="policy-version">
-          Version {shown.version} · Effective from {formatDate(shown.effectiveAt!)}
+        <p className="text-muted" data-testid="policy-version">
+          Version {shown.version}, effective from {formatDate(shown.effectiveAt!)}
+          {shown.state === "current" ? " (current)" : ""}
         </p>
+        {shown.changeSummary && <p className="text-sm text-muted">What changed: {shown.changeSummary}</p>}
         {shown.state === "superseded" && current && (
-          <p role="note" className="rounded border border-amber-600 bg-amber-50 px-3 py-2 text-sm">
-            This is an earlier version. It was replaced by{" "}
-            <Link className="underline" href={policyPath(slug)}>
-              version {current.version}
-            </Link>
-            .
-          </p>
+          <Notice tone="warning" role="note">
+            <p>
+              This is an earlier version. It was replaced by{" "}
+              <Link className="font-medium underline underline-offset-4" href={policyPath(slug)}>
+                version {current.version}
+              </Link>
+              .
+            </p>
+          </Notice>
+        )}
+        {history.length > 1 && (
+          <FilterChips
+            label="Policy versions"
+            className="pt-1"
+            items={history.map((v) => ({
+              label: `Version ${v.version}${v.state === "current" ? " (current)" : ""}`,
+              href: v.state === "current" ? policyPath(slug) : `${policyPath(slug)}?version=${v.version}`,
+              current: v.id === shown.id,
+            }))}
+          />
         )}
       </header>
-      <PolicyMarkdown body={shown.body} vars={{ DBID: getConfig().dbid ?? "pending registration" }} />
-      {history.length > 1 && (
-        <section aria-labelledby="versions-heading" className="mt-6 border-t border-gray-300 pt-4 text-sm">
-          <h2 id="versions-heading" className="font-semibold">
-            All versions
-          </h2>
-          <ul className="mt-2 flex flex-col gap-1">
-            {history.map((v) => (
-              <li key={v.id}>
-                <Link className="underline" href={`${policyPath(slug)}?version=${v.version}`} aria-current={v.id === shown.id ? "page" : undefined}>
-                  Version {v.version}
-                </Link>{" "}
-                effective {formatDate(v.effectiveAt!)}
-                {v.state === "current" ? " (current)" : ""}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <div className="max-w-[70ch]">
+        <PolicyMarkdown body={shown.body} vars={{ DBID: getConfig().dbid ?? "pending registration" }} />
+      </div>
     </article>
   );
 }
@@ -82,13 +95,13 @@ export async function PublicPolicy({
 /** /policies: list of all policy pages (static). */
 export function PolicyIndex() {
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="flex max-w-[70ch] flex-col">
       {POLICIES.map((p) => (
-        <li key={p.slug}>
-          <Link className="font-semibold underline" href={policyPath(p.slug)}>
+        <li key={p.slug} className="border-t border-line py-4 first:border-t-0 first:pt-0">
+          <Link className="text-lg font-semibold text-jade underline-offset-4 hover:underline" href={policyPath(p.slug)}>
             {p.title}
           </Link>
-          <p className="text-sm text-gray-700">{p.summary}</p>
+          <p className="mt-1 text-muted">{p.summary}</p>
         </li>
       ))}
     </ul>

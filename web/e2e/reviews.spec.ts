@@ -162,7 +162,7 @@ test("the Platform Admin hides the review with a reason; it leaves the product p
   await page.context().clearCookies();
 
   await login(page, "01700000001", "/admin/reviews");
-  await expect(page.getByRole("heading", { level: 1, name: "Reviews: moderation" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Review moderation" })).toBeVisible();
   const card = page.getByTestId("admin-review").filter({ hasText: REVIEW_TITLE });
   await card.getByLabel("Reason for hiding").fill("Mentions a competitor's shop");
   await card.getByRole("button", { name: "Hide review" }).click();

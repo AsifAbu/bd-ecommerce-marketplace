@@ -16,6 +16,7 @@ export {
 } from "./dropdown-menu";
 export { EmptyState, type EmptyStateProps } from "./empty-state";
 export { controlStyles, FormField, Input, Select, Textarea, type FieldControlProps, type FormFieldProps } from "./form-field";
+export { FilterChips, type ChipItem } from "./filter-chips";
 export { IconButton, type IconButtonProps } from "./icon-button";
 export { Checkbox, Radio } from "./choice";
 export { Notice, type NoticeProps, type NoticeTone } from "./notice";

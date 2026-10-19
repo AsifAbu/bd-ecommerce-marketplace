@@ -381,3 +381,58 @@
     padding-bottom: 0;
   }
 }
+
+/* Admin: a row or card flashes once when an action inside it reports a result (a status or alert
+   line appears). Pure CSS: the :has() match starts the animation. */
+@media (prefers-reduced-motion: no-preference) {
+  .flash-result:has([role="status"]:not(:empty)) {
+    animation: flash-ok 1.6s var(--ease-out);
+  }
+  .flash-result:has([role="alert"]:not(:empty)) {
+    animation: flash-err 1.6s var(--ease-out);
+  }
+}
+@keyframes flash-ok {
+  from {
+    background-color: var(--color-jade-soft);
+  }
+}
+@keyframes flash-err {
+  from {
+    background-color: var(--color-vermilion-soft);
+  }
+}
+
+/* Admin tables: under 640px each row becomes a labelled block (cells carry data-label). */
+@media (max-width: 39.999rem) {
+  .table-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .table-stack,
+  .table-stack tbody,
+  .table-stack tr,
+  .table-stack td,
+  .table-stack th {
+    display: block;
+  }
+  .table-stack tr {
+    padding: 0.75rem 1rem;
+  }
+  .table-stack th,
+  .table-stack td {
+    padding: 0.25rem 0;
+    text-align: left;
+    border-bottom: 0;
+  }
+  .table-stack td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--color-muted);
+  }
+}

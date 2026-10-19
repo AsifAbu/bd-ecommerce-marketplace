@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { AdminPageHeader } from "@/components/admin/page-header";
+import { Notice } from "@/components/ui";
+import { Table, Tbody, Td, Th, Thead, Tr } from "@/components/admin/data-table";
 import {
   addOtherLeafAction,
   archiveCategoryAction,
@@ -21,26 +24,38 @@ export async function CategoryDetail({ id }: { id: Promise<string> }) {
     listCategories(),
     listAttributes(),
   ]);
-  if (!category) return <p role="alert">Category not found.</p>;
+  if (!category) {
+    return (
+      <Notice tone="error">
+        Category not found.
+      </Notice>
+    );
+  }
 
   const hasOther = categories.some((c) => c.parentId === category.id && c.isOther && !c.archivedAt);
   const canHaveAttributes = category.isLeaf && !category.isOther && !category.archivedAt;
   const assignedIds = new Set(category.attributes.map((a) => a.attributeId));
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-xl font-semibold">{category.name}</h2>
-        {category.isLeaf && <Badge>leaf</Badge>}
-        {category.isOther && <Badge>Other</Badge>}
-        {category.archivedAt && <Badge>archived</Badge>}
-        <span className="text-sm text-gray-700">slug: {category.slug}</span>
-      </div>
+    <>
+      <AdminPageHeader
+        title={category.name}
+        description={`Slug: ${category.slug}`}
+        crumbs={[{ label: "Category tree", href: "/admin/catalog" }, { label: category.name }]}
+      >
+        {(category.isLeaf || category.isOther || category.archivedAt) && (
+          <div className="flex flex-wrap gap-1">
+            {category.isLeaf && <Badge>leaf</Badge>}
+            {category.isOther && <Badge>Other</Badge>}
+            {category.archivedAt && <Badge>archived</Badge>}
+          </div>
+        )}
+      </AdminPageHeader>
 
       <section className={sectionClass} aria-labelledby="edit">
-        <h3 id="edit" className="font-semibold">
+        <h2 id="edit" className="text-lg font-semibold">
           Edit
-        </h3>
+        </h2>
         <ActionForm action={renameCategoryAction} label="Rename">
           <input type="hidden" name="id" value={category.id} />
           <label className={labelClass}>
@@ -83,7 +98,7 @@ export async function CategoryDetail({ id }: { id: Promise<string> }) {
           </label>
           <SubmitButton>Move</SubmitButton>
         </ActionForm>
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-x-8 gap-y-4">
           {!category.isOther && !category.archivedAt && !hasOther && (
             <ActionForm action={addOtherLeafAction} label="Add Other leaf">
               <input type="hidden" name="parentId" value={category.id} />
@@ -101,53 +116,55 @@ export async function CategoryDetail({ id }: { id: Promise<string> }) {
 
       {canHaveAttributes && (
         <section className={sectionClass} aria-labelledby="attrs">
-          <h3 id="attrs" className="font-semibold">
+          <h2 id="attrs" className="text-lg font-semibold">
             Attributes
-          </h3>
-          <p className="text-sm text-gray-700">
+          </h2>
+          <p className="text-sm text-muted">
             The guideline fields (quantity, weight, brand, origin, returns, warranty
             {category.requiresExpiry ? ", expiry date" : ""}) are added automatically.{" "}
-            <Link className="underline" href={`/api/categories/${category.id}/schema`}>
+            <Link className="font-medium text-jade underline-offset-4 hover:underline" href={`/api/categories/${category.id}/schema`}>
               View the effective schema (JSON)
             </Link>
           </p>
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-gray-300">
-                <th scope="col">Order</th>
-                <th scope="col">Attribute</th>
-                <th scope="col">Settings</th>
-                <th scope="col">
+          <Table caption="Assigned attributes" stack>
+            <Thead>
+              <tr>
+                <Th>Order</Th>
+                <Th>Attribute</Th>
+                <Th>Settings</Th>
+                <Th>
                   <span className="sr-only">Remove</span>
-                </th>
+                </Th>
               </tr>
-            </thead>
-            <tbody>
+            </Thead>
+            <Tbody>
               {category.attributes.map((a) => (
-                <tr key={a.attributeId} className="border-b border-gray-200">
-                  <td className="py-1">{a.displayOrder}</td>
-                  <td>
-                    {a.attribute.name} <span className="text-gray-700">({a.attribute.type})</span>
+                <Tr key={a.attributeId}>
+                  <Td label="Order" className="py-2">{a.displayOrder}</Td>
+                  <Td label="Attribute" className="py-2">
+                    {a.attribute.name} <span className="text-muted">({a.attribute.type})</span>
                     {a.attribute.archivedAt && <Badge>archived</Badge>}
-                  </td>
-                  <td className="flex flex-wrap gap-1 py-1">
-                    {a.required && <Badge>required</Badge>}
-                    {a.filterable && <Badge>filter: {a.filterWidget ?? "default"}</Badge>}
-                    {a.isVariantAxis && <Badge>variant axis</Badge>}
-                  </td>
-                  <td>
+                  </Td>
+                  <Td label="Settings" className="py-2">
+                    <span className="flex flex-wrap gap-1">
+                      {a.required && <Badge>required</Badge>}
+                      {a.filterable && <Badge>filter: {a.filterWidget ?? "default"}</Badge>}
+                      {a.isVariantAxis && <Badge>variant axis</Badge>}
+                    </span>
+                  </Td>
+                  <Td className="py-2">
                     <ActionForm action={unassignAttributeAction} label={`Remove ${a.attribute.name}`}>
                       <input type="hidden" name="categoryId" value={category.id} />
                       <input type="hidden" name="attributeId" value={a.attributeId} />
                       <SubmitButton variant="secondary">Remove</SubmitButton>
                     </ActionForm>
-                  </td>
-                </tr>
+                  </Td>
+                </Tr>
               ))}
-            </tbody>
-          </table>
+            </Tbody>
+          </Table>
 
-          <h4 className="font-medium">Add or update an attribute</h4>
+          <h3 className="font-semibold">Add or update an attribute</h3>
           <ActionForm action={assignAttributeAction} label="Assign attribute">
             <input type="hidden" name="categoryId" value={category.id} />
             <label className={labelClass}>
@@ -188,6 +205,6 @@ export async function CategoryDetail({ id }: { id: Promise<string> }) {
           </ActionForm>
         </section>
       )}
-    </div>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { AdminLoading } from "@/components/admin/loading";
 import { shopOrderDetail } from "@/features/orders/lifecycle/server";
 import { ShopOrderDetail } from "@/features/orders/lifecycle/ui/shop-order-detail";
 import { guardPage } from "@/features/shops/page-guard";
@@ -11,11 +12,9 @@ export const metadata = { title: "Shop order: admin" };
 /** Admin (US-053): one shop order with every action the admin may take (delivery is recorded here until a courier feed exists). */
 export default function AdminShopOrderPage({ params }: PageProps<"/admin/orders/[shopOrderId]">) {
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-4 py-10">
-      <Suspense fallback={<p role="status">Loading…</p>}>
-        <Content params={params} />
-      </Suspense>
-    </main>
+    <Suspense fallback={<AdminLoading />}>
+      <Content params={params} />
+    </Suspense>
   );
 }
 

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Badge as KitBadge } from "@/components/ui";
+import { Table, Tbody, Td, Th, Thead, Tr } from "@/components/admin/data-table";
 import { createCategoryAction } from "../actions";
 import { listCategories } from "../service";
 import { toOutline } from "../tree";
@@ -6,7 +8,7 @@ import { ActionForm, SubmitButton } from "./action-form";
 import { checkboxLabelClass, inputClass, labelClass, sectionClass } from "./styles";
 
 export function Badge({ children }: { children: React.ReactNode }) {
-  return <span className="rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-900">{children}</span>;
+  return <KitBadge>{children}</KitBadge>;
 }
 
 export function ParentOptions({ categories, excludePathPrefix }: { categories: Awaited<ReturnType<typeof listCategories>>; excludePathPrefix?: string }) {
@@ -14,7 +16,7 @@ export function ParentOptions({ categories, excludePathPrefix }: { categories: A
     .filter((c) => !c.isOther && !c.archivedAt && !(excludePathPrefix && c.path.startsWith(excludePathPrefix)))
     .map((c) => (
       <option key={c.id} value={c.id}>
-        {"  ".repeat(c.depth)}
+        {"  ".repeat(c.depth)}
         {c.name}
       </option>
     ));
@@ -26,9 +28,9 @@ export async function CategoryTree() {
   const outline = toOutline(categories);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-10">
       <section className={sectionClass} aria-labelledby="new-category">
-        <h2 id="new-category" className="text-lg font-semibold">
+        <h2 id="new-category" className="scroll-mt-24 text-lg font-semibold">
           New category
         </h2>
         <ActionForm action={createCategoryAction} label="New category">
@@ -45,7 +47,7 @@ export async function CategoryTree() {
           </label>
           <label className={labelClass}>
             Commission %
-            <input name="commissionRate" type="number" min={0} max={100} step="0.01" placeholder="inherit" className={`${inputClass} w-24`} />
+            <input name="commissionRate" type="number" min={0} max={100} step="0.01" placeholder="inherit" className={`${inputClass} w-28`} />
           </label>
           <label className={checkboxLabelClass}>
             <input type="checkbox" name="requiresLicence" /> Requires licence
@@ -55,41 +57,46 @@ export async function CategoryTree() {
           </label>
           <SubmitButton>Create</SubmitButton>
         </ActionForm>
-        <p className="text-sm text-gray-700">Empty fields are inherited from the parent (top level: 10% commission).</p>
+        <p className="text-sm text-muted">Empty fields are inherited from the parent (top level: 10% commission).</p>
       </section>
 
-      <section aria-labelledby="tree">
-        <h2 id="tree" className="mb-2 text-lg font-semibold">
+      <section aria-labelledby="tree" className="flex flex-col gap-3">
+        <h2 id="tree" className="text-xl font-semibold">
           Category tree
         </h2>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-gray-300">
-              <th scope="col" className="py-1">Category</th>
-              <th scope="col">Commission</th>
-              <th scope="col">Flags</th>
+        <p className="text-sm text-muted">Sub-categories are indented under their parent. Open a category to rename, move or archive it, and to choose the attributes sellers fill in.</p>
+        <Table caption="Category tree">
+          <Thead>
+            <tr>
+              <Th>Category</Th>
+              <Th align="right">Commission</Th>
+              <Th>Flags</Th>
             </tr>
-          </thead>
-          <tbody>
+          </Thead>
+          <Tbody>
             {outline.map((c) => (
-              <tr key={c.id} className={`border-b border-gray-200 ${c.archivedAt ? "text-gray-500" : ""}`}>
-                <td className="py-1" style={{ paddingLeft: `${c.depth * 1.5}rem` }}>
-                  <Link className="underline" href={`/admin/catalog/categories/${c.id}`}>
+              <Tr key={c.id} className={c.archivedAt ? "text-muted" : ""}>
+                <Td className="py-2" style={{ paddingLeft: `${0.75 + c.depth * 1.5}rem` }}>
+                  <Link className={`${c.depth === 0 ? "font-semibold" : "font-medium"} text-jade underline-offset-4 hover:underline`} href={`/admin/catalog/categories/${c.id}`}>
                     {c.name}
                   </Link>
-                </td>
-                <td>{c.commissionRate.toString()}%</td>
-                <td className="flex flex-wrap gap-1 py-1">
-                  {c.isLeaf && <Badge>leaf</Badge>}
-                  {c.isOther && <Badge>Other</Badge>}
-                  {c.requiresLicence && <Badge>licence</Badge>}
-                  {c.requiresExpiry && <Badge>expiry</Badge>}
-                  {c.archivedAt && <Badge>archived</Badge>}
-                </td>
-              </tr>
+                </Td>
+                <Td align="right" className="py-2">
+                  {c.commissionRate.toString()}%
+                </Td>
+                <Td className="py-2">
+                  <span className="flex flex-wrap gap-1">
+                    {c.isLeaf && <Badge>leaf</Badge>}
+                    {c.isOther && <Badge>Other</Badge>}
+                    {c.requiresLicence && <Badge>licence</Badge>}
+                    {c.requiresExpiry && <Badge>expiry</Badge>}
+                    {c.archivedAt && <Badge>archived</Badge>}
+                  </span>
+                </Td>
+              </Tr>
             ))}
-          </tbody>
-        </table>
+          </Tbody>
+        </Table>
       </section>
     </div>
   );

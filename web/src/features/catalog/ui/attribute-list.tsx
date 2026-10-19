@@ -2,14 +2,14 @@ import { addAttributeOptionAction, approveAttributeOptionAction, archiveAttribut
 import { listAttributes } from "../service";
 import { ActionForm, SubmitButton } from "./action-form";
 import { Badge } from "./category-tree";
-import { inputClass, labelClass, sectionClass } from "./styles";
+import { cardClass, inputClass, labelClass, sectionClass } from "./styles";
 
 /** US-021: attributes are defined once; archived ones stay listed and readable. */
 export async function AttributeList() {
   const attributes = await listAttributes();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-10">
       <section className={sectionClass} aria-labelledby="new-attribute">
         <h2 id="new-attribute" className="text-lg font-semibold">
           New attribute
@@ -45,27 +45,27 @@ export async function AttributeList() {
         </ActionForm>
       </section>
 
-      <section aria-labelledby="attributes" className="flex flex-col gap-3">
-        <h2 id="attributes" className="text-lg font-semibold">
+      <section aria-labelledby="attributes" className="flex flex-col gap-4">
+        <h2 id="attributes" className="text-xl font-semibold">
           Attributes
         </h2>
         {attributes.map((a) => (
-          <article key={a.id} className={`${sectionClass} ${a.archivedAt ? "text-gray-600" : ""}`} aria-label={a.name}>
+          <article key={a.id} className={`${cardClass} ${a.archivedAt ? "text-muted" : ""}`} aria-label={a.name}>
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-semibold">{a.name}</h3>
-              <code className="text-sm">{a.key}</code>
+              <h3 className="text-base font-semibold">{a.name}</h3>
+              <code className="rounded-sm bg-surface px-1.5 py-0.5 text-sm">{a.key}</code>
               <Badge>{a.type}</Badge>
               {a.unit && <Badge>{a.unit}</Badge>}
               {a.archivedAt && <Badge>archived</Badge>}
-              <span className="text-sm">used in {a._count.categories} categories</span>
+              <span className="text-sm text-muted">used in {a._count.categories} categories</span>
             </div>
             {a.options.length > 0 && (
               <ul className="flex flex-wrap gap-2 text-sm">
                 {a.options.map((o) => (
-                  <li key={o.id} className="flex items-center gap-1 rounded border border-gray-300 px-2 py-0.5">
+                  <li key={o.id} className="flex items-center gap-2 rounded-md bg-surface px-2.5 py-1">
                     {o.label}
                     {o.status === "pending" && (
-                      <ActionForm action={approveAttributeOptionAction} label={`Approve ${o.label}`} className="inline-flex gap-1">
+                      <ActionForm action={approveAttributeOptionAction} label={`Approve ${o.label}`} className="inline-flex flex-wrap items-center gap-2">
                         <input type="hidden" name="optionId" value={o.id} />
                         <Badge>pending</Badge>
                         <SubmitButton variant="secondary">Approve</SubmitButton>
@@ -76,7 +76,7 @@ export async function AttributeList() {
               </ul>
             )}
             {!a.archivedAt && (
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-x-8 gap-y-4">
                 {(a.type === "enum" || a.type === "multi_enum") && (
                   <ActionForm action={addAttributeOptionAction} label={`Add option to ${a.name}`}>
                     <input type="hidden" name="attributeId" value={a.id} />
