@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 /** Copies a link to the clipboard and says so to screen readers. */
 export function CopyLinkButton({ value, label = "Copy link" }: { value: string; label?: string }) {
@@ -17,14 +18,10 @@ export function CopyLinkButton({ value, label = "Copy link" }: { value: string; 
 
   return (
     <span className="inline-flex items-center gap-2">
-      <button
-        type="button"
-        onClick={copy}
-        className="rounded border border-gray-500 px-3 py-1 font-medium hover:bg-gray-100 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700"
-      >
+      <Button variant="secondary" onClick={copy}>
         {label}
-      </button>
-      <span role="status" className="text-sm">
+      </Button>
+      <span role="status" className="text-sm text-muted">
         {status === "copied" ? "Link copied" : status === "failed" ? "Copy failed: select the link and copy it" : ""}
       </span>
     </span>

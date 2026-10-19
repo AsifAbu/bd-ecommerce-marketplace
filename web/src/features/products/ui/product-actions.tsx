@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
 import { callApi } from "./api-client";
-import { dangerButtonClass, errorTextClass, inputClass, secondaryButtonClass } from "./styles";
+import { dangerButtonClass, dangerButtonCompactClass, errorTextClass, inputClass, secondaryButtonClass, secondaryButtonCompactClass } from "./styles";
 
 /** Activate / deactivate and delete (US-033). `afterDelete` is where to go once deleted. */
 export function ProductActions({
@@ -12,12 +12,15 @@ export function ProductActions({
   title,
   status,
   afterDelete,
+  compact = false,
 }: {
   shopId: string;
   productId: string;
   title: string;
   status: "active" | "inactive";
   afterDelete?: string;
+  /** Dense 36px buttons for a desktop table row. */
+  compact?: boolean;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -39,7 +42,7 @@ export function ProductActions({
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          className={secondaryButtonClass}
+          className={compact ? secondaryButtonCompactClass : secondaryButtonClass}
           disabled={pending}
           aria-label={`${next === "active" ? "Activate" : "Deactivate"} ${title}`}
           onClick={() => run(() => callApi(`${base}/status`, { method: "PUT", json: { status: next } }), () => router.refresh())}
@@ -48,7 +51,7 @@ export function ProductActions({
         </button>
         <button
           type="button"
-          className={dangerButtonClass}
+          className={compact ? dangerButtonCompactClass : dangerButtonClass}
           disabled={pending}
           aria-label={`Delete ${title}`}
           onClick={() => {
@@ -111,9 +114,9 @@ export function StockForm({
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-wrap items-end gap-2">
-      <div className="flex flex-col gap-1">
-        <label htmlFor={id} className="font-medium">
+    <form onSubmit={onSubmit} noValidate className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={id} className="text-sm font-medium text-ink">
           Stock: {label}
         </label>
         <input
@@ -121,7 +124,7 @@ export function StockForm({
           name="stock"
           inputMode="numeric"
           defaultValue={stock}
-          className={`${inputClass} w-32`}
+          className={`${inputClass} w-32 sm:w-40`}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : undefined}
         />
@@ -135,7 +138,7 @@ export function StockForm({
         </p>
       )}
       {saved && (
-        <p role="status" className="text-sm text-green-800">
+        <p role="status" className="toast-in text-sm font-medium text-jade">
           Stock updated
         </p>
       )}

@@ -17,8 +17,13 @@ export {
 export { EmptyState, type EmptyStateProps } from "./empty-state";
 export { controlStyles, FormField, Input, Select, Textarea, type FieldControlProps, type FormFieldProps } from "./form-field";
 export { IconButton, type IconButtonProps } from "./icon-button";
-export { ChoiceChip, type ChoiceChipProps } from "./choice-chip";
+export { Checkbox, Radio } from "./choice";
 export { Notice, type NoticeProps, type NoticeTone } from "./notice";
+export { PageHeader } from "./page-header";
+export { statusTone } from "./status-tone";
+export { RowHeader, Table, Td, Th, tdStyles, thStyles } from "./table";
+export { linkStyles, TextLink } from "./text-link";
+export { ChoiceChip, type ChoiceChipProps } from "./choice-chip";
 export { Pagination, type PaginationProps } from "./pagination";
 export { QuantityStepper, type QuantityStepperProps } from "./quantity-stepper";
 export { discountPercent, Price, type PriceProps } from "./price";

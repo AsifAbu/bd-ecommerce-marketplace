@@ -3,7 +3,8 @@
 import { resultFields, resultValues } from "@/lib/actions";
 import { useActionState, useEffect, useState } from "react";
 import { saveAddressAction } from "../actions";
-import { Field, FormMessage, inputClass, SubmitButton } from "./form-parts";
+import { Checkbox, controlStyles } from "@/components/ui";
+import { Field, FormMessage, SubmitButton } from "./form-parts";
 
 export interface AddressDefaults {
   id?: string;
@@ -56,8 +57,8 @@ function Select({
   // Keep the saved value selectable while its options load.
   const list = value && !options.includes(value) ? [value, ...options] : options;
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={name} className="font-medium">
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={name} className="text-sm font-medium text-ink">
         {label}
       </label>
       <select
@@ -67,7 +68,7 @@ function Select({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         required
-        className={inputClass}
+        className={controlStyles}
         aria-invalid={!!error}
         aria-describedby={error ? `${name}-error` : undefined}
       >
@@ -79,7 +80,7 @@ function Select({
         ))}
       </select>
       {error && (
-        <p id={`${name}-error`} className="text-sm text-red-700">
+        <p id={`${name}-error`} className="text-sm font-medium text-vermilion">
           {error}
         </p>
       )}
@@ -125,6 +126,7 @@ export function AddressFields({
             name={n("phone")}
             type="tel"
             inputMode="numeric"
+            autoComplete="tel-national"
             placeholder="01XXXXXXXXX"
             required
             error={f.phone}
@@ -181,14 +183,13 @@ export function AddressForm({ defaults }: { defaults: AddressDefaults }) {
   const v = { ...defaults, ...resultValues(state) };
 
   return (
-    <form action={action} className="flex flex-col gap-4" noValidate>
+    <form action={action} className="flex flex-col gap-5" noValidate>
       <FormMessage state={state} />
       {defaults.id && <input type="hidden" name="id" value={defaults.id} />}
       <AddressFields defaults={v} errors={f} />
-      <div className="flex items-center gap-2">
-        <input id="isDefault" name="isDefault" type="checkbox" defaultChecked={defaults.isDefault} className="h-5 w-5" />
-        <label htmlFor="isDefault">Use as my default address</label>
-      </div>
+      <Checkbox id="isDefault" name="isDefault" defaultChecked={defaults.isDefault}>
+        Use as my default address
+      </Checkbox>
       <SubmitButton className="self-start">{defaults.id ? "Save address" : "Add address"}</SubmitButton>
     </form>
   );

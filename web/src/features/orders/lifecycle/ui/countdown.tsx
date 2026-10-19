@@ -17,7 +17,7 @@ export function HandoverCountdown({ status, dueAt, initialLabel, initialState }:
     const id = window.setInterval(tick, 30_000);
     return () => window.clearInterval(id);
   }, [status, dueAt]);
-  const tone = view.state === "overdue" ? "text-red-800" : view.state === "due_soon" ? "text-amber-900" : "text-gray-800";
+  const tone = view.state === "overdue" ? "text-vermilion" : view.state === "due_soon" ? "text-gold-ink" : "text-ink";
   return (
     <span className={`text-sm font-semibold ${tone}`} data-testid="handover-countdown">
       {view.label}

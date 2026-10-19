@@ -1,20 +1,23 @@
-import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { requireUser } from "@/lib/auth";
-import { acceptInvite } from "@/features/shops/actions";
 import { ActionForm } from "@/components/action-form";
+import { Container, Notice, PageHeader, TextLink } from "@/components/ui";
+import { FormSkeleton } from "@/features/accounts/ui/auth-shell";
+import { acceptInvite } from "@/features/shops/actions";
 import { guardPage } from "@/features/shops/page-guard";
 import { getAccountEmail } from "@/features/shops/repo";
+import { requireUser } from "@/lib/auth";
+
+export const metadata = { title: "Join a shop as staff" };
 
 export default function InvitePage({ params }: PageProps<"/seller/invite/[token]">) {
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-10">
-      <h1 className="text-3xl font-bold">Join a shop as staff</h1>
-      <Suspense fallback={<p>Loading…</p>}>
+    <Container as="main" className="flex max-w-xl flex-1 flex-col gap-6 py-6 sm:py-10">
+      <PageHeader title="Join a shop as staff" />
+      <Suspense fallback={<FormSkeleton fields={0} />}>
         <Accept params={params} />
       </Suspense>
-    </main>
+    </Container>
   );
 }
 
@@ -25,19 +28,15 @@ async function Accept({ params }: { params: Promise<{ token: string }> }) {
   const account = await getAccountEmail(user.id);
   if (!account?.email || !account.emailVerifiedAt) {
     return (
-      <p role="alert" className="rounded border border-red-700 bg-red-50 px-3 py-2 text-red-800">
+      <Notice tone="error" role="alert" className="leading-6">
         {account?.email ? `Verify your email ${account.email} before accepting this invite.` : "Add your email to your profile and verify it before accepting this invite."}{" "}
-        Open the link we emailed you, or send a new one from{" "}
-        <Link className="underline" href="/account">
-          your account page
-        </Link>
-        . Then open this invite link again.
-      </p>
+        Open the link we emailed you, or send a new one from <TextLink href="/account">your account page</TextLink>. Then open this invite link again.
+      </Notice>
     );
   }
   return (
     <>
-      <p>You are logged in as {user.email ?? user.phone}. Accept the invite to help run this shop.</p>
+      <p className="text-muted">You are logged in as {user.email ?? user.phone}. Accept the invite to help run this shop.</p>
       <ActionForm action={acceptInvite} submitLabel="Accept invite">
         <input type="hidden" name="token" value={token} />
       </ActionForm>

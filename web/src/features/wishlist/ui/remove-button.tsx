@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button } from "@/components/ui";
 
 /** Removes one wishlist item through the JSON API, then refreshes the list. */
 export function RemoveButton({ itemId, title }: { itemId: string; title: string }) {
@@ -24,17 +25,11 @@ export function RemoveButton({ itemId, title }: { itemId: string; title: string 
 
   return (
     <>
-      <button
-        type="button"
-        onClick={remove}
-        disabled={busy}
-        aria-label={`Remove ${title} from wishlist`}
-        className="rounded border border-red-700 px-3 py-1 font-medium text-red-800 hover:bg-red-50 focus:outline-2 focus:outline-offset-2 focus:outline-red-700 disabled:opacity-60"
-      >
+      <Button block variant="secondary" loading={busy} onClick={remove} aria-label={`Remove ${title} from wishlist`}>
         Remove
-      </button>
+      </Button>
       {error && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm font-medium text-vermilion">
           {error}
         </p>
       )}

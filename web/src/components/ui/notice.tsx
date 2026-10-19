@@ -33,7 +33,7 @@ export function Notice({ tone = "info", plain = false, role, className, children
   return (
     <div
       role={role ?? (tone === "error" ? "alert" : "status")}
-      className={cn("flex items-start gap-2.5 rounded-md px-3 py-2.5 text-sm", tones[tone], className)}
+      className={cn("toast-in flex items-start gap-2.5 rounded-md px-3 py-2.5 text-sm", tones[tone], className)}
       {...rest}
     >
       {!plain && <span className="mt-0.5 shrink-0">{icons[tone]}</span>}

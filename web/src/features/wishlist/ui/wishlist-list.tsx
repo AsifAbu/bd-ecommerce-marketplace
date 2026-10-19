@@ -1,5 +1,6 @@
+import { Heart } from "lucide-react";
 import Link from "next/link";
-import { ProductImage } from "@/components/product-image";
+import { buttonStyles, EmptyState, Notice, ProductCard, ProductGrid, TextLink } from "@/components/ui";
 import type { WishlistItemView } from "../service";
 import { MoveToCartButton } from "./move-to-cart-button";
 import { RemoveButton } from "./remove-button";
@@ -10,84 +11,85 @@ import { RemoveButton } from "./remove-button";
  */
 export function WishlistList({ items, moved = false }: { items: WishlistItemView[]; moved?: boolean }) {
   const notice = moved && (
-    <p role="status" className="rounded border border-green-700 bg-green-50 px-3 py-2 text-green-900">
-      Moved to your cart.{" "}
-      <Link className="underline" href="/cart">
-        View cart
-      </Link>
-    </p>
+    <Notice tone="success">
+      Moved to your cart. <TextLink href="/cart">View cart</TextLink>
+    </Notice>
   );
   if (items.length === 0) {
     return (
       <>
         {notice}
-        <EmptyWishlist />
+        <EmptyState
+          icon={<Heart aria-hidden="true" size={24} />}
+          title="Your wishlist is empty"
+          description="Choose Save to wishlist on a product to keep it here for later."
+          action={
+            <Link href="/" className={buttonStyles()}>
+              Start browsing
+            </Link>
+          }
+        />
       </>
     );
   }
   return (
     <>
       {notice}
-      <ul className="flex flex-col gap-4" aria-label="Wishlist items">
+      <ProductGrid label="Wishlist items" className="lg:grid-cols-3 xl:grid-cols-4">
         {items.map((item) => (
           <Item key={item.id} item={item} />
         ))}
-      </ul>
+      </ProductGrid>
     </>
   );
 }
 
-function EmptyWishlist() {
-  return (
-    <p>
-      Your wishlist is empty. Tap <span aria-hidden="true">♡</span> <strong>Save to wishlist</strong> on a product to keep it here.{" "}
-      <Link className="text-blue-800 underline" href="/">
-        Start browsing
-      </Link>
-    </p>
-  );
+/** "Tk 1,850" or "Tk 1,850 – 1,950" back into numbers for the card's price. */
+function pricesOf(text: string): [number, number] {
+  const nums = (text.match(/\d[\d,]*(?:\.\d+)?/g) ?? []).map((n) => Number(n.replace(/,/g, "")));
+  return [nums[0] ?? 0, nums[nums.length - 1] ?? nums[0] ?? 0];
 }
 
 function Item({ item }: { item: WishlistItemView }) {
   const hintId = `move-hint-${item.id}`;
-  const hint = item.moveHint && item.moveHint !== "Out of stock" ? item.moveHint : null; // the status already says it
+  const hint = item.moveHint && item.moveHint !== "Out of stock" ? item.moveHint : null; // the badge already says it
+  const [min, max] = pricesOf(item.priceText);
   return (
-    <li className="flex flex-wrap gap-4 rounded border border-gray-300 p-3">
-      <ProductImage imageId={item.imageId} alt="" className="h-24 w-24 shrink-0 rounded" />
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <Link className="font-semibold text-blue-800 underline" href={item.href}>
-          {item.title}
-        </Link>
-        <p className="text-sm text-gray-700">{item.shopName}</p>
-        {item.variantLabel && <p className="text-sm">{item.variantLabel}</p>}
-        <p className="font-semibold">{item.priceText}</p>
-        <p className={item.status === "in_stock" ? "text-sm text-green-800" : "text-sm font-semibold text-red-800"}>
-          {item.statusLabel}
-        </p>
-      </div>
-      <div className="flex flex-col items-start gap-2">
-        {item.canMoveToCart ? (
-          <MoveToCartButton itemId={item.id} title={item.title} />
-        ) : (
-          <>
-            <button
-              type="button"
-              disabled
-              aria-label={`Move to cart: ${item.title}`}
-              aria-describedby={hint ? hintId : undefined}
-              className="rounded bg-blue-700 px-3 py-1 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Move to cart
-            </button>
-            {hint && (
-              <span id={hintId} className="text-xs text-gray-700">
-                {hint}
-              </span>
-            )}
-          </>
-        )}
-        <RemoveButton itemId={item.id} title={item.title} />
-      </div>
-    </li>
+    <ProductCard
+      href={item.href}
+      title={item.title}
+      imageUrl={item.imageId ? `/api/product-images/${item.imageId}` : null}
+      priceMin={min}
+      priceMax={max}
+      shopName={item.shopName}
+      outOfStock={item.status === "out_of_stock"}
+      action={
+        <div className="flex flex-col gap-2">
+          {item.variantLabel && <p className="text-sm text-muted">{item.variantLabel}</p>}
+          <p className="sr-only">{item.statusLabel}</p>
+          {item.canMoveToCart ? (
+            <MoveToCartButton itemId={item.id} title={item.title} />
+          ) : (
+            <>
+              <button
+                type="button"
+                disabled
+                aria-label={`Move to cart: ${item.title}`}
+                aria-describedby={hint ? hintId : undefined}
+                className={buttonStyles({ block: true })}
+              >
+                Move to cart
+              </button>
+              {hint && (
+                <span id={hintId} className="text-xs text-muted">
+                  {hint}
+                </span>
+              )}
+            </>
+          )}
+          <RemoveButton itemId={item.id} title={item.title} />
+        </div>
+      }
+    />
   );
 }

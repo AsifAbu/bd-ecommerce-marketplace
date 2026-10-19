@@ -22,7 +22,7 @@ export function PackingSlip({ so, backHref }: { so: ShopOrderDetailView; backHre
         </div>
         <div className="flex gap-3 print:hidden">
           <PrintSlipButton />
-          <Link className="self-center text-blue-800 underline" href={backHref}>
+          <Link className="self-center text-jade underline underline-offset-4" href={backHref}>
             Back to the order
           </Link>
         </div>

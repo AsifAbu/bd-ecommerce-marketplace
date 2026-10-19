@@ -1,8 +1,15 @@
+import { Badge, RowHeader, Section, Table, Td, Th, type BadgeTone } from "@/components/ui";
+import { DUE_STATE_LABELS, PAYOUT_METHOD_LABELS, type DueState } from "../ledger";
 import { formatPaisa } from "../money";
 import type { ShopLedger } from "../service";
-import { DueBadge, PayoutTable } from "./admin-payouts";
 
 const date = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { timeZone: "Asia/Dhaka", day: "numeric", month: "short", year: "numeric" });
+
+const DUE_TONE: Record<DueState, BadgeTone> = { paid: "brand", overdue: "sale", due_soon: "warning", upcoming: "neutral" };
+
+function Due({ state }: { state: DueState | null }) {
+  return state ? <Badge tone={DUE_TONE[state]}>{DUE_STATE_LABELS[state]}</Badge> : null;
+}
 
 /**
  * The shop owner's payouts page (US-082; reports come with US-054): cash collected for delivered
@@ -10,88 +17,116 @@ const date = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { timeZo
  */
 export function ShopLedgerView({ ledger }: { ledger: ShopLedger }) {
   const { totals } = ledger;
+  const stats = [
+    { label: "Waiting to be paid", value: formatPaisa(totals.unpaidNet) },
+    { label: "Due within 2 days", value: String(totals.dueSoon) },
+    { label: "Past the 10-day deadline", value: String(totals.overdue) },
+    { label: "Paid so far", value: formatPaisa(totals.paidNet) },
+  ];
   return (
-    <div className="flex flex-col gap-8">
-      <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 rounded border border-gray-300 p-4" aria-label="Payout summary">
-        <dt className="font-medium">Waiting to be paid</dt>
-        <dd>{formatPaisa(totals.unpaidNet)}</dd>
-        <dt className="font-medium">Due within 2 days</dt>
-        <dd>{totals.dueSoon}</dd>
-        <dt className="font-medium">Past the 10-day deadline</dt>
-        <dd>{totals.overdue}</dd>
-        <dt className="font-medium">Paid so far</dt>
-        <dd>{formatPaisa(totals.paidNet)}</dd>
+    <div className="flex flex-col gap-10">
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-5 lg:grid-cols-4" aria-label="Payout summary">
+        {stats.map((s) => (
+          <div key={s.label} className="flex flex-col gap-1">
+            <dt className="text-sm text-muted">{s.label}</dt>
+            <dd className="tabular text-2xl font-semibold">{s.value}</dd>
+          </div>
+        ))}
       </dl>
-      <p className="text-sm">
+      <p className="max-w-prose text-muted">
         The platform collects the cash on delivery and pays you within 10 days, minus commission (no commission on orders placed during the launch offer).{" "}
         {ledger.deliveryChargesTo === "shop" ? "Delivery charges are paid to you, since you book the courier." : "Delivery charges go to the courier."}
       </p>
 
-      <section aria-labelledby="collections-heading" className="flex flex-col gap-3">
-        <h2 id="collections-heading" className="text-xl font-semibold">
-          Cash collections
-        </h2>
+      <Section title="Cash collections" id="collections-heading">
         {ledger.collections.length === 0 ? (
-          <p>No collections yet. A collection is recorded when an order is delivered.</p>
+          <p className="text-muted">No collections yet. A collection is recorded when an order is delivered.</p>
         ) : (
-          <table className="w-full text-left text-sm">
+          <Table label="Cash collections">
+            <caption className="sr-only">Cash collections</caption>
             <thead>
-              <tr className="border-b border-gray-300">
-                <th scope="col" className="py-1">
-                  Order
-                </th>
-                <th scope="col" className="py-1">
-                  Collected
-                </th>
-                <th scope="col" className="py-1 text-right">
-                  Amount
-                </th>
-                <th scope="col" className="py-1 text-right">
-                  Commission
-                </th>
-                <th scope="col" className="py-1 text-right">
-                  You get
-                </th>
-                <th scope="col" className="py-1">
-                  Payout
-                </th>
+              <tr>
+                <Th>Order</Th>
+                <Th>Collected</Th>
+                <Th className="text-right">Amount</Th>
+                <Th className="text-right">Commission</Th>
+                <Th className="text-right">You get</Th>
+                <Th>Payout</Th>
               </tr>
             </thead>
             <tbody>
               {ledger.collections.map((c) => (
-                <tr key={c.id} className="border-b border-gray-100">
-                  <td className="py-1">{c.shopOrderNo}</td>
-                  <td className="py-1">{date(c.collectedAt)}</td>
-                  <td className="py-1 text-right">{formatPaisa(c.amount)}</td>
-                  <td className="py-1 text-right">
+                <tr key={c.id}>
+                  <RowHeader className="whitespace-nowrap">{c.shopOrderNo}</RowHeader>
+                  <Td className="whitespace-nowrap">{date(c.collectedAt)}</Td>
+                  <Td className="tabular whitespace-nowrap text-right">{formatPaisa(c.amount)}</Td>
+                  <Td className="tabular whitespace-nowrap text-right">
                     {formatPaisa(c.commission)}
-                    {c.launchOffer && <span className="block text-xs">launch offer</span>}
-                  </td>
-                  <td className="py-1 text-right font-semibold">{c.payable ? formatPaisa(c.net) : "—"}</td>
-                  <td className="py-1">
+                    {c.launchOffer && <span className="block text-xs text-muted">launch offer</span>}
+                  </Td>
+                  <Td className="tabular whitespace-nowrap text-right font-semibold">{c.payable ? formatPaisa(c.net) : "–"}</Td>
+                  <Td className="min-w-44">
                     {!c.payable ? (
-                      <>Not paid out ({c.shopOrderStatus})</>
+                      <span className="text-muted">Not paid out ({c.shopOrderStatus})</span>
                     ) : c.paidOutAt ? (
                       <>Paid {date(c.paidOutAt)}</>
                     ) : (
-                      <span className="flex flex-wrap items-center gap-2">
-                        Due by {date(c.payoutDueAt)} <DueBadge state={c.dueState} />
+                      <span className="flex flex-col items-start gap-1">
+                        Due by {date(c.payoutDueAt)} <Due state={c.dueState} />
                       </span>
                     )}
-                  </td>
+                  </Td>
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table>
         )}
-      </section>
+      </Section>
 
-      <section aria-labelledby="payouts-heading" className="flex flex-col gap-3">
-        <h2 id="payouts-heading" className="text-xl font-semibold">
-          Payouts
-        </h2>
-        <PayoutTable payouts={ledger.payouts} />
-      </section>
+      <Section title="Payouts" id="payouts-heading">
+        {ledger.payouts.length === 0 ? (
+          <p className="text-muted">No payouts yet.</p>
+        ) : (
+          <Table label="Payouts">
+            <caption className="sr-only">Payouts</caption>
+            <thead>
+              <tr>
+                <Th>Orders</Th>
+                <Th className="text-right">Collected</Th>
+                <Th className="text-right">Commission</Th>
+                <Th className="text-right">Paid to you</Th>
+                <Th>Status</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {ledger.payouts.map((p) => (
+                <tr key={p.id}>
+                  <RowHeader className="min-w-36">
+                    {p.collectionCount} {p.collectionCount === 1 ? "order" : "orders"}
+                    <span className="block text-xs font-normal text-muted">
+                      {date(p.periodStart)} to {date(p.periodEnd)}
+                    </span>
+                  </RowHeader>
+                  <Td className="tabular whitespace-nowrap text-right">{formatPaisa(p.gross)}</Td>
+                  <Td className="tabular whitespace-nowrap text-right">{formatPaisa(p.commission)}</Td>
+                  <Td className="tabular whitespace-nowrap text-right font-semibold">{formatPaisa(p.net)}</Td>
+                  <Td className="min-w-44">
+                    {p.status === "paid" && p.paidAt ? (
+                      <>
+                        Paid {date(p.paidAt)} by {PAYOUT_METHOD_LABELS[p.method as keyof typeof PAYOUT_METHOD_LABELS] ?? p.method}, ref. {p.reference}
+                      </>
+                    ) : p.status === "cancelled" ? (
+                      <>Cancelled{p.cancelReason ? `: ${p.cancelReason}` : ""}</>
+                    ) : (
+                      <>Pending, due by {date(p.dueAt)}</>
+                    )}
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </Section>
     </div>
   );
 }
