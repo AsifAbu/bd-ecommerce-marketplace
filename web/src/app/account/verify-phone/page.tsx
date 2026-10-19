@@ -1,15 +1,17 @@
 import { Suspense } from "react";
+import { PageHeader } from "@/components/ui";
 import { VerifyPhonePage } from "@/features/accounts/ui/account-pages";
-import { Loading, PageShell } from "@/features/accounts/ui/page-shell";
+import { FormSkeleton } from "@/features/accounts/ui/auth-shell";
 
 export const metadata = { title: "Verify your mobile number" };
 
 export default function Page() {
   return (
-    <PageShell title="Verify your mobile number">
-      <Suspense fallback={<Loading />}>
+    <>
+      <PageHeader title="Verify your mobile number" />
+      <Suspense fallback={<FormSkeleton fields={1} />}>
         <VerifyPhonePage />
       </Suspense>
-    </PageShell>
+    </>
   );
 }

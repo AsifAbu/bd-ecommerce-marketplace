@@ -63,12 +63,14 @@ export function VerifyPhoneForms() {
   const [sendState, send] = useActionState(sendPhoneOtpAction, undefined);
   const [verifyState, verify] = useActionState(verifyPhoneAction, undefined);
   return (
-    <div className="flex flex-col gap-6">
-      <form action={send} className="flex flex-col gap-3">
+    <div className="flex flex-col gap-8">
+      <form action={send} className="flex flex-col gap-3" aria-label="Send a code">
         <FormMessage state={sendState} />
-        <SubmitButton className="self-start">Send code by SMS</SubmitButton>
+        <SubmitButton variant={sendState && "ok" in sendState ? "secondary" : "primary"} block>
+          {sendState && "ok" in sendState ? "Send a new code" : "Send code by SMS"}
+        </SubmitButton>
       </form>
-      <form action={verify} className="flex flex-col gap-3" noValidate>
+      <form action={verify} className="flex flex-col gap-5" noValidate aria-label="Enter the code">
         <FormMessage state={verifyState} />
         <Field
           label="6-digit code"
@@ -78,8 +80,9 @@ export function VerifyPhoneForms() {
           maxLength={6}
           required
           error={resultFields(verifyState).code}
+          className="text-center text-2xl font-semibold tabular tracking-[0.35em]"
         />
-        <SubmitButton className="self-start">Verify</SubmitButton>
+        <SubmitButton block>Verify</SubmitButton>
       </form>
     </div>
   );

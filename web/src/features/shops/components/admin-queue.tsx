@@ -111,11 +111,13 @@ export async function AdminQueue() {
     <div className="flex flex-col gap-10">
       <div className="flex flex-col gap-4">
         {waiting === 0 ? (
-          <Notice tone="success" title="Nothing is waiting for review.">
+          <Notice tone="success">
+            <p className="font-semibold">Nothing is waiting for review.</p>
             New applications, licences and upgrade requests will appear here.
           </Notice>
         ) : (
-          <Notice tone="warning" title={`${waiting} ${waiting === 1 ? "item is" : "items are"} waiting for your decision.`}>
+          <Notice tone="warning">
+            <p className="font-semibold">{`${waiting} ${waiting === 1 ? "item is" : "items are"} waiting for your decision.`}</p>
             Applicants cannot sell until a shop is approved. Oldest first.
           </Notice>
         )}

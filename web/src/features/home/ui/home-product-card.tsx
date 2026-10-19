@@ -12,14 +12,15 @@ export function HomeProductCard({ product }: { product: HomeProduct }) {
       priceMin={product.priceMin}
       priceMax={product.priceMax}
       shopName={product.shopName}
+      shopVerified={product.shopVerified}
       rating={product.rating}
     />
   );
 }
 
-export function ProductGrid({ products, label }: { products: HomeProduct[]; label: string }) {
+export function ProductGrid({ products, label, className }: { products: HomeProduct[]; label: string; className?: string }) {
   return (
-    <KitGrid label={label}>
+    <KitGrid label={label} className={className}>
       {products.map((p) => (
         <HomeProductCard key={p.id} product={p} />
       ))}

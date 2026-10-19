@@ -24,7 +24,7 @@ async function Content({ searchParams }: { searchParams: Promise<Record<string, 
   const admin = await adminOrLogin("/admin/reviews");
   if (!admin) {
     return (
-      <Notice tone="danger" role="alert">
+      <Notice tone="error">
         Only Platform Admins can moderate reviews.
       </Notice>
     );

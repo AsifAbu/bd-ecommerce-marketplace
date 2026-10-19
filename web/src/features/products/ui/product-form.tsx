@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { Checkbox } from "@/components/ui";
 import type { CategorySchema, FieldDef } from "@/features/catalog";
 import { callApi } from "./api-client";
 import { buttonClass, errorTextClass, inputClass, secondaryButtonClass } from "./styles";
@@ -34,7 +35,7 @@ const EMPTY_VARIANT: VariantValues = { sku: "", price: "", stock: "", options: {
 
 function Label({ htmlFor, children, required }: { htmlFor: string; children: ReactNode; required?: boolean }) {
   return (
-    <label htmlFor={htmlFor} className="font-medium">
+    <label htmlFor={htmlFor} className="text-sm font-medium text-ink">
       {children}
       {required && <span aria-hidden="true"> *</span>}
     </label>
@@ -68,17 +69,16 @@ function SchemaField({ field, name, error, value, label }: { field: FieldDef; na
   if (field.type === "multi_enum") {
     const selected = new Set(Array.isArray(value) ? (value as string[]) : []);
     return (
-      <fieldset className="flex flex-col gap-1" aria-invalid={error ? true : undefined} aria-describedby={error ? errorId : undefined}>
-        <legend className="font-medium">
+      <fieldset className="flex flex-col gap-1.5" aria-invalid={error ? true : undefined} aria-describedby={error ? errorId : undefined}>
+        <legend className="mb-1 text-sm font-medium text-ink">
           {text}
           {field.required && <span aria-hidden="true"> *</span>}
         </legend>
-        <div className="flex flex-wrap gap-x-4 gap-y-1">
+        <div className="flex flex-wrap gap-x-5">
           {field.options.map((o) => (
-            <label key={o.value} className="flex items-center gap-1">
-              <input type="checkbox" name={name} value={o.value} defaultChecked={selected.has(o.value)} />
+            <Checkbox key={o.value} name={name} value={o.value} defaultChecked={selected.has(o.value)}>
               {o.label}
-            </label>
+            </Checkbox>
           ))}
         </div>
         <ErrorText id={errorId} error={error} />
@@ -120,7 +120,7 @@ function SchemaField({ field, name, error, value, label }: { field: FieldDef; na
     );
   }
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <Label htmlFor={id} required={field.required}>
         {text}
       </Label>
@@ -153,12 +153,12 @@ function PlainField(props: {
     className: inputClass,
   };
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <Label htmlFor={id} required={props.required}>
         {props.label}
       </Label>
       {props.hint && (
-        <p id={`${id}-hint`} className="text-sm text-gray-700">
+        <p id={`${id}-hint`} className="text-sm text-muted">
           {props.hint}
         </p>
       )}
@@ -261,8 +261,8 @@ export function ProductForm({
   const variantError = (i: number, key: string) => errors[`variants.${i}.${key}`];
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4" aria-label={productId ? "Edit product" : "New product"}>
-      <p className="text-sm text-gray-700">
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6" aria-label={productId ? "Edit product" : "New product"}>
+      <p className="text-sm text-muted">
         Fields marked <span aria-hidden="true">*</span>
         <span className="sr-only">with an asterisk</span> are required.
       </p>
@@ -277,7 +277,7 @@ export function ProductForm({
       />
       <PlainField name="description" label="Description" as="textarea" required defaultValue={initial?.description} error={errors.description} />
 
-      <fieldset className="flex flex-col gap-3 rounded border border-gray-300 p-3">
+      <fieldset className="flex flex-col gap-4 rounded-lg border border-line p-4 sm:p-5">
         <legend className="px-1 text-lg font-semibold">Details for {schema.name}</legend>
         {productFields.map((f) => (
           <SchemaField key={f.key} field={f} name={`attr.${f.key}`} value={initial?.attributes[f.key]} error={errors[`attributes.${f.key}`]} />
@@ -289,13 +289,13 @@ export function ProductForm({
           {axes.length ? "Variants" : "Price and stock"}
         </h2>
         {axes.length > 0 && (
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-muted">
             One row per {axes.map((a) => a.name.toLowerCase()).join(" and ")} combination, each with its own price and stock.
           </p>
         )}
         {errors.variants && <p className={errorTextClass}>{errors.variants}</p>}
         {rows.map(({ key, values }, i) => (
-          <fieldset key={key} className="flex flex-col gap-3 rounded border border-gray-300 p-3">
+          <fieldset key={key} className="flex flex-col gap-4 rounded-lg border border-line p-4 sm:p-5">
             <legend className="px-1 font-semibold">{axes.length ? `Variant ${i + 1}` : "Price and stock"}</legend>
             {(variantError(i, "options") || errors[`variants.${i}`]) && (
               <p className={errorTextClass}>{variantError(i, "options") ?? errors[`variants.${i}`]}</p>
@@ -361,12 +361,12 @@ export function ProductForm({
       </section>
 
       {message && (
-        <p ref={alertRef} tabIndex={-1} role="alert" className="font-medium text-red-700">
+        <p ref={alertRef} tabIndex={-1} role="alert" className="toast-in rounded-md bg-vermilion-soft px-3 py-2.5 text-sm font-medium text-vermilion-hover outline-none">
           {message}
         </p>
       )}
       <div>
-        <button type="submit" disabled={pending} className={buttonClass}>
+        <button type="submit" disabled={pending} aria-busy={pending || undefined} className={buttonClass}>
           {pending ? "Saving…" : productId ? "Save changes" : "Create product"}
         </button>
       </div>

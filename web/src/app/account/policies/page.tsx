@@ -1,15 +1,17 @@
 import { Suspense } from "react";
-import { Loading, PageShell } from "@/features/accounts/ui/page-shell";
+import { PageHeader } from "@/components/ui";
+import { ListSkeleton } from "@/features/accounts/ui/auth-shell";
 import { AccountPolicies } from "@/features/policies/ui/account-policies";
 
 export const metadata = { title: "My policy acceptances" };
 
 export default function AccountPoliciesPage() {
   return (
-    <PageShell title="Policies you accepted" wide>
-      <Suspense fallback={<Loading />}>
+    <>
+      <PageHeader title="Policies you accepted" />
+      <Suspense fallback={<ListSkeleton />}>
         <AccountPolicies />
       </Suspense>
-    </PageShell>
+    </>
   );
 }

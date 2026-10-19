@@ -1,15 +1,15 @@
 import { Suspense } from "react";
 import { ResetPasswordForm } from "@/features/accounts/ui/auth-forms";
-import { Loading, PageShell } from "@/features/accounts/ui/page-shell";
+import { AuthShell, FormSkeleton } from "@/features/accounts/ui/auth-shell";
 
 export const metadata = { title: "Choose a new password" };
 
 export default function ResetPasswordPage() {
   return (
-    <PageShell title="Choose a new password">
-      <Suspense fallback={<Loading />}>
+    <AuthShell title="Choose a new password">
+      <Suspense fallback={<FormSkeleton fields={1} />}>
         <ResetPasswordForm />
       </Suspense>
-    </PageShell>
+    </AuthShell>
   );
 }

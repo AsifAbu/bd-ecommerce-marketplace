@@ -34,7 +34,8 @@ async function Content({ searchParams }: { searchParams: Promise<Record<string, 
   return (
     <>
       <aside aria-label="Compliance officer">
-        <Notice tone={officer ? "info" : "warning"} title="Compliance officer">
+        <Notice tone={officer ? "info" : "warning"}>
+          <p className="font-semibold">Compliance officer</p>
           <p>
             {officer ? `${officer} is responsible for complaints.` : "Not named yet: the company must appoint a compliance officer before release (pre-release checklist)."}{" "}
             Digital Commerce Operation Guidelines 2021: every complaint is recorded and resolved within 72 hours, and the customer is informed. Target: 95% or

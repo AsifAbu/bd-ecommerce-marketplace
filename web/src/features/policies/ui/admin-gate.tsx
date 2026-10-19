@@ -13,7 +13,7 @@ export async function AdminGate({ children, callbackUrl }: { children: ReactNode
     if (err instanceof UnauthorizedError) redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
     if (err instanceof ForbiddenError) {
       return (
-        <Notice tone="danger" role="alert">
+        <Notice tone="error">
           This page is for the Platform Admin only.
         </Notice>
       );

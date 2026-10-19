@@ -37,13 +37,13 @@ describe("loadHome", () => {
     expect(data.arrivals).toHaveLength(1);
   });
 
-  it("builds one row per top category, biggest first, limited to four rows", async () => {
+  it("builds one row per top category, biggest first, limited to three rows", async () => {
     const tree = [cat("e", "Electronics", 5), cat("b", "Books", 9), cat("f", "Fashion", 7), cat("m", "Medicine", 1), cat("h", "Home", 2)];
     const productsUnder = vi.fn(async (id: string) => [product(`${id}-1`)]);
     const data = await loadHome(deps({ categoryTree: async () => tree, productsUnder }));
     expect(data.categories).toHaveLength(5);
-    expect(data.rows.map((r) => r.category.slug)).toEqual(["b", "f", "e", "h"]);
-    expect(productsUnder).toHaveBeenCalledTimes(4);
+    expect(data.rows.map((r) => r.category.slug)).toEqual(["b", "f", "e"]);
+    expect(productsUnder).toHaveBeenCalledTimes(3);
     expect(data.rows[0].products[0].id).toBe("b-1");
   });
 
@@ -59,6 +59,6 @@ describe("loadHome", () => {
     const newArrivals = vi.fn(async () => [product("n")]);
     const data = await loadHome(deps({ categoryTree: async () => [cat("b", "Books", 1)], newArrivals, featuredShops: async () => shops }));
     expect(data.shops).toEqual(shops);
-    expect(newArrivals).toHaveBeenCalledWith(8);
+    expect(newArrivals).toHaveBeenCalledWith(10);
   });
 });

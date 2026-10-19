@@ -1,5 +1,6 @@
 import { StatusBadge } from "@/components/admin/status";
-import { Button, EmptyState, FormField, Input, Notice, Table, Tbody, Td, Th, Thead, Tr } from "@/components/ui";
+import { Button, EmptyState, FormField, Input, Notice } from "@/components/ui";
+import { Table, Tbody, Td, Th, Thead, Tr } from "@/components/admin/data-table";
 import { adminUserAction } from "../actions";
 import { adminOrLogin } from "../page-guards";
 import { adminUsers } from "../services";
@@ -21,7 +22,7 @@ export async function AdminUsersContent({ searchParams }: { searchParams: Search
   const admin = await adminOrLogin("/admin/users");
   if (!admin) {
     return (
-      <Notice tone="danger" role="alert">
+      <Notice tone="error">
         Not allowed. This page is for Platform Admins only.
       </Notice>
     );

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { ProductImage } from "@/components/product-image";
+import { ProductThumb } from "@/components/product-thumb";
+import { Button, buttonStyles, ChoiceChip, cn, EmptyState, Notice, QuantityStepper } from "@/components/ui";
 import { describeDelivery, type DeliveryZone } from "@/lib/delivery";
 import { setDeliveryZoneAction } from "../actions";
 import { DELIVERY_ZONES, MAX_LINE_QUANTITY, tk, ZONE_LABELS, type Cart, type CartLine, type Readiness, type ShopGroup, type ZoneSource } from "../model";
@@ -13,11 +14,10 @@ import { DELIVERY_ZONES, MAX_LINE_QUANTITY, tk, ZONE_LABELS, type Cart, type Car
  * delivery charge and free-delivery hint, quantity controls, remove, save for later, price-change
  * notices, the saved list and the totals. Every control is a native button or input (keyboard).
  * Changes go through the JSON API, then the server-rendered cart is refreshed.
+ *
+ * Layout: one column on phones with the order summary pinned above the tab bar; from lg the
+ * summary is a sticky panel beside the list.
  */
-
-const btn =
-  "rounded border px-3 py-1 text-sm font-medium focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-60";
-const primary = "rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700";
 
 type Patch = { quantity?: number; savedForLater?: boolean; acknowledgePrice?: boolean };
 
@@ -79,79 +79,79 @@ export function CartView({
   const empty = cart.groups.length === 0 && cart.unavailable.length === 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <p role="status" aria-live="polite" className="sr-only">
         {status}
       </p>
 
-      <fieldset className="flex flex-col gap-2 rounded border border-gray-300 p-4">
-        <legend className="px-1 font-semibold">Delivery area</legend>
-        <div className="flex flex-wrap gap-4">
-          {DELIVERY_ZONES.map((z) => (
-            <label key={z} className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="delivery-zone"
-                value={z}
-                checked={chosenZone === z}
-                onChange={() => chooseZone(z)}
-                disabled={pending}
-                className="accent-blue-700"
-              />
-              {ZONE_LABELS[z]}
-            </label>
-          ))}
+      {empty && cart.saved.length === 0 ? (
+        <EmptyState
+          title="Your cart is empty"
+          description="Find something you like and add it here. Items from different shops can share one cart."
+          action={
+            <Link className={buttonStyles({ variant: "primary" })} href="/">
+              Start shopping
+            </Link>
+          }
+        />
+      ) : (
+        <div className="grid items-start gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,1fr)_21rem]">
+          <div className="flex min-w-0 flex-col gap-10 lg:col-start-1 lg:row-start-1">
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-2 text-sm font-medium text-ink">Delivery area</legend>
+              <div className="flex flex-wrap gap-2">
+                {DELIVERY_ZONES.map((z) => (
+                  <ChoiceChip key={z} name="delivery-zone" value={z} checked={chosenZone === z} onChange={() => chooseZone(z)} disabled={pending}>
+                    {ZONE_LABELS[z]}
+                  </ChoiceChip>
+                ))}
+              </div>
+              <p className="text-sm text-muted">
+                {zone.source === "address"
+                  ? "Based on your default address. Change it here to compare."
+                  : zone.source === "chosen"
+                    ? "You chose this area. You give the full address at checkout."
+                    : "Choose where your order goes; delivery charges depend on it."}
+              </p>
+            </fieldset>
+
+            {empty && <EmptyState title="Nothing to order right now" description="Your saved items are below. Move one back to your cart to buy it." />}
+
+            {cart.groups.map((group) => (
+              <ShopSection key={group.shop.id} group={group} {...lineProps} />
+            ))}
+
+            {cart.unavailable.length > 0 && (
+              <section aria-labelledby="unavailable-heading" className="flex flex-col gap-3">
+                <h2 id="unavailable-heading" className="text-lg">
+                  Can&apos;t be ordered now
+                </h2>
+                <p className="text-sm text-muted">These items are not in your totals and won&apos;t be ordered.</p>
+                <ul className="flex flex-col divide-y divide-line">
+                  {cart.unavailable.map((line) => (
+                    <LineItem key={`${line.id}:${line.quantity}`} line={line} {...lineProps} />
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {cart.saved.length > 0 && (
+              <section aria-labelledby="saved-heading" className="flex flex-col gap-3">
+                <h2 id="saved-heading" className="text-lg">
+                  Saved for later ({cart.saved.length})
+                </h2>
+                <p className="text-sm text-muted">Not in your cart totals. Move an item back to buy it.</p>
+                <ul className="flex flex-col divide-y divide-line" aria-label="Saved for later">
+                  {cart.saved.map((line) => (
+                    <LineItem key={`${line.id}:${line.quantity}`} line={line} {...lineProps} />
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
+
+          {cart.groups.length > 0 && <Summary cart={cart} readiness={readiness} />}
         </div>
-        <p className="text-sm text-gray-700">
-          {zone.source === "address"
-            ? "Based on your default address. Change it here to compare."
-            : zone.source === "chosen"
-              ? "You chose this area. You give the full address at checkout."
-              : "Choose where your order goes; delivery charges depend on it."}
-        </p>
-      </fieldset>
-
-      {empty && (
-        <p>
-          Your cart is empty.{" "}
-          <Link className="text-blue-800 underline" href="/">
-            Start shopping
-          </Link>
-        </p>
-      )}
-
-      {cart.groups.map((group) => (
-        <ShopSection key={group.shop.id} group={group} {...lineProps} />
-      ))}
-
-      {cart.unavailable.length > 0 && (
-        <section aria-labelledby="unavailable-heading" className="flex flex-col gap-3 rounded border border-red-300 p-4">
-          <h2 id="unavailable-heading" className="text-xl font-semibold">
-            Can&apos;t be ordered now
-          </h2>
-          <p className="text-sm">These items are not in your totals and won&apos;t be ordered.</p>
-          <ul className="flex flex-col gap-4">
-            {cart.unavailable.map((line) => (
-              <LineItem key={`${line.id}:${line.quantity}`} line={line} {...lineProps} />
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {cart.groups.length > 0 && <Summary cart={cart} readiness={readiness} />}
-
-      {cart.saved.length > 0 && (
-        <section aria-labelledby="saved-heading" className="flex flex-col gap-3 rounded border border-gray-300 p-4">
-          <h2 id="saved-heading" className="text-xl font-semibold">
-            Saved for later ({cart.saved.length})
-          </h2>
-          <p className="text-sm">Not in your cart totals. Move an item back to buy it.</p>
-          <ul className="flex flex-col gap-4" aria-label="Saved for later">
-            {cart.saved.map((line) => (
-              <LineItem key={`${line.id}:${line.quantity}`} line={line} {...lineProps} />
-            ))}
-          </ul>
-        </section>
       )}
     </div>
   );
@@ -166,42 +166,54 @@ interface LineHandlers {
 
 function ShopSection({ group, ...handlers }: { group: ShopGroup } & LineHandlers) {
   const headingId = `shop-${group.shop.id}`;
+  const progress =
+    group.freeDeliveryThreshold && group.amountForFreeDelivery !== null
+      ? Math.min(100, Math.round((group.subtotal / group.freeDeliveryThreshold) * 100))
+      : null;
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3 rounded border border-gray-300 p-4">
-      <h2 id={headingId} className="text-xl font-semibold">
-        <Link className="text-blue-800 underline" href={group.shop.href}>
+    <section aria-labelledby={headingId} className="flex flex-col gap-1">
+      <h2 id={headingId} className="text-lg">
+        <Link className="underline-offset-4 hover:underline" href={group.shop.href}>
           {group.shop.name}
         </Link>
       </h2>
-      <ul className="flex flex-col gap-4" aria-label={`Items from ${group.shop.name}`}>
+      <ul className="flex flex-col divide-y divide-line" aria-label={`Items from ${group.shop.name}`}>
         {group.lines.map((line) => (
           <LineItem key={`${line.id}:${line.quantity}`} line={line} {...handlers} />
         ))}
       </ul>
-      <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-gray-200 pt-3" aria-label={`${group.shop.name} order`}>
-        <dt>Subtotal ({group.itemCount} {group.itemCount === 1 ? "item" : "items"})</dt>
-        <dd className="text-right">{tk(group.subtotal)}</dd>
-        <dt>Delivery</dt>
-        <dd className="text-right">
+      <dl className="mt-1 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5 border-t border-line pt-4 text-sm" aria-label={`${group.shop.name} order`}>
+        <dt className="text-muted">
+          Subtotal ({group.itemCount} {group.itemCount === 1 ? "item" : "items"})
+        </dt>
+        <dd className="tabular text-right">{tk(group.subtotal)}</dd>
+        <dt className="text-muted">Delivery</dt>
+        <dd className="tabular text-right">
           {group.freeDelivery ? (
             <>
-              <s className="text-gray-600">{tk(group.delivery.total)}</s> <strong>Free delivery</strong>
+              <s className="text-muted">{tk(group.delivery.total)}</s> <strong className="font-semibold text-jade">Free delivery</strong>
             </>
           ) : (
             describeDelivery(group.delivery)
           )}
         </dd>
         <dt className="font-semibold">Shop total</dt>
-        <dd className="text-right font-semibold">{tk(group.total)}</dd>
+        <dd className="tabular text-right font-semibold">{tk(group.total)}</dd>
       </dl>
       {group.amountForFreeDelivery !== null && (
-        <p className="text-sm text-green-900">
-          Add {tk(group.amountForFreeDelivery)} more from this shop for free delivery (orders of {tk(group.freeDeliveryThreshold!)} or
-          more).
-        </p>
+        <div className="mt-2 flex flex-col gap-1.5">
+          <p className="text-sm text-jade-hover">
+            Add {tk(group.amountForFreeDelivery)} more from this shop for free delivery (orders of {tk(group.freeDeliveryThreshold!)} or more).
+          </p>
+          {progress !== null && (
+            <div aria-hidden="true" className="h-1 overflow-hidden rounded-sm bg-surface">
+              <div className="h-full rounded-sm bg-jade transition-[width] duration-[var(--duration-slow)] ease-[var(--ease-out)]" style={{ width: `${progress}%` }} />
+            </div>
+          )}
+        </div>
       )}
       {group.freeDelivery && (
-        <p className="text-sm text-green-900">This shop delivers free for orders of {tk(group.freeDeliveryThreshold!)} or more.</p>
+        <p className="mt-2 text-sm text-jade-hover">This shop delivers free for orders of {tk(group.freeDeliveryThreshold!)} or more.</p>
       )}
     </section>
   );
@@ -227,94 +239,81 @@ function LineItem({ line, busy, messages, patch, remove }: { line: CartLine } & 
   }
 
   return (
-    <li className="flex flex-wrap gap-4">
-      <ProductImage imageId={line.imageId} alt="" className="h-20 w-20 shrink-0 rounded" />
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <Link className="font-semibold text-blue-800 underline" href={line.href}>
-          {line.title}
-        </Link>
-        {line.variantLabel && <p className="text-sm">{line.variantLabel}</p>}
-        <p>
-          {tk(line.unitPrice)} each
-          {orderable && !line.savedForLater && <span className="text-gray-700"> · {tk(line.lineTotal)}</span>}
-        </p>
-        {line.savedForLater && !orderable && <p className="text-sm font-semibold text-red-800">{line.status === "out_of_stock" ? "Out of stock" : "No longer available"}</p>}
-        {line.notices.map((n) => (
-          <p
-            key={n}
-            className={`text-sm ${line.priceChanged && n.startsWith("The price") ? "rounded border border-amber-600 bg-amber-50 px-2 py-1 text-amber-950" : orderable ? "text-gray-800" : "font-semibold text-red-800"}`}
-          >
-            {n}
-          </p>
-        ))}
-        {line.priceChanged && orderable && !line.savedForLater && (
-          <div>
-            <button type="button" className={`${btn} border-amber-700`} disabled={disabled} onClick={() => patch(line, { acknowledgePrice: true })} aria-label={`Accept new price: ${line.title}`}>
-              Accept new price
-            </button>
+    <li className="flex gap-4 py-5">
+      <Link href={line.href} tabIndex={-1} aria-hidden="true" className="shrink-0">
+        <ProductThumb
+          src={line.imageId ? `/api/product-images/${encodeURIComponent(line.imageId)}` : null}
+          title={line.title}
+          decorative
+          className="aspect-[4/5] w-20 rounded-md sm:w-24"
+        />
+      </Link>
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <Link className="line-clamp-2 font-medium underline-offset-4 hover:underline" href={line.href}>
+              {line.title}
+            </Link>
+            {line.variantLabel && <p className="text-sm text-muted">{line.variantLabel}</p>}
           </div>
+          {orderable && !line.savedForLater ? (
+            <p className="tabular shrink-0 text-right font-semibold">{tk(line.lineTotal)}</p>
+          ) : (
+            <p className="tabular shrink-0 text-right text-muted">{tk(line.unitPrice)}</p>
+          )}
+        </div>
+        {orderable && !line.savedForLater && line.quantity > 1 && <p className="tabular text-sm text-muted">{tk(line.unitPrice)} each</p>}
+        {line.savedForLater && !orderable && (
+          <p className="text-sm font-medium text-vermilion">{line.status === "out_of_stock" ? "Out of stock" : "No longer available"}</p>
         )}
-        {message && (
-          <p className={`text-sm ${message.error ? "font-semibold text-red-800" : "text-green-900"}`}>{message.text}</p>
+        {line.notices.map((n) =>
+          line.priceChanged && n.startsWith("The price") ? (
+            <Notice key={n} tone="warning" className="items-center">
+              {n}
+            </Notice>
+          ) : (
+            <p key={n} className={cn("text-sm", orderable ? "text-muted" : "font-medium text-vermilion")}>
+              {n}
+            </p>
+          ),
         )}
-      </div>
+        {message && <p className={cn("text-sm", message.error ? "font-medium text-vermilion" : "text-muted")}>{message.text}</p>}
 
-      <div className="flex flex-col items-start gap-2">
-        {orderable && !line.savedForLater && (
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              className={`${btn} border-gray-500`}
-              aria-label={`Decrease quantity of ${line.title}`}
-              disabled={disabled || line.quantity <= 1}
-              onClick={() => commit(line.quantity - 1)}
-            >
-              −
-            </button>
-            <label htmlFor={qtyId} className="sr-only">
-              Quantity of {line.title}
-            </label>
-            <input
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          {orderable && !line.savedForLater && (
+            <QuantityStepper
               id={qtyId}
-              type="number"
-              inputMode="numeric"
+              label={`Quantity of ${line.title}`}
+              hideLabel
+              value={qty}
               min={1}
               max={max}
-              value={qty}
               disabled={disabled}
-              onChange={(e) => setQty(e.target.value)}
-              onBlur={() => commit(Number(qty))}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  commit(Number(qty));
-                }
-              }}
-              className="w-16 rounded border border-gray-500 px-2 py-1 text-center"
+              onChange={setQty}
+              onStep={commit}
+              onCommit={commit}
+              decreaseLabel={`Decrease quantity of ${line.title}`}
+              increaseLabel={`Increase quantity of ${line.title}`}
             />
-            <button
-              type="button"
-              className={`${btn} border-gray-500`}
-              aria-label={`Increase quantity of ${line.title}`}
-              disabled={disabled}
-              onClick={() => commit(line.quantity + 1)}
-            >
-              +
-            </button>
-          </div>
-        )}
-        {line.savedForLater ? (
-          <button type="button" className={`${btn} border-blue-700 text-blue-800`} disabled={disabled} onClick={() => patch(line, { savedForLater: false })} aria-label={`Move to cart: ${line.title}`}>
-            Move to cart
-          </button>
-        ) : (
-          <button type="button" className={`${btn} border-gray-500`} disabled={disabled} onClick={() => patch(line, { savedForLater: true })} aria-label={`Save for later: ${line.title}`}>
-            Save for later
-          </button>
-        )}
-        <button type="button" className={`${btn} border-red-700 text-red-800`} disabled={disabled} onClick={() => remove(line)} aria-label={`Remove: ${line.title}`}>
-          Remove
-        </button>
+          )}
+          {line.priceChanged && orderable && !line.savedForLater && (
+            <Button variant="secondary" disabled={disabled} onClick={() => patch(line, { acknowledgePrice: true })} aria-label={`Accept new price: ${line.title}`}>
+              Accept new price
+            </Button>
+          )}
+          {line.savedForLater ? (
+            <Button variant="secondary" disabled={disabled} onClick={() => patch(line, { savedForLater: false })} aria-label={`Move to cart: ${line.title}`}>
+              Move to cart
+            </Button>
+          ) : (
+            <Button variant="ghost" className="px-2 text-sm text-muted hover:text-ink" disabled={disabled} onClick={() => patch(line, { savedForLater: true })} aria-label={`Save for later: ${line.title}`}>
+              Save for later
+            </Button>
+          )}
+          <Button variant="ghost" className="px-2 text-sm text-muted hover:text-vermilion" disabled={disabled} onClick={() => remove(line)} aria-label={`Remove: ${line.title}`}>
+            Remove
+          </Button>
+        </div>
       </div>
     </li>
   );
@@ -323,33 +322,39 @@ function LineItem({ line, busy, messages, patch, remove }: { line: CartLine } & 
 function Summary({ cart, readiness }: { cart: Cart; readiness: Readiness }) {
   const shops = cart.groups.length;
   return (
-    <section aria-labelledby="summary-heading" className="flex flex-col gap-3 rounded border-2 border-gray-400 p-4">
-      <h2 id="summary-heading" className="text-xl font-semibold">
+    <section
+      aria-labelledby="summary-heading"
+      className={cn(
+        // Phones: pinned above the tab bar, full width. Desktop: a sticky quiet panel beside the list.
+        "sticky bottom-[var(--tabbar-space)] z-10 -mx-4 border-t border-line bg-paper px-4 py-3 sm:-mx-6 sm:px-6",
+        "lg:bottom-auto lg:top-24 lg:col-start-2 lg:row-start-1 lg:mx-0 lg:rounded-lg lg:border-0 lg:bg-surface lg:p-6",
+        "max-lg:grid max-lg:grid-cols-[1fr_auto] max-lg:items-center max-lg:gap-x-4 max-lg:gap-y-2 lg:flex lg:flex-col lg:gap-4",
+      )}
+    >
+      <h2 id="summary-heading" className="text-lg max-lg:sr-only">
         Order summary
       </h2>
-      <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
-        <dt>Items ({cart.itemCount})</dt>
-        <dd className="text-right">{tk(cart.subtotal)}</dd>
-        <dt>
+      <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm lg:text-base">
+        <dt className="text-muted">Items ({cart.itemCount})</dt>
+        <dd className="tabular text-right">{tk(cart.subtotal)}</dd>
+        <dt className="text-muted">
           Delivery ({shops} {shops === 1 ? "shop" : "shops"}, {ZONE_LABELS[cart.zone]})
         </dt>
-        <dd className="text-right">{tk(cart.deliveryTotal)}</dd>
-        <dt className="text-lg font-bold">Total</dt>
-        <dd className="text-right text-lg font-bold">{tk(cart.grandTotal)}</dd>
+        <dd className="tabular text-right">{tk(cart.deliveryTotal)}</dd>
+        <dt className="font-semibold lg:text-lg">Total</dt>
+        <dd className="tabular text-right font-semibold lg:text-lg">{tk(cart.grandTotal)}</dd>
       </dl>
-      <p className="text-sm text-gray-700">
-        Each shop ships its own order with its own delivery charge. Pay cash on delivery.
-      </p>
+      <p className="text-sm text-muted max-lg:hidden">Each shop ships its own order with its own delivery charge. Pay cash on delivery.</p>
       {readiness.ready ? (
-        <Link href="/checkout" className={`${primary} self-start`}>
+        <Link href="/checkout" className={buttonStyles({ size: "lg", block: true })}>
           Checkout
         </Link>
       ) : (
         <>
-          <button type="button" disabled aria-describedby="checkout-blocked" className={`${primary} self-start disabled:cursor-not-allowed disabled:opacity-60`}>
+          <Button size="lg" block disabled aria-describedby="checkout-blocked">
             Checkout
-          </button>
-          <ul id="checkout-blocked" className="text-sm font-semibold text-amber-900">
+          </Button>
+          <ul id="checkout-blocked" className="text-sm font-medium text-gold-ink max-lg:col-span-2">
             {readiness.reasons.map((r) => (
               <li key={r}>{r}</li>
             ))}

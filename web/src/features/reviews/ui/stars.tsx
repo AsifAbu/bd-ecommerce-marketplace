@@ -1,13 +1,14 @@
+import { Star } from "lucide-react";
+
 /** Star rating for display: the stars are decorative, the label is what screen readers read. */
 export function Stars({ value, className = "" }: { value: number; className?: string }) {
   const full = Math.round(value);
   const label = `${Number.isInteger(value) ? value : value.toFixed(1)} out of 5 stars`;
   return (
-    <span role="img" aria-label={label} className={`whitespace-nowrap text-amber-700 ${className}`}>
-      <span aria-hidden="true">
-        {"★".repeat(full)}
-        <span className="text-gray-400">{"★".repeat(5 - full)}</span>
-      </span>
+    <span role="img" aria-label={label} className={`inline-flex items-center gap-0.5 whitespace-nowrap ${className}`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star key={n} aria-hidden="true" size={14} className={n <= full ? "fill-gold text-gold" : "text-edge/60"} />
+      ))}
     </span>
   );
 }

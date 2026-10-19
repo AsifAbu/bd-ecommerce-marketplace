@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/page-header";
-import { Notice, Table, Tbody, Td, Th, Thead, Tr } from "@/components/ui";
+import { Notice } from "@/components/ui";
+import { Table, Tbody, Td, Th, Thead, Tr } from "@/components/admin/data-table";
 import {
   addOtherLeafAction,
   archiveCategoryAction,
@@ -25,7 +26,7 @@ export async function CategoryDetail({ id }: { id: Promise<string> }) {
   ]);
   if (!category) {
     return (
-      <Notice tone="danger" role="alert">
+      <Notice tone="error">
         Category not found.
       </Notice>
     );

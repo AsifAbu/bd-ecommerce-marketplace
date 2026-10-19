@@ -2,35 +2,42 @@ import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
 import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "./cn";
 
-export type NoticeTone = "info" | "success" | "warning" | "danger";
+export type NoticeTone = "info" | "success" | "warning" | "error";
 
-const tones: Record<NoticeTone, { box: string; icon: typeof Info }> = {
-  info: { box: "bg-surface text-ink", icon: Info },
-  success: { box: "bg-jade-soft text-jade-hover", icon: CircleCheck },
-  warning: { box: "bg-gold/15 text-gold-ink", icon: TriangleAlert },
-  danger: { box: "bg-vermilion-soft text-vermilion-hover", icon: CircleAlert },
+const tones: Record<NoticeTone, string> = {
+  info: "bg-surface text-ink",
+  success: "bg-jade-soft text-jade-hover",
+  warning: "bg-gold/15 text-gold-ink",
+  error: "bg-vermilion-soft text-vermilion-hover",
 };
 
-export interface NoticeProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
+const icons: Record<NoticeTone, ReactNode> = {
+  info: <Info aria-hidden="true" size={18} />,
+  success: <CircleCheck aria-hidden="true" size={18} />,
+  warning: <TriangleAlert aria-hidden="true" size={18} />,
+  error: <CircleAlert aria-hidden="true" size={18} />,
+};
+
+export interface NoticeProps extends HTMLAttributes<HTMLDivElement> {
+  /** info (neutral), success, warning (price changed, something to check), error (what to fix). Default info. */
   tone?: NoticeTone;
-  /** Short bold lead-in. */
-  title?: string;
-  children?: ReactNode;
+  /** Hide the leading icon. */
+  plain?: boolean;
 }
 
 /**
- * A quiet message block with an icon: the tone is also stated by the icon shape and the words, never
- * by colour alone. Use role="alert" for errors that appear after an action, role="status" for results.
+ * A short message in a quiet tinted panel, from palette tokens only. Errors default to role="alert",
+ * everything else to role="status". Say what happened and what to do next.
  */
-export function Notice({ tone = "info", title, className, children, ...rest }: NoticeProps) {
-  const { box, icon: Icon } = tones[tone];
+export function Notice({ tone = "info", plain = false, role, className, children, ...rest }: NoticeProps) {
   return (
-    <div className={cn("flex items-start gap-3 rounded-lg p-4 text-sm", box, className)} {...rest}>
-      <Icon aria-hidden="true" size={20} className="mt-0.5 shrink-0" />
-      <div className="flex min-w-0 flex-col gap-1">
-        {title && <p className="font-semibold">{title}</p>}
-        {children}
-      </div>
+    <div
+      role={role ?? (tone === "error" ? "alert" : "status")}
+      className={cn("toast-in flex items-start gap-2.5 rounded-md px-3 py-2.5 text-sm", tones[tone], className)}
+      {...rest}
+    >
+      {!plain && <span className="mt-0.5 shrink-0">{icons[tone]}</span>}
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }

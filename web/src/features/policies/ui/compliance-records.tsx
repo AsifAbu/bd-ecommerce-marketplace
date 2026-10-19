@@ -1,4 +1,5 @@
-import { Badge, Notice, Table, Tbody, Td, Th, Thead, Tr } from "@/components/ui";
+import { Badge, Notice } from "@/components/ui";
+import { Table, Tbody, Td, Th, Thead, Tr } from "@/components/admin/data-table";
 import { getConfig, TEST_DBID_PLACEHOLDER } from "@/lib/config";
 import { RETENTION_RULES, RETENTION_YEARS } from "@/lib/retention";
 
@@ -16,13 +17,14 @@ export function ComplianceRecords() {
           Shown in the footer of every page: <strong data-testid="admin-dbid">{dbid ?? "not set"}</strong>
         </p>
         {placeholder && (
-          <Notice tone="warning" role="note" title="This is the test placeholder.">
+          <Notice tone="warning" role="note">
+            <p className="font-semibold">This is the test placeholder.</p>
             Before release, register the DBID and set the <code>DBID</code> environment variable (pre-release checklist). The app refuses to start in
             production without it.
           </Notice>
         )}
         {!dbid && appMode === "production" && (
-          <Notice tone="danger" role="alert">
+          <Notice tone="error">
             DBID is missing. Set the DBID environment variable.
           </Notice>
         )}

@@ -33,6 +33,16 @@ export function optionAvailable(
   );
 }
 
+/**
+ * Units in stock behind an option, counting only variants that agree with what is chosen on the
+ * other axes. Shown as "n left" on the chip when the stock is low.
+ */
+export function optionStock(variants: VariantView[], axes: AxisView[], selected: Selection, axisKey: string, value: string): number {
+  return variants
+    .filter((v) => v.options[axisKey] === value && axes.every((a) => a.key === axisKey || selected[a.key] === undefined || v.options[a.key] === selected[a.key]))
+    .reduce((sum, v) => sum + Math.max(0, v.stock), 0);
+}
+
 /** Stock line under the price. */
 export function stockText(variant: VariantView | null, axes: AxisView[], variants: VariantView[]): string {
   if (variant) return variant.stock > 0 ? `In stock: ${variant.stock} available` : "Out of stock";

@@ -2,7 +2,8 @@
 
 import { createContext, startTransition, use, useActionState, useId, type ReactNode } from "react";
 import { resultFields, type ActionResult } from "@/lib/actions";
-import { buttonClass, dangerButtonClass, inputClass } from "./form-styles";
+import { Notice } from "./ui/notice";
+import { buttonClass, dangerButtonClass, dangerOutlineButtonClass, inputClass } from "./form-styles";
 
 type Action = (prev: ActionResult, formData: FormData) => Promise<ActionResult>;
 
@@ -28,7 +29,7 @@ export function ActionForm({
   submitLabel?: string;
   children?: ReactNode;
   className?: string;
-  variant?: "primary" | "danger";
+  variant?: "primary" | "danger" | "danger-outline";
   /** Accessible name of the form. */
   label?: string;
   /** List field errors under the message (for forms without <Field>). */
@@ -61,16 +62,16 @@ export function ActionForm({
       <FieldErrors value={fields}>{children}</FieldErrors>
       {submitLabel && (
         <div>
-          <button type="submit" disabled={pending} className={variant === "danger" ? dangerButtonClass : buttonClass}>
+          <button type="submit" disabled={pending} className={variant === "danger" ? dangerButtonClass : variant === "danger-outline" ? dangerOutlineButtonClass : buttonClass}>
             {pending ? <><span aria-hidden="true" className="spinner" />Please wait…</> : submitLabel}
           </button>
         </div>
       )}
       {state && "error" in state && (
-        <div role="alert" className="status-in w-full text-sm font-medium text-vermilion">
+        <Notice tone="error" className="w-full">
           <p>{state.error.message}</p>
           {listFieldErrors && Object.keys(fields).length > 0 && (
-            <ul className="list-disc pl-5 font-normal">
+            <ul className="mt-1 list-disc pl-5 font-normal">
               {Object.entries(fields).map(([field, message]) => (
                 <li key={field}>
                   {field}: {message}
@@ -78,12 +79,12 @@ export function ActionForm({
               ))}
             </ul>
           )}
-        </div>
+        </Notice>
       )}
       {state && "ok" in state && (
-        <p role="status" className="status-in w-full text-sm font-medium text-jade">
+        <Notice tone="success" className="w-full">
           {state.message}
-        </p>
+        </Notice>
       )}
     </form>
   );
@@ -143,7 +144,7 @@ export function Field(props: FieldProps) {
   }
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-sm font-medium text-ink">
         {props.label}
         {props.required && <span aria-hidden="true"> *</span>}
       </label>
@@ -154,7 +155,7 @@ export function Field(props: FieldProps) {
       )}
       {control}
       {error && (
-        <p id={`${id}-error`} className="text-sm text-vermilion">
+        <p id={`${id}-error`} className="text-sm font-medium text-vermilion">
           {error}
         </p>
       )}

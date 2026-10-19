@@ -1,6 +1,7 @@
 import { Check, Info, Minus, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { Badge, EmptyState, FilterChips, Table, Tbody, Td, Th, Thead, Tr } from "@/components/ui";
+import { Badge, EmptyState, FilterChips } from "@/components/ui";
+import { Table, Tbody, Td, Th, Thead, Tr } from "@/components/admin/data-table";
 import { STATUS_LABELS } from "../calculators";
 import { WINDOW_CHOICES } from "../config";
 import type { MetricsDashboard, Tile } from "../service";

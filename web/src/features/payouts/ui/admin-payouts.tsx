@@ -1,5 +1,6 @@
 import { ActionForm, Field } from "@/components/action-form";
-import { Badge, EmptyState, Notice, Table, Tbody, Td, Th, Thead, Tr } from "@/components/ui";
+import { Badge, EmptyState, Notice } from "@/components/ui";
+import { Table, Tbody, Td, Th, Thead, Tr } from "@/components/admin/data-table";
 import { cancelPayoutAction, createPayoutAction, markPayoutPaidAction, recordCollectionAction } from "../actions";
 import { DUE_STATE_LABELS, PAYOUT_METHOD_LABELS, PAYOUT_METHODS, type DeliveryChargesTo, type DueState } from "../ledger";
 import { formatPaisa, toPaisa } from "../money";

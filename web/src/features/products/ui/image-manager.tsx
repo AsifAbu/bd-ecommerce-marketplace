@@ -34,20 +34,20 @@ export function ImageManager({ shopId, productId, images }: { shopId: string; pr
   return (
     <div className="flex flex-col gap-3">
       {images.length === 0 ? (
-        <p>No images yet. The first image you upload is the cover.</p>
+        <p className="text-muted">No images yet. The first image you upload is the cover.</p>
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {images.map((img, i) => (
-            <li key={img.id} className="flex flex-col gap-2 rounded border border-gray-300 p-2">
+            <li key={img.id} className="flex flex-col gap-2">
               {/* Signed private-bucket URLs: not for the Next image optimiser. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`/api/product-images/${img.id}`}
                 alt={i === 0 ? "Cover image" : `Image ${i + 1}`}
-                className="aspect-square w-full bg-gray-100 object-cover"
+                className="aspect-square w-full rounded-md bg-surface object-cover"
               />
-              <span className="text-sm">{i === 0 ? "Cover" : `Image ${i + 1}`}</span>
-              <div className="flex flex-wrap gap-1">
+              <span className="text-sm text-muted">{i === 0 ? "Cover" : `Image ${i + 1}`}</span>
+              <div className="flex flex-wrap gap-2">
                 {i > 0 && (
                   <button
                     type="button"
@@ -73,12 +73,12 @@ export function ImageManager({ shopId, productId, images }: { shopId: string; pr
         </ul>
       )}
       {images.length < MAX_IMAGES ? (
-        <form onSubmit={onUpload} className="flex flex-wrap items-end gap-2">
-          <div className="flex flex-col gap-1">
-            <label htmlFor={id} className="font-medium">
+        <form onSubmit={onUpload} className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor={id} className="text-sm font-medium text-ink">
               Add an image
             </label>
-            <p id={`${id}-hint`} className="text-sm text-gray-700">
+            <p id={`${id}-hint`} className="text-sm text-muted">
               JPEG, PNG or WebP, up to 5 MB. Up to {MAX_IMAGES} images.
             </p>
             <input
@@ -97,7 +97,7 @@ export function ImageManager({ shopId, productId, images }: { shopId: string; pr
           </button>
         </form>
       ) : (
-        <p>This product has the maximum of {MAX_IMAGES} images.</p>
+        <p className="text-muted">This product has the maximum of {MAX_IMAGES} images.</p>
       )}
       {error && (
         <p id={`${id}-error`} role="alert" className={errorTextClass}>

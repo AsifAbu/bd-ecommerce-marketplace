@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Badge as KitBadge, Table, Tbody, Td, Th, Thead, Tr } from "@/components/ui";
+import { Badge as KitBadge } from "@/components/ui";
+import { Table, Tbody, Td, Th, Thead, Tr } from "@/components/admin/data-table";
 import { createCategoryAction } from "../actions";
 import { listCategories } from "../service";
 import { toOutline } from "../tree";

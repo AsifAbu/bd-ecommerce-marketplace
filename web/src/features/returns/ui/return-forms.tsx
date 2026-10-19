@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionForm, Field } from "@/components/action-form";
+import { Checkbox } from "@/components/ui";
 import { adminReturnAction, cancelReturnAction, disputeReturnAction, shopReturnAction } from "../actions";
 import { REFUND_METHOD_LABELS, REFUND_METHODS } from "../rules";
 import type { ReturnView } from "../views";
@@ -43,9 +44,9 @@ function RefundForm({ view, action, hidden }: { view: ReturnView; action: typeof
       <Field as="select" name="method" label="Paid by" required options={methodOptions} />
       <Field name="reference" label="Transaction ID or receipt" required hint="The bKash/Nagad transaction ID, bank reference or cash receipt number." />
       {!view.receivedAt && !view.restocked && (
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="restock" defaultChecked={view.restockByDefault} /> Put the {view.quantity} unit(s) back in stock
-        </label>
+        <Checkbox name="restock" defaultChecked={view.restockByDefault}>
+          Put the {view.quantity} unit(s) back in stock
+        </Checkbox>
       )}
     </ActionForm>
   );
@@ -58,9 +59,9 @@ function ReceiveForm({ view, action, hidden }: { view: ReturnView; action: typeo
         <input key={k} type="hidden" name={k} value={v} />
       ))}
       <input type="hidden" name="action" value="receive" />
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" name="restock" defaultChecked={view.restockByDefault} /> Put the {view.quantity} unit(s) back in stock (inspected, sellable)
-      </label>
+      <Checkbox name="restock" defaultChecked={view.restockByDefault}>
+        Put the {view.quantity} unit(s) back in stock (inspected, sellable)
+      </Checkbox>
     </ActionForm>
   );
 }

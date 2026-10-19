@@ -1,4 +1,6 @@
+import { Pencil } from "lucide-react";
 import Link from "next/link";
+import { Badge, buttonStyles, EmptyState, linkStyles, Notice, Section } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { adminUserAction, deleteAddressAction, setDefaultAddressAction } from "../actions";
 import { adminOrLogin, userOrLogin } from "../page-guards";
@@ -16,12 +18,10 @@ const param = async (sp: SearchParams, key: string) => {
 /** +8801XXXXXXXXX -> 01XXXXXXXXX for display and form fields. */
 const localPhone = (phone: string | null) => (phone ? phone.replace(/^\+88/, "") : "");
 
-function Badge({ ok }: { ok: boolean }) {
-  return (
-    <span className={`ml-2 rounded px-2 py-0.5 text-sm ${ok ? "bg-green-100 text-green-900" : "bg-amber-100 text-amber-900"}`}>
-      {ok ? "Verified" : "Not verified"}
-    </span>
-  );
+const rowAction = "inline-flex min-h-11 items-center rounded-sm px-2 text-sm font-medium hover:underline underline-offset-4";
+
+function VerifiedBadge({ ok }: { ok: boolean }) {
+  return <Badge tone={ok ? "brand" : "warning"}>{ok ? "Verified" : "Not verified"}</Badge>;
 }
 
 export async function ProfilePage({ searchParams }: { searchParams: SearchParams }) {
@@ -35,21 +35,17 @@ export async function ProfilePage({ searchParams }: { searchParams: SearchParams
         : null;
 
   return (
-    <div className="flex flex-col gap-8">
-      {notice && (
-        <p role="status" className="rounded border border-green-700 bg-green-50 px-3 py-2 text-green-900">
-          {notice}
-        </p>
-      )}
-      <section aria-labelledby="status-h" className="flex flex-col gap-3">
-        <h2 id="status-h" className="text-lg font-semibold">
-          Verification
-        </h2>
+    <div className="flex max-w-xl flex-col gap-10">
+      {notice && <Notice tone="success">{notice}</Notice>}
+      <Section title="Verification">
+        {!user.phone && !user.email && <p className="text-muted">Add a mobile number or an email below.</p>}
         {user.phone && (
-          <div>
-            Mobile {localPhone(user.phone)} <Badge ok={!!user.phoneVerifiedAt} />
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p className="flex flex-wrap items-center gap-2">
+              Mobile {localPhone(user.phone)} <VerifiedBadge ok={!!user.phoneVerifiedAt} />
+            </p>
             {!user.phoneVerifiedAt && (
-              <Link className="ml-3 underline" href="/account/verify-phone">
+              <Link className={`${linkStyles} inline-flex min-h-11 items-center text-sm font-medium`} href="/account/verify-phone">
                 Verify now
               </Link>
             )}
@@ -57,51 +53,61 @@ export async function ProfilePage({ searchParams }: { searchParams: SearchParams
         )}
         {user.email && (
           <div className="flex flex-col gap-2">
-            <div>
-              Email {user.email} <Badge ok={!!user.emailVerifiedAt} />
-            </div>
+            <p className="flex flex-wrap items-center gap-2 break-all">
+              Email {user.email} <VerifiedBadge ok={!!user.emailVerifiedAt} />
+            </p>
             {!user.emailVerifiedAt && <ResendEmailButton />}
           </div>
         )}
-      </section>
-      <section aria-labelledby="profile-h" className="flex flex-col gap-3">
-        <h2 id="profile-h" className="text-lg font-semibold">
-          Profile
-        </h2>
+      </Section>
+
+      <Section title="Profile">
         <ProfileForm
           defaults={{ name: user.name ?? "", phone: localPhone(user.phone), email: user.email ?? "", avatarUrl: user.avatarUrl ?? "" }}
         />
-      </section>
-      <nav aria-label="Account" className="flex flex-wrap gap-4">
-        <Link className="underline" href="/account/addresses">
-          My addresses
-        </Link>
-        <Link className="underline" href="/account/returns">
-          My returns
-        </Link>
-        <Link className="underline" href="/account/complaints">
-          My complaints
-        </Link>
-        {user.isPlatformAdmin && (
-          <Link className="underline" href="/admin/users">
-            Manage users
-          </Link>
-        )}
-        {user.isPlatformAdmin && (
-          <>
-            <Link className="underline" href="/admin/metrics">
-              Marketplace metrics
+      </Section>
+
+      <Section title="More">
+        <ul className="flex flex-col">
+          <li>
+            <Link className={`${linkStyles} inline-flex min-h-11 items-center`} href="/account/policies">
+              Policies you accepted
             </Link>
-            <Link className="underline" href="/admin/orders">
-              All shop orders
+          </li>
+          <li>
+            <Link className={`${linkStyles} inline-flex min-h-11 items-center`} href="/seller">
+              My shops
             </Link>
-            <Link className="underline" href="/admin/payouts">
-              Payouts
-            </Link>
-          </>
-        )}
-        <LogoutButton />
-      </nav>
+          </li>
+          {user.isPlatformAdmin && (
+            <>
+              <li>
+                <Link className={`${linkStyles} inline-flex min-h-11 items-center`} href="/admin/users">
+                  Manage users
+                </Link>
+              </li>
+              <li>
+                <Link className={`${linkStyles} inline-flex min-h-11 items-center`} href="/admin/metrics">
+                  Marketplace metrics
+                </Link>
+              </li>
+              <li>
+                <Link className={`${linkStyles} inline-flex min-h-11 items-center`} href="/admin/orders">
+                  All shop orders
+                </Link>
+              </li>
+              <li>
+                <Link className={`${linkStyles} inline-flex min-h-11 items-center`} href="/admin/payouts">
+                  Payouts
+                </Link>
+              </li>
+            </>
+          )}
+          <li>
+            <LogoutButton />
+          </li>
+        </ul>
+      </Section>
     </div>
   );
 }
@@ -111,24 +117,35 @@ export async function VerifyPhonePage() {
   const user = await prisma.user.findUniqueOrThrow({ where: { id }, select: { phone: true, phoneVerifiedAt: true } });
   if (!user.phone) {
     return (
-      <p>
-        You have no mobile number yet.{" "}
-        <Link className="underline" href="/account">
-          Add one to your profile
-        </Link>
-        .
-      </p>
+      <EmptyState
+        title="You have no mobile number yet"
+        description="Add one to your profile, then come back to verify it."
+        action={
+          <Link className={buttonStyles()} href="/account">
+            Add a number to my profile
+          </Link>
+        }
+      />
     );
   }
-  if (user.phoneVerifiedAt) return <p role="status">Your mobile number {localPhone(user.phone)} is verified.</p>;
+  if (user.phoneVerifiedAt) {
+    return (
+      <div className="flex max-w-xl flex-col items-start gap-4">
+        <Notice tone="success">Your mobile number {localPhone(user.phone)} is verified.</Notice>
+        <Link className={buttonStyles({ variant: "secondary" })} href="/account">
+          Back to my account
+        </Link>
+      </div>
+    );
+  }
   return (
-    <div className="flex flex-col gap-4">
-      <p>
-        We will send a 6-digit code to <strong>{localPhone(user.phone)}</strong>. You need a verified mobile number for cash on
-        delivery.
+    <div className="flex max-w-md flex-col gap-6">
+      <p className="text-muted">
+        We will send a 6-digit code to <strong className="text-ink">{localPhone(user.phone)}</strong>. You need a verified mobile number for cash
+        on delivery.
       </p>
       <VerifyPhoneForms />
-      <Link className="underline" href="/account">
+      <Link className={`${linkStyles} inline-flex min-h-11 items-center self-start`} href="/account">
         Back to my account
       </Link>
     </div>
@@ -144,49 +161,47 @@ export async function AddressesPage({ searchParams }: { searchParams: SearchPara
   const editing = editId ? addresses.find((a) => a.id === editId) : undefined;
 
   return (
-    <div className="flex flex-col gap-8">
-      <section aria-labelledby="list-h" className="flex flex-col gap-3">
-        <h2 id="list-h" className="text-lg font-semibold">
-          Saved addresses
-        </h2>
-        {addresses.length === 0 && <p>No saved addresses yet.</p>}
-        <ul className="flex flex-col gap-3">
-          {addresses.map((a) => (
-            <li key={a.id} className="rounded border border-gray-300 p-3">
-              <p className="font-medium">
-                {a.name} · {localPhone(a.phone)}
-                {a.isDefault && <span className="ml-2 rounded bg-blue-100 px-2 py-0.5 text-sm text-blue-900">Default</span>}
-              </p>
-              <p>
-                {a.line1}, {a.area}, {a.upazila}, {a.district}, {a.division}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-4 text-sm">
-                <Link className="underline" href={`/account/addresses?edit=${a.id}`}>
-                  Edit<span className="sr-only"> address for {a.name}</span>
-                </Link>
-                {!a.isDefault && (
-                  <form action={setDefaultAddressAction}>
+    <div className="flex flex-col gap-10">
+      <Section title="Saved addresses">
+        {addresses.length === 0 ? (
+          <p className="text-muted">No saved addresses yet. Add the first one below and checkout will use it.</p>
+        ) : (
+          <ul className="divide-y divide-line border-y border-line">
+            {addresses.map((a) => (
+              <li key={a.id} className={`flex flex-col gap-1 py-4 ${editing?.id === a.id ? "bg-jade-soft/50" : ""}`}>
+                <p className="flex flex-wrap items-center gap-2 font-medium">
+                  {a.name}, {localPhone(a.phone)}
+                  {a.isDefault && <Badge tone="brand">Default</Badge>}
+                </p>
+                <p className="text-muted">
+                  {a.line1}, {a.area}, {a.upazila}, {a.district}, {a.division}
+                </p>
+                <div className="-ml-2 flex flex-wrap items-center">
+                  <Link className={`${rowAction} text-jade`} href={`/account/addresses?edit=${a.id}`}>
+                    <Pencil aria-hidden="true" size={14} className="mr-1.5" />
+                    Edit<span className="sr-only"> address for {a.name}</span>
+                  </Link>
+                  {!a.isDefault && (
+                    <form action={setDefaultAddressAction}>
+                      <input type="hidden" name="id" value={a.id} />
+                      <button className={`${rowAction} text-jade`} type="submit">
+                        Make default
+                      </button>
+                    </form>
+                  )}
+                  <form action={deleteAddressAction}>
                     <input type="hidden" name="id" value={a.id} />
-                    <button className="underline" type="submit">
-                      Make default
+                    <button className={`${rowAction} text-vermilion`} type="submit">
+                      Delete<span className="sr-only"> address for {a.name}</span>
                     </button>
                   </form>
-                )}
-                <form action={deleteAddressAction}>
-                  <input type="hidden" name="id" value={a.id} />
-                  <button className="text-red-700 underline" type="submit">
-                    Delete<span className="sr-only"> address for {a.name}</span>
-                  </button>
-                </form>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section aria-labelledby="form-h" className="flex flex-col gap-3">
-        <h2 id="form-h" className="text-lg font-semibold">
-          {editing ? "Edit address" : "Add an address"}
-        </h2>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+      <Section title={editing ? "Edit address" : "Add an address"} className="max-w-xl">
         <AddressForm
           key={editing?.id ?? "new"}
           defaults={
@@ -196,11 +211,11 @@ export async function AddressesPage({ searchParams }: { searchParams: SearchPara
           }
         />
         {editing && (
-          <Link className="underline" href="/account/addresses">
+          <Link className={`${linkStyles} inline-flex min-h-11 items-center self-start`} href="/account/addresses">
             Cancel editing
           </Link>
         )}
-      </section>
+      </Section>
     </div>
   );
 }

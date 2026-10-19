@@ -25,7 +25,7 @@ export async function RoleGate({ children, role }: { children: ReactNode; role: 
     }
     if (err instanceof ForbiddenError) {
       return (
-        <Notice tone="danger" role="alert">
+        <Notice tone="error">
           This page is for the Platform Admin only.
         </Notice>
       );

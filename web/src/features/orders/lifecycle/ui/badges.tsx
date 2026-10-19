@@ -1,14 +1,13 @@
-import { statusTone } from "@/components/admin/status";
-import { Badge } from "@/components/ui";
+import { Badge, statusTone } from "@/components/ui";
 import type { ShopOrderStatus } from "../../config";
 import { formatDhakaTime } from "../../views";
 import type { ShopOrderListView } from "../views";
 import { HandoverCountdown } from "./countdown";
 
-/** Shop order status as a kit badge; the tone follows the shared admin status tones. */
+/** A shop order's status: amber while it waits on the shop, jade when delivered, vermilion when refused, grey when closed. */
 export function StatusBadge({ status, label }: { status: ShopOrderStatus; label: string }) {
   return (
-    <Badge tone={statusTone(status)} className="text-sm" data-testid="shop-order-status">
+    <Badge tone={statusTone(status)} data-testid="shop-order-status">
       {label}
     </Badge>
   );
@@ -16,7 +15,7 @@ export function StatusBadge({ status, label }: { status: ShopOrderStatus; label:
 
 export function OverdueBadge() {
   return (
-    <Badge tone="sale" className="text-sm" data-testid="overdue-badge">
+    <Badge tone="sale" data-testid="overdue-badge">
       Overdue
     </Badge>
   );
@@ -34,9 +33,9 @@ export function HandoverDeadline({ so }: { so: ShopOrderListView }) {
   }
   if (so.handedOverAt) {
     return (
-      <p className="text-sm">
+      <p className="text-sm text-muted">
         Handed over {formatDhakaTime(so.handedOverAt)}
-        {so.handedOverLate ? <strong className="text-vermilion"> (after the 48 h deadline)</strong> : " (within 48 h)"}
+        {so.handedOverLate ? <strong className="font-semibold text-vermilion"> (after the 48 h deadline)</strong> : " (within 48 h)"}
       </p>
     );
   }

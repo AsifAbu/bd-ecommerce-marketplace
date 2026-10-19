@@ -1,19 +1,31 @@
+import { BadgeCheck } from "lucide-react";
 import Link from "next/link";
-import { priceRange } from "@/features/products";
+import { Badge, Button, buttonStyles, EmptyState, FormField, Pagination, ProductCard, ProductGrid, ProductGridSkeleton, Select, Skeleton } from "@/components/ui";
 import { storefrontPath } from "@/lib/storefront-link";
 import { isWebUrl } from "../metadata";
 import { SORT_LABELS, SORTS, storefrontQueryString, type StorefrontQuery } from "../query";
 import type { StorefrontData } from "../service";
-import { ProductCover } from "./product-cover";
 import { ShopScoreSlot } from "./shop-score-slot";
 
-const linkClass = "text-blue-800 underline";
-const inputClass =
-  "rounded border border-gray-400 px-3 py-2 text-base focus:outline-2 focus:outline-offset-1 focus:outline-blue-700";
-const buttonClass =
-  "rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700";
-
 const memberSince = (d: Date) => d.toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "Asia/Dhaka" });
+const monogram = (name: string) => (name.replace(/^[^\p{L}\p{N}]+/u, "").match(/[\p{L}\p{N}]/u)?.[0] ?? "S").toUpperCase();
+
+/** Placeholder with the shop page's footprint while it loads. */
+export function StorefrontSkeleton() {
+  return (
+    <div className="flex flex-col gap-8" role="status">
+      <span className="sr-only">Loading shop…</span>
+      <div className="flex items-center gap-4">
+        <Skeleton className="size-16 rounded-full" />
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-9 w-56" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+      </div>
+      <ProductGridSkeleton count={8} />
+    </div>
+  );
+}
 
 /** US-014: one shop's public page. `data` comes from loadStorefront(). */
 export function StorefrontView({ data }: { data: StorefrontData }) {
@@ -23,113 +35,114 @@ export function StorefrontView({ data }: { data: StorefrontData }) {
   const href = (q: Partial<StorefrontQuery>) => `${base}${storefrontQueryString({ ...current, ...q })}`;
 
   return (
-    <article className="flex flex-col gap-8">
-      <header className="flex flex-col gap-4">
-        {isWebUrl(shop.bannerUrl) ? (
+    <article className="flex flex-col gap-10">
+      <header className="flex flex-col gap-5">
+        {isWebUrl(shop.bannerUrl) && (
           // Shop-provided external URL; next/image would need every host allow-listed.
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={shop.bannerUrl} alt="" className="h-40 w-full rounded object-cover sm:h-56" />
-        ) : (
-          <div aria-hidden="true" className="h-24 w-full rounded bg-gradient-to-r from-blue-100 to-blue-50" />
+          <img src={shop.bannerUrl} alt="" className="h-36 w-full rounded-lg bg-surface object-cover sm:h-52" />
         )}
-        <div className="flex flex-wrap items-center gap-4">
-          {isWebUrl(shop.logoUrl) && (
+        <div className="flex items-center gap-4">
+          {isWebUrl(shop.logoUrl) ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={shop.logoUrl} alt={`${shop.name} logo`} className="h-20 w-20 rounded-full border border-gray-300 object-cover" />
+            <img src={shop.logoUrl} alt={`${shop.name} logo`} className="size-16 shrink-0 rounded-full bg-surface object-cover sm:size-20" />
+          ) : (
+            <div aria-hidden="true" className="flex size-16 shrink-0 items-center justify-center rounded-full bg-surface text-2xl font-semibold text-muted sm:size-20 sm:text-3xl">
+              {monogram(shop.name)}
+            </div>
           )}
-          <div className="flex flex-col gap-1">
-            <h1 className="text-3xl font-bold">{shop.name}</h1>
-            <p className="flex flex-wrap items-center gap-3 text-sm text-gray-700">
+          <div className="flex min-w-0 flex-col gap-2">
+            <h1 className="break-words text-3xl font-semibold sm:text-4xl">{shop.name}</h1>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted">
               {shop.tier === "verified" && (
-                <span className="rounded-full bg-green-100 px-3 py-0.5 font-semibold text-green-900">✓ Verified seller</span>
+                <Badge tone="brand">
+                  <BadgeCheck aria-hidden="true" size={14} />
+                  Verified seller
+                </Badge>
               )}
               <span>Member since {memberSince(shop.createdAt)}</span>
-            </p>
-            <ShopScoreSlot shopId={shop.id} />
+              <ShopScoreSlot shopId={shop.id} />
+            </div>
           </div>
         </div>
-        {shop.description && <p className="whitespace-pre-line">{shop.description}</p>}
+        {shop.description && <p className="max-w-prose whitespace-pre-line">{shop.description}</p>}
       </header>
 
-      <section aria-labelledby="shop-products" className="flex flex-col gap-4">
-        <h2 id="shop-products" className="text-2xl font-semibold">
-          Products{data.category && ` in ${data.category.name}`} ({data.total})
-        </h2>
+      <section aria-labelledby="shop-products" className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-0.5">
+            <h2 id="shop-products" className="text-xl font-semibold sm:text-2xl">
+              Products{data.category && ` in ${data.category.name}`}
+            </h2>
+            <p className="tabular text-sm text-muted">{data.total === 1 ? "1 product" : `${data.total.toLocaleString("en-US")} products`}</p>
+          </div>
 
-        {data.categories.length > 0 && (
-          <form action={base} method="get" className="flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="font-medium">Category</span>
-              <select name="category" defaultValue={current.category ?? ""} className={inputClass}>
-                <option value="">All categories</option>
-                {data.categories.map((c) => (
-                  <option key={c.id} value={c.slug}>
-                    {c.name} ({c.count})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="font-medium">Sort by</span>
-              <select name="sort" defaultValue={current.sort} className={inputClass}>
-                {SORTS.map((s) => (
-                  <option key={s} value={s}>
-                    {SORT_LABELS[s]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button type="submit" className={buttonClass}>
-              Apply
-            </button>
-          </form>
-        )}
+          {data.categories.length > 0 && (
+            <form action={base} method="get" className="grid grid-cols-2 items-end gap-3 sm:flex sm:flex-wrap">
+              <FormField label="Category" className="col-span-2 min-w-0 sm:col-span-1">
+                {(p) => (
+                  <Select name="category" defaultValue={current.category ?? ""} {...p}>
+                    <option value="">All categories</option>
+                    {data.categories.map((c) => (
+                      <option key={c.id} value={c.slug}>
+                        {c.name} ({c.count})
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </FormField>
+              <FormField label="Sort by" className="col-span-2 min-w-0 sm:col-span-1">
+                {(p) => (
+                  <Select name="sort" defaultValue={current.sort} {...p}>
+                    {SORTS.map((s) => (
+                      <option key={s} value={s}>
+                        {SORT_LABELS[s]}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </FormField>
+              <Button type="submit" variant="secondary" className="col-span-2 sm:col-span-1">
+                Apply
+              </Button>
+            </form>
+          )}
+        </div>
 
         {data.products.length === 0 ? (
-          <p>This shop has no products in stock right now.</p>
+          <EmptyState
+            title="No products in stock right now"
+            description="This shop has nothing available at the moment. Have a look at other shops in the meantime."
+            action={
+              <Link href="/" className={buttonStyles({ variant: "secondary" })}>
+                Browse the marketplace
+              </Link>
+            }
+          />
         ) : (
-          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <ProductGrid label="Products">
             {data.products.map((p) => (
-              <li key={p.id}>
-                <Link href={`/products/${p.id}`} className="flex flex-col gap-2 rounded border border-gray-200 p-2 hover:border-blue-700 focus:outline-2 focus:outline-blue-700">
-                  <ProductCover imageId={p.coverImageId} title={p.title} />
-                  <span className="font-medium">{p.title}</span>
-                  <span className="text-gray-800">{priceRange([p.minPrice, p.maxPrice])}</span>
-                </Link>
-              </li>
+              <ProductCard
+                key={p.id}
+                href={`/products/${p.id}`}
+                title={p.title}
+                imageUrl={p.coverImageId ? `/api/product-images/${encodeURIComponent(p.coverImageId)}` : null}
+                priceMin={p.minPrice}
+                priceMax={p.maxPrice}
+              />
             ))}
-          </ul>
+          </ProductGrid>
         )}
 
-        {data.totalPages > 1 && (
-          <nav aria-label="Pages" className="flex items-center gap-4">
-            {data.page > 1 ? (
-              <Link className={linkClass} href={href({ page: data.page - 1 })} rel="prev">
-                Previous page
-              </Link>
-            ) : (
-              <span aria-hidden="true" className="text-gray-400">Previous page</span>
-            )}
-            <span aria-current="page">
-              Page {data.page} of {data.totalPages}
-            </span>
-            {data.page < data.totalPages ? (
-              <Link className={linkClass} href={href({ page: data.page + 1 })} rel="next">
-                Next page
-              </Link>
-            ) : (
-              <span aria-hidden="true" className="text-gray-400">Next page</span>
-            )}
-          </nav>
-        )}
+        <Pagination page={data.page} totalPages={data.totalPages} hrefFor={(page) => href({ page })} className="pt-4" />
       </section>
 
       {shop.policies && (
-        <section aria-labelledby="shop-policies" className="flex flex-col gap-2">
-          <h2 id="shop-policies" className="text-2xl font-semibold">
+        <section aria-labelledby="shop-policies" className="flex max-w-prose flex-col gap-2">
+          <h2 id="shop-policies" className="text-xl font-semibold sm:text-2xl">
             Shop policies
           </h2>
-          <p className="whitespace-pre-line">{shop.policies}</p>
+          <p className="whitespace-pre-line text-muted">{shop.policies}</p>
         </section>
       )}
     </article>
