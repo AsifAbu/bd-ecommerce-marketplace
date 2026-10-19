@@ -61,6 +61,8 @@ function RangeInputs(props: {
   format: (n: number) => string;
   idPrefix: string;
 }) {
+  // One value in the results: a range filter would offer nothing to choose.
+  if (props.min === props.max && props.selectedMin === null && props.selectedMax === null) return null;
   const id = `${props.idPrefix}-${props.minName.replace(/\W/g, "-")}`;
   const field = (name: string, label: string, selected: number | null, placeholder: number) => (
     <label className="flex min-w-0 flex-1 flex-col gap-1 text-sm">

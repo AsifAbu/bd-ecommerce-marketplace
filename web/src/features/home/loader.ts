@@ -52,7 +52,7 @@ export interface HomeDeps {
   featuredShops(limit: number): Promise<HomeShop[]>;
 }
 
-export const HOME_LIMITS = { arrivals: 10, rows: 4, perRow: 5, shops: 8 } as const;
+export const HOME_LIMITS = { arrivals: 10, rows: 3, perRow: 5, shops: 8 } as const;
 
 export async function loadHome(deps: HomeDeps): Promise<HomeData> {
   const tree = await deps.categoryTree();

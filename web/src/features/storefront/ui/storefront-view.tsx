@@ -78,8 +78,8 @@ export function StorefrontView({ data }: { data: StorefrontData }) {
           </div>
 
           {data.categories.length > 0 && (
-            <form action={base} method="get" className="flex flex-wrap items-end gap-3">
-              <FormField label="Category" className="min-w-0 flex-1 sm:flex-none">
+            <form action={base} method="get" className="grid grid-cols-2 items-end gap-3 sm:flex sm:flex-wrap">
+              <FormField label="Category" className="col-span-2 min-w-0 sm:col-span-1">
                 {(p) => (
                   <Select name="category" defaultValue={current.category ?? ""} {...p}>
                     <option value="">All categories</option>
@@ -91,7 +91,7 @@ export function StorefrontView({ data }: { data: StorefrontData }) {
                   </Select>
                 )}
               </FormField>
-              <FormField label="Sort by" className="min-w-0 flex-1 sm:flex-none">
+              <FormField label="Sort by" className="col-span-2 min-w-0 sm:col-span-1">
                 {(p) => (
                   <Select name="sort" defaultValue={current.sort} {...p}>
                     {SORTS.map((s) => (
@@ -102,7 +102,7 @@ export function StorefrontView({ data }: { data: StorefrontData }) {
                   </Select>
                 )}
               </FormField>
-              <Button type="submit" variant="secondary">
+              <Button type="submit" variant="secondary" className="col-span-2 sm:col-span-1">
                 Apply
               </Button>
             </form>
