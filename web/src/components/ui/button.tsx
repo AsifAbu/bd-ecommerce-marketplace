@@ -16,7 +16,7 @@ const variants: Record<ButtonVariant, string> = {
 
 // md and lg meet the 44px touch target; sm is 36px with a mouse and 44px on touch screens (dense desktop toolbars).
 const sizes: Record<ButtonSize, string> = {
-  sm: "min-h-9 px-3 text-sm pointer-coarse:min-h-11",
+  sm: "min-h-9 px-3 text-sm max-lg:min-h-11 pointer-coarse:min-h-11",
   md: "min-h-11 px-4 text-base",
   lg: "min-h-12 px-6 text-base",
 };

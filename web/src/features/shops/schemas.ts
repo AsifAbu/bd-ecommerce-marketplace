@@ -1,16 +1,10 @@
 import { z } from "zod";
 import { dhakaToday } from "./rules";
+import { SHOP_TYPES } from "./shop-types";
 
-export const SHOP_TYPES = ["general", "electronics", "books", "fashion", "medicine"] as const;
+export { SHOP_TYPE_LABELS, SHOP_TYPES } from "./shop-types";
+
 export const REGISTRATION_TYPES = ["trade_licence", "vat", "tin", "ubid", "pra", "dbid"] as const;
-
-export const SHOP_TYPE_LABELS: Record<(typeof SHOP_TYPES)[number], string> = {
-  general: "General",
-  electronics: "Electronics",
-  books: "Books",
-  fashion: "Fashion",
-  medicine: "Medicine",
-};
 
 export const REGISTRATION_TYPE_LABELS: Record<(typeof REGISTRATION_TYPES)[number], string> = {
   trade_licence: "Trade licence",

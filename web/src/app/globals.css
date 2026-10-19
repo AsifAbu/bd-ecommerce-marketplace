@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
-/* Fonts are self-hosted by the npm packages (no external requests). Each file is split by
-   unicode-range, so a page downloads only the scripts it shows (Latin, and Bengali when used). */
-@import "@fontsource-variable/instrument-sans/wght.css";
+/* Fonts are self-hosted by the npm packages (no external requests). Latin is loaded in layout.tsx
+   with next/font/local (preloaded, metric-matched fallback); Bengali is split by unicode-range, so a
+   page downloads it only when it shows Bengali. */
 @import "@fontsource-variable/anek-bangla/wght.css";
 
 /*
@@ -75,7 +75,7 @@
   --color-gray-950: #111412;
 
   /* Type */
-  --font-sans: "Instrument Sans Variable", "Anek Bangla Variable", sans-serif;
+  --font-sans: var(--font-instrument), "Anek Bangla Variable", sans-serif;
   --text-xs: 0.75rem;
   --text-xs--line-height: 1rem;
   --text-sm: 0.875rem;

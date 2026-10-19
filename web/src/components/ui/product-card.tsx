@@ -71,7 +71,7 @@ export function ProductCard({
             decorative
             className={cn(
               "aspect-[4/5] w-full transition-transform duration-[var(--duration-slow)] ease-[var(--ease-out)] group-hover:scale-[1.03]",
-              outOfStock && "opacity-60",
+              outOfStock && "grayscale",
             )}
           />
           {outOfStock && (
