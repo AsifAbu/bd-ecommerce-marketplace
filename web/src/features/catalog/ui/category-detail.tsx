@@ -125,7 +125,7 @@ export async function CategoryDetail({ id }: { id: Promise<string> }) {
               View the effective schema (JSON)
             </Link>
           </p>
-          <Table caption="Assigned attributes">
+          <Table caption="Assigned attributes" stack>
             <Thead>
               <tr>
                 <Th>Order</Th>
@@ -139,12 +139,12 @@ export async function CategoryDetail({ id }: { id: Promise<string> }) {
             <Tbody>
               {category.attributes.map((a) => (
                 <Tr key={a.attributeId}>
-                  <Td className="py-2">{a.displayOrder}</Td>
-                  <Td className="py-2">
+                  <Td label="Order" className="py-2">{a.displayOrder}</Td>
+                  <Td label="Attribute" className="py-2">
                     {a.attribute.name} <span className="text-muted">({a.attribute.type})</span>
                     {a.attribute.archivedAt && <Badge>archived</Badge>}
                   </Td>
-                  <Td className="py-2">
+                  <Td label="Settings" className="py-2">
                     <span className="flex flex-wrap gap-1">
                       {a.required && <Badge>required</Badge>}
                       {a.filterable && <Badge>filter: {a.filterWidget ?? "default"}</Badge>}

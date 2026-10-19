@@ -167,9 +167,10 @@ export async function AdminQueue() {
                         <ul className="flex flex-col gap-1">
                           {s.licences.map((l) => (
                             <li key={l.id} className="flex flex-wrap items-center gap-2">
-                              <span className="tabular">{l.licenceNo}</span>
-                              <StatusBadge status={l.status}>{l.status}</StatusBadge>
-                              <span className="text-muted">expires {date(l.expiryDate)}</span>
+                              <span className="tabular">
+                                {l.licenceNo} ({l.status}, expires {date(l.expiryDate)})
+                              </span>
+                              <StatusBadge status={l.status}>{l.status === "verified" ? "Verified" : l.status === "rejected" ? "Rejected" : "Pending"}</StatusBadge>
                             </li>
                           ))}
                         </ul>
