@@ -1,24 +1,31 @@
 "use client";
 
+import { CircleCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { Button, cn, QuantityStepper } from "@/components/ui";
+import { formatTk } from "@/lib/money";
 
 /**
  * "Add to cart" on the product page (US-050). Adds the variant chosen in the picker (?variant=,
  * or the only variant). Guests can add too (the cart is kept on the device). The server caps the
- * quantity at the stock and says so.
+ * quantity at the stock and says so. On phones a bar above the tab bar repeats the button once
+ * the main one has scrolled out of view.
  */
 export function AddToCartButton({
   variants,
   defaultVariantId,
   chooseHint,
+  priceFallback,
 }: {
-  variants: { id: string; stock: number }[];
+  variants: { id: string; stock: number; price: number }[];
   /** The only variant of a product without options. */
   defaultVariantId: string | null;
   /** "Choose size and colour first." */
   chooseHint: string;
+  /** What the sticky bar shows as price until a variant is chosen, e.g. "Tk 1,850 – Tk 1,950". */
+  priceFallback: string;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -26,17 +33,39 @@ export function AddToCartButton({
   const variant = variants.find((v) => v.id === fromUrl) ?? variants.find((v) => v.id === defaultVariantId) ?? null;
   const [quantity, setQuantity] = useState("1");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
+  const [message, setMessage] = useState<{ text: string; ok: boolean; n: number } | null>(null);
+  const [barVisible, setBarVisible] = useState(false);
+  const inlineRef = useRef<HTMLDivElement>(null);
+  const qtyId = useId();
   const outOfStock = variant !== null && variant.stock <= 0;
+
+  // Phones only: show the bar while the main button is not on screen.
+  useEffect(() => {
+    const el = inlineRef.current;
+    if (!el) return;
+    const phone = window.matchMedia("(max-width: 1023px)");
+    let onScreen = true;
+    const update = () => setBarVisible(phone.matches && !onScreen);
+    const io = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      update();
+    });
+    io.observe(el);
+    phone.addEventListener("change", update);
+    return () => {
+      io.disconnect();
+      phone.removeEventListener("change", update);
+    };
+  }, []);
 
   async function add() {
     if (!variant) {
-      setMessage({ text: chooseHint, ok: false });
+      setMessage({ text: chooseHint, ok: false, n: Date.now() });
       return;
     }
     const qty = Number(quantity);
     if (!Number.isInteger(qty) || qty < 1) {
-      setMessage({ text: "Enter a quantity of at least 1.", ok: false });
+      setMessage({ text: "Enter a quantity of at least 1.", ok: false, n: Date.now() });
       return;
     }
     setBusy(true);
@@ -49,50 +78,72 @@ export function AddToCartButton({
       });
       const data = (await res.json().catch(() => ({}))) as { message?: string; error?: { message?: string } };
       if (!res.ok) throw new Error(data.error?.message ?? "");
-      setMessage({ text: data.message ?? "Added to your cart.", ok: true });
+      setMessage({ text: data.message ?? "Added to your cart.", ok: true, n: Date.now() });
       router.refresh(); // the header count
     } catch (err) {
-      setMessage({ text: err instanceof Error && err.message ? err.message : "Could not add to your cart. Please try again.", ok: false });
+      setMessage({ text: err instanceof Error && err.message ? err.message : "Could not add to your cart. Please try again.", ok: false, n: Date.now() });
     } finally {
       setBusy(false);
     }
   }
 
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2">
-          Quantity
-          <input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={variant ? Math.max(1, variant.stock) : undefined}
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            className="w-16 rounded border border-gray-500 px-2 py-1 text-center"
-          />
-        </label>
-        <button
-          type="button"
-          onClick={add}
-          disabled={busy || outOfStock}
-          className="rounded bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 focus:outline-2 focus:outline-offset-2 focus:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Add to cart
-        </button>
-      </div>
-      <p role="status" className={`text-sm ${message && !message.ok ? "font-semibold text-red-800" : ""}`}>
+  const status = (
+    <p key={message?.n} role="status" className={cn("flex items-start gap-1.5 text-sm", message && "feedback-in", message && !message.ok && "font-medium text-vermilion")}>
+      {message?.ok && <CircleCheck aria-hidden="true" size={16} className="mt-0.5 shrink-0 text-jade" />}
+      <span>
         {outOfStock && !message ? "This option is out of stock." : message?.text}
         {message?.ok && (
           <>
             {" "}
-            <Link className="text-blue-800 underline" href="/cart">
+            <Link className="font-medium text-jade underline underline-offset-2" href="/cart">
               View cart
             </Link>
           </>
         )}
-      </p>
+      </span>
+    </p>
+  );
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div ref={inlineRef} className="flex items-end gap-3">
+        <QuantityStepper
+          id={qtyId}
+          label="Quantity"
+          value={quantity}
+          min={1}
+          max={variant ? Math.max(1, variant.stock) : undefined}
+          onChange={setQuantity}
+          onStep={(n) => setQuantity(String(n))}
+          decreaseLabel="One less"
+          increaseLabel="One more"
+        />
+        <Button size="lg" className="flex-1" onClick={add} loading={busy} disabled={outOfStock}>
+          Add to cart
+        </Button>
+      </div>
+      {!barVisible && status}
+
+      {barVisible && (
+        <div
+          role="region"
+          aria-label="Add to cart"
+          className="bar-in fixed inset-x-0 bottom-[var(--tabbar-space)] z-20 border-t border-line bg-paper px-4 py-2.5 lg:hidden"
+        >
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              {message || outOfStock ? (
+                status
+              ) : (
+                <p className="tabular truncate text-base font-semibold">{variant ? formatTk(variant.price) : priceFallback}</p>
+              )}
+            </div>
+            <Button size="lg" onClick={add} loading={busy} disabled={outOfStock}>
+              Add to cart
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

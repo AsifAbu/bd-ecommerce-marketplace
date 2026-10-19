@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import Link from "next/link";
 import { connection } from "next/server";
+import { buttonStyles, EmptyState, Notice } from "@/components/ui";
 import { addressRepo } from "@/features/accounts/server";
 import { isInsideDhaka } from "@/features/cart";
 import { cartService, currentUserOrNull, resolveCartOwner } from "@/features/cart/server";
@@ -23,12 +24,15 @@ export async function CheckoutContent() {
 
   if (!inside || !outside || inside.groups.length === 0) {
     return (
-      <p>
-        Your cart has no items that can be ordered.{" "}
-        <Link className="text-blue-800 underline" href="/cart">
-          Go to your cart
-        </Link>
-      </p>
+      <EmptyState
+        title="Your cart has no items that can be ordered"
+        description="Check your cart, or find something to add."
+        action={
+          <Link className={buttonStyles({ variant: "secondary" })} href="/cart">
+            Go to your cart
+          </Link>
+        }
+      />
     );
   }
 
@@ -69,9 +73,9 @@ export async function CheckoutContent() {
   return (
     <div className="flex flex-col gap-4">
       {blocked && (
-        <p role="alert" className="rounded border border-red-700 bg-red-50 p-3 font-semibold text-red-800">
-          {blocked}
-        </p>
+        <Notice tone="error">
+          <p className="font-medium">{blocked}</p>
+        </Notice>
       )}
       <CheckoutForm
         mode="user"

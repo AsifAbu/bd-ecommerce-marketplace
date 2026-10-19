@@ -17,7 +17,10 @@ export {
 export { EmptyState, type EmptyStateProps } from "./empty-state";
 export { controlStyles, FormField, Input, Select, Textarea, type FieldControlProps, type FormFieldProps } from "./form-field";
 export { IconButton, type IconButtonProps } from "./icon-button";
+export { ChoiceChip, type ChoiceChipProps } from "./choice-chip";
+export { Notice, type NoticeProps, type NoticeTone } from "./notice";
 export { Pagination, type PaginationProps } from "./pagination";
+export { QuantityStepper, type QuantityStepperProps } from "./quantity-stepper";
 export { discountPercent, Price, type PriceProps } from "./price";
 export { ProductCard, ProductCardSkeleton, ProductGrid, ProductGridSkeleton, type ProductCardProps } from "./product-card";
 export { Rating, type RatingProps } from "./rating";

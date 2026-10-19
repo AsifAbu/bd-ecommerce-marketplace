@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AxisView, VariantView } from "./detail";
-import { findVariant, optionAvailable, stockText } from "./variant-picker";
+import { findVariant, optionAvailable, optionStock, stockText } from "./variant-picker";
 
 const axes: AxisView[] = [
   { key: "size", name: "Size", options: [{ value: "m", label: "M" }, { value: "l", label: "L" }] },
@@ -42,6 +42,15 @@ describe("optionAvailable", () => {
   it("disables an option whose every variant is out of stock", () => {
     const out = variants.map((x) => (x.options.size === "l" ? { ...x, stock: 0 } : x));
     expect(optionAvailable(out, axes, {}, "size", "l")).toBe(false);
+  });
+});
+
+describe("optionStock", () => {
+  it("adds up the stock behind an option that agrees with the other choices", () => {
+    expect(optionStock(variants, axes, {}, "size", "m")).toBe(8); // 6 + 2
+    expect(optionStock(variants, axes, { colour: "black" }, "size", "m")).toBe(6);
+    expect(optionStock(variants, axes, { colour: "white" }, "size", "l")).toBe(0);
+    expect(optionStock(variants, axes, { size: "m", colour: "black" }, "size", "l")).toBe(4); // the axis's own choice does not restrict it
   });
 });
 
