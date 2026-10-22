@@ -24,7 +24,8 @@ async function Content({
 }) {
   await connection();
   const { shopId } = await params;
-  const { categoryId } = await searchParams;
+  const { categoryId, copyFrom, q } = await searchParams;
+  const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : undefined);
   const access = await guardPage(`/seller/${shopId}/products/new`, () => requireShopRole(shopId, ["owner", "staff"]));
-  return <NewProductView shopId={access.shopId} categoryId={typeof categoryId === "string" ? categoryId : undefined} />;
+  return <NewProductView shopId={access.shopId} categoryId={one(categoryId)} copyFrom={one(copyFrom)} q={one(q)?.slice(0, 80)} />;
 }

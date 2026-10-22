@@ -1,0 +1,194 @@
+[worker] started (test mode): example.log, shops.licence-expiry, shops.refresh-scores, products.refresh-counts, cart.purge-guest-carts, search.reindex-product, search.reindex-all, orders.notify-placed, orders.handover-check, orders.notify-overdue, payouts.due-check, returns.escalate-overdue, returns.notify, complaints.flag-overdue, complaints.notify
+[sms:test] to +8801700000002 (not sent): The marketplace admin answered your complaint CP-261018-FJYVM (In progress): "We are sorry, a replacement is on its way CP-261018-FJYVM" http://localhost:3330/complaints/e2eadm-riirk0dvj5-tkt
+[worker] complaints.notify e2eadm-riirk0dvj5-tkt reply { sent: 2 }
+[sms:test] to +8801700000002 (not sent): Your complaint CP-261018-DZC2G is now being handled. Due by 22 Oct 2026, 6:41 am. http://localhost:3330/complaints/e2eadm-d5e71bdxcx-tkt
+[worker] complaints.notify e2eadm-d5e71bdxcx-tkt in_progress { sent: 2 }
+[sms:test] to +8801700000002 (not sent): Your complaint CP-261018-DW4CQ is resolved: Replacement shipped and refund of the delivery charge issued http://localhost:3330/complaints/e2eadm-ukqwbsdy1y-tkt
+[worker] complaints.notify e2eadm-ukqwbsdy1y-tkt resolved { sent: 3 }
+[sms:test] to +8801700000002 (not sent): Your complaint CP-261018-FTYRB is resolved: Apologised and refunded http://localhost:3330/complaints/e2eadm-k7entle0gm-tkt
+[worker] complaints.notify e2eadm-k7entle0gm-tkt resolved { sent: 3 }
+[sms:test] to +8801700000002 (not sent): Your complaint CP-261018-F9MDC is closed: Duplicate of an earlier complaint http://localhost:3330/complaints/e2eadm-n1f3mee1hq-tkt
+[worker] complaints.notify e2eadm-n1f3mee1hq-tkt closed { sent: 3 }
+[sms:test] to +8801700000002 (not sent): The marketplace admin answered your complaint CP-261018-SKZK6 (In progress): "We are sorry, a replacement is on its way CP-261018-SKZK6" http://localhost:3330/complaints/e2eadm-e4s0fve362-tkt
+[worker] complaints.notify e2eadm-e4s0fve362-tkt reply { sent: 2 }
+[sms:test] to +8801700000002 (not sent): The marketplace admin answered your complaint CP-261018-R6Z9T (Resolved): "Looking into it" http://localhost:3330/complaints/e2eadm-vumnmee3md-tkt
+[worker] complaints.notify e2eadm-vumnmee3md-tkt reply { sent: 2 }
+[sms:test] to +8801700000002 (not sent): Your complaint CP-261018-R6Z9T is resolved: Refunded in full http://localhost:3330/complaints/e2eadm-vumnmee3md-tkt
+[worker] complaints.notify e2eadm-vumnmee3md-tkt resolved { sent: 3 }
+[sms:test] to +8801700000002 (not sent): The admin approved your return of 1 x [TEST] Slim denim pants (order BD-261018-TXDCF-1). The shop will collect the item and refund you. Note: Photos support the customer http://localhost:3330/orders/BD-261018-TXDCF
+[worker] returns.notify e2eadm-ommby6e8we-ret approved { sent: 3 }
+[sms:test] to +8801700000002 (not sent): The admin decided against your return of 1 x [TEST] Slim denim pants (order BD-261018-CYR8F-1): The item shows signs of use http://localhost:3330/orders/BD-261018-CYR8F
+[worker] returns.notify e2eadm-o1an8te9tl-ret denied { sent: 2 }
+[sms:test] to +8801700000002 (not sent): The admin approved your return of 1 x [TEST] Slim denim pants (order BD-261018-FY4S7-1). The shop will collect the item and refund you. http://localhost:3330/orders/BD-261018-FY4S7
+[worker] returns.notify e2eadm-1frbezeacr-ret approved { sent: 3 }
+[sms:test] to +8801700000002 (not sent): The admin approved your return of 1 x [TEST] Slim denim pants (order BD-261018-AM5Q6-1). The shop will collect the item and refund you. http://localhost:3330/orders/BD-261018-AM5Q6
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] returns.notify e2eadm-yo0s34eatb-ret approved { sent: 3 }
+[sms:test] to +8801700000002 (not sent): Refund of Tk 2270.00 for 1 x [TEST] Slim denim pants (order BD-261018-FY4S7-1) paid by bKash, reference BKASH-RET-5566. http://localhost:3330/orders/BD-261018-FY4S7
+[worker] returns.notify e2eadm-1frbezeacr-ret refunded { sent: 2 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[sms:test] to +8801700000002 (not sent): The admin approved your return of 1 x [TEST] Slim denim pants (order BD-261018-K7EBD-1). The shop will collect the item and refund you. http://localhost:3330/orders/BD-261018-K7EBD
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] returns.notify e2eadm-n3l7hueblx-ret approved { sent: 3 }
+[sms:test] to +8801700000002 (not sent): The admin approved your return of 1 x [TEST] Slim denim pants (order BD-261018-66SAV-1). The shop will collect the item and refund you. Note: api approval http://localhost:3330/orders/BD-261018-66SAV
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] returns.notify e2eadm-owmj50ecvz-ret approved { sent: 3 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[sms:test] to +8801918709019 (not sent): We sent your return request for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E ntkujhjs] (order BD-261018-Y3RW5-1) to [TEST] E2E Shop 3bd1a336. The shop answers within 48 hours. http://localhost:3330/orders/BD-261018-Y3RW5
+[worker] returns.notify cmvenhy6200bi04oxepvlcqer requested { sent: 2 }
+[sms:test] to +8801918709019 (not sent): [TEST] E2E Shop 3bd1a336 accepted your return of 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E ntkujhjs] (order BD-261018-Y3RW5-1). The item will be collected or you can drop it off; the refund follows. http://localhost:3330/orders/BD-261018-Y3RW5
+[worker] returns.notify cmvenhy6200bi04oxepvlcqer accepted { sent: 2 }
+[sms:test] to +8801959726605 (not sent): We sent your return request for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E sjhnxsg9] (order BD-261018-83E4B-1) to [TEST] E2E Shop dc7ab4f0. The shop answers within 48 hours. http://localhost:3330/orders/BD-261018-83E4B
+[worker] returns.notify cmveni1if00bl04oxlodyzrwl requested { sent: 2 }
+[sms:test] to +8801943363920 (not sent): We sent your return request for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E ojt1s0ff] (order BD-261018-EJ9HV-1) to [TEST] E2E Shop f8b778eb. The shop answers within 48 hours. http://localhost:3330/orders/BD-261018-EJ9HV
+[worker] returns.notify cmveni2ak00bn04oxz7ngddam requested { sent: 2 }
+[sms:test] to +8801943363920 (not sent): [TEST] E2E Shop f8b778eb accepted your return of 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E ojt1s0ff] (order BD-261018-EJ9HV-1). The item will be collected or you can drop it off; the refund follows. http://localhost:3330/orders/BD-261018-EJ9HV
+[worker] returns.notify cmveni2ak00bn04oxz7ngddam accepted { sent: 2 }
+[sms:test] to +8801959726605 (not sent): [TEST] E2E Shop dc7ab4f0 accepted your return of 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E sjhnxsg9] (order BD-261018-83E4B-1). The item will be collected or you can drop it off; the refund follows. http://localhost:3330/orders/BD-261018-83E4B
+[worker] returns.notify cmveni1if00bl04oxlodyzrwl accepted { sent: 2 }
+[sms:test] to +8801959726605 (not sent): Refund of Tk 6870.00 for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E sjhnxsg9] (order BD-261018-83E4B-1) paid by bKash, reference E2E8N7A6B5C. http://localhost:3330/orders/BD-261018-83E4B
+[worker] returns.notify cmveni1if00bl04oxlodyzrwl refunded { sent: 2 }
+[sms:test] to +8801978096420 (not sent): We sent your return request for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E 9che4l48] (order BD-261018-H4VTH-1) to [TEST] E2E Shop faf020fd. The shop answers within 48 hours. http://localhost:3330/orders/BD-261018-H4VTH
+[worker] returns.notify cmveni3ps00bs04ox6p73g4ls requested { sent: 2 }
+[sms:test] to +8801954823715 (not sent): We received your complaint CP-261019-DVC93 about order BD-261018-4JB7B. We will resolve it by 22 Oct 2026, 8:44 am (within 72 hours). http://localhost:3330/complaints/cmveniatj00cb04oxqkrp9usb
+[sms:test] to +8801992701509 (not sent): We sent your return request for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E nppsgti7] (order BD-261018-8KE6K-1) to [TEST] E2E Shop a14d8119. The shop answers within 48 hours. http://localhost:3330/orders/BD-261018-8KE6K
+[worker] returns.notify cmveni4cw00bu04oxphth6qpn requested { sent: 2 }
+[worker] complaints.notify cmveniatj00cb04oxqkrp9usb opened { sent: 4 }
+[sms:test] to +8801964046675 (not sent): We received your complaint CP-261019-VNR9H about order BD-261018-S6C38. We will resolve it by 22 Oct 2026, 8:44 am (within 72 hours). http://localhost:3330/complaints/cmvenic3b00ce04ox52366jq5
+[sms:test] to +8801978096420 (not sent): [TEST] E2E Shop faf020fd rejected your return of 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E 9che4l48] (order BD-261018-H4VTH-1): The box was opened and used.. You can ask the admin to decide on the order page. http://localhost:3330/orders/BD-261018-H4VTH
+[worker] returns.notify cmveni3ps00bs04ox6p73g4ls rejected { sent: 2 }
+[worker] complaints.notify cmvenic3b00ce04ox52366jq5 opened { sent: 4 }
+[sms:test] to +8801978096420 (not sent): Your return of 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E 9che4l48] (order BD-261018-H4VTH-1) is now with the marketplace admin, who will decide. http://localhost:3330/orders/BD-261018-H4VTH
+[sms:test] to +8801954823715 (not sent): The shop answered your complaint CP-261019-DVC93 (In progress): "Sorry for the delay, the courier was late. We have escalated it." http://localhost:3330/complaints/cmveniatj00cb04oxqkrp9usb
+[worker] complaints.notify cmveniatj00cb04oxqkrp9usb reply { sent: 2 }
+[worker] returns.notify cmveni3ps00bs04ox6p73g4ls escalated { sent: 3 }
+[sms:test] to +8801964046675 (not sent): Your complaint CP-261019-VNR9H is resolved: The shop sent a replacement box and checked the items. http://localhost:3330/complaints/cmvenic3b00ce04ox52366jq5
+[sms:test] to +8801911152548 (not sent): We sent your return request for 1 x [TEST] Paracetamol 500 mg tablets [E2E 18usbxcf] (order BD-261018-BYCX7-1) to [TEST] E2E Shop 6a4be8b5. The shop answers within 48 hours. http://localhost:3330/orders/BD-261018-BYCX7
+[worker] returns.notify cmveni5w900by04ox79gy71zh requested { sent: 2 }
+[worker] complaints.notify cmvenic3b00ce04ox52366jq5 resolved { sent: 3 }
+[sms:test] to +8801990089640 (not sent): We received your complaint CP-261019-A7RJ3 about order BD-261018-54SYS. We will resolve it by 22 Oct 2026, 8:44 am (within 72 hours). http://localhost:3330/complaints/cmvenifqk00cm04oxhkm98vit
+[sms:test] to +8801926239943 (not sent): We sent your return request for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E japmdweb] (order BD-261018-55R8Y-1) to [TEST] E2E Shop fc425e18. The shop answers within 48 hours. http://localhost:3330/orders/BD-261018-55R8Y
+[worker] returns.notify cmveni6a100c004oxi6ijrqdb requested { sent: 2 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] complaints.notify cmvenifqk00cm04oxhkm98vit opened { sent: 4 }
+[sms:test] to +8801979666332 (not sent): We received your complaint CP-261019-PJT5W about order BD-261018-CFMF9. We will resolve it by 19 Oct 2026, 12:44 am (within 72 hours). http://localhost:3330/complaints/cmvenifqm00cn04oxv7rt9fce
+[sms:test] to +8801975097394 (not sent): We sent your return request for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E 3yjjl5jz] (order BD-261018-B5775-1) to [TEST] E2E Shop 4cd2e16b. The shop answers within 48 hours. http://localhost:3330/orders/BD-261018-B5775
+[worker] returns.notify cmveni6yu00c204oxscfojo9d requested { sent: 2 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] complaints.notify cmvenifqm00cn04oxv7rt9fce opened { sent: 4 }
+[sms:test] to +8801940409604 (not sent): We sent your return request for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E and4xwrp] (order BD-261018-T7MCR-1) to [TEST] E2E Shop 5bfdf37c. The shop answers within 48 hours. http://localhost:3330/orders/BD-261018-T7MCR
+[worker] returns.notify cmveni6z800c404oxaycy0d0v requested { sent: 2 }
+[sms:test] to +8801948513614 (not sent): We sent your return request for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E uggqnc9m] (order BD-261018-4EJT7-1) to [TEST] E2E Shop f97189d5. The shop answers within 48 hours. http://localhost:3330/orders/BD-261018-4EJT7
+[worker] returns.notify cmveni7di00c604oxe5ykewf8 requested { sent: 2 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[sms:test] to +8801955316928 (not sent): We sent your return request for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E rynvh3am] (order BD-261018-VP829-1) to [TEST] E2E Shop 6bc87d87. The shop answers within 48 hours. http://localhost:3330/orders/BD-261018-VP829
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] returns.notify cmveni8sg00c904ox9lcztpqy requested { sent: 2 }
+[sms:test] to +8801922750200 (not sent): We sent your return request for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E nekts6ac] (order BD-261018-K3JZF-1) to [TEST] E2E Shop 07b4ec51. The shop answers within 48 hours. http://localhost:3330/orders/BD-261018-K3JZF
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] returns.notify cmvenif7900ck04ox5gb50quh requested { sent: 2 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 2, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] complaints.flag-overdue { flagged: 3 }
+[worker] orders.handover-check {"overdue":7,"alerted":7,"failures":[]}
+[worker] complaints.notify seed-complaint-overdue overdue { sent: 1 }
+[worker] orders.notify-overdue e2eadm-1ai3rpeuq3-so { sent: [ 'admin email' ] }
+[worker] returns.escalate-overdue { escalated: 3 }
+[sms:test] to +8801700000002 (not sent): [TEST] Test Tech Shop did not answer your return of 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM (order BD-261001-RTNB3-1) within 48 hours, so the marketplace admin will decide. http://localhost:3330/orders/BD-261001-RTNB3
+[worker] complaints.notify cmvenifqm00cn04oxv7rt9fce overdue { sent: 1 }
+[worker] returns.notify seed-return-overdue escalated { sent: 3 }
+[worker] orders.notify-overdue cmvenc0oe006usgoxtl0uft71 { sent: [ 'shop email', 'admin email' ] }
+[sms:test] to +8801940409604 (not sent): [TEST] E2E Shop 5bfdf37c did not answer your return of 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E and4xwrp] (order BD-261018-T7MCR-1) within 48 hours, so the marketplace admin will decide. http://localhost:3330/orders/BD-261018-T7MCR
+[worker] complaints.notify e2eadm-vj79x3dv6n-tkt overdue { sent: 1 }
+[worker] returns.notify cmveni6z800c404oxaycy0d0v escalated { sent: 3 }
+[worker] orders.notify-overdue cmvenc0oj006xsgoxxhdw0kqi { sent: [ 'shop email', 'admin email' ] }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[sms:test] to +8801922750200 (not sent): [TEST] E2E Shop 07b4ec51 did not answer your return of 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E nekts6ac] (order BD-261018-K3JZF-1) within 48 hours, so the marketplace admin will decide. http://localhost:3330/orders/BD-261018-K3JZF
+[worker] returns.notify cmvenif7900ck04ox5gb50quh escalated { sent: 3 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] orders.notify-overdue cmvenc0pr007dsgoxe70xtx10 { sent: [ 'shop email', 'admin email' ] }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] orders.notify-overdue e2eadm-bzzjkweh17-so { sent: [ 'admin email' ] }
+[worker] orders.notify-overdue e2eadm-txfja5ei8g-so { sent: [ 'admin email' ] }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[sms:test] to +8801905518193 (not sent): Overdue: order BD-261018-ZTEW2-1 had to be handed over by 19 Oct 2026, 6:45 am. Hand it over now: http://localhost:3330/seller/e2e-s-7919b0camvenj18d/orders/e2e-o-BD-261018-ZTEW2
+[sms:test] to +8801945927257 (not sent): Overdue: order BD-261018-ZTEW2-1 had to be handed over by 19 Oct 2026, 6:45 am. Hand it over now: http://localhost:3330/seller/e2e-s-7919b0camvenj18d/orders/e2e-o-BD-261018-ZTEW2
+[worker] orders.notify-overdue e2e-o-BD-261018-ZTEW2 {
+  sent: [
+    'shop email',
+    'sms +8801905518193',
+    'sms +8801945927257',
+    'admin email'
+  ]
+}
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 0, removed: 1 }
+[worker] search.reindex-product { skipped: false, indexed: 0, removed: 1 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[sms:test] to +8801957800280 (not sent): Order BD-261019-GN9NS placed: 2 shop orders, total Tk 7,560 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-GN9NS
+[worker] search.reindex-product { skipped: false, indexed: 2, removed: 0 }
+[worker] orders.notify-placed cmvenmfhu00ig04oxtz6v9ghn { sms: 'sent', email: 'sent' }
+[sms:test] to +8801910524005 (not sent): Order BD-261019-XRHSW placed: 1 shop order, total Tk 6,870 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-XRHSW
+[worker] orders.notify-placed cmvenmijb00io04ox16am13rl { sms: 'sent', email: 'sent' }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[sms:test] to +8801992384259 (not sent): Order BD-261019-CZ44M placed: 1 shop order, total Tk 6,870 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-CZ44M
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] orders.notify-placed cmvenmk0g00iu04oxihuqvzzi { sms: 'sent', email: 'sent' }
+[sms:test] to +8801936825064 (not sent): Order BD-261019-WZ4EQ placed: 1 shop order, total Tk 6,870 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-WZ4EQ
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] orders.notify-placed cmvenmm2c00j604oxvxv6f0cx { sms: 'sent', email: 'sent' }
+[sms:test] to +8801926572131 (not sent): Order BD-261019-SPKHQ placed: 1 shop order, total Tk 6,870 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-SPKHQ
+[worker] orders.notify-placed cmvenmnb800je04ox83yryptt { sms: 'sent', email: 'sent' }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[sms:test] to +8801926572131 (not sent): Order BD-261019-69A4A placed: 1 shop order, total Tk 6,870 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-69A4A
+[worker] orders.notify-placed cmvenmnc400jk04oxrjy7b9it { sms: 'sent', email: 'sent' }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[sms:test] to +8801926572131 (not sent): Order BD-261019-Y47HW placed: 1 shop order, total Tk 6,870 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-Y47HW
+[worker] orders.notify-placed cmvenmncs00jq04oxxwnpprkf { sms: 'sent', email: 'sent' }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[sms:test] to +8801997312001 (not sent): Order BD-261019-PYZCN placed: 1 shop order, total Tk 6,870 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-PYZCN
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] orders.notify-placed cmvenmqka00k004oxy0vaaa4n { sms: 'sent', email: 'sent' }
+[sms:test] to +8801977161438 (not sent): Order BD-261019-GCXV8 placed: 1 shop order, total Tk 320 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-GCXV8
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] orders.notify-placed cmvenn0lu00k804oxfndz19f7 { sms: 'sent', email: 'sent' }
+[sms:test] to +8801974890225 (not sent): Order BD-261019-MFHW8 placed: 1 shop order, total Tk 320 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-MFHW8
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] orders.notify-placed cmvenn5q200ko04oxddnq48rl { sms: 'sent', email: 'sent' }
+[sms:test] to +8801913155621 (not sent): Order BD-261019-XND5Y placed: 1 shop order, total Tk 320 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-XND5Y
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] orders.notify-placed cmvenn7pj00kw04ox6ap0llbq { sms: 'sent', email: 'sent' }
+[sms:test] to +8801900149397 (not sent): Order BD-261019-Q4RZQ placed: 1 shop order, total Tk 320 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-Q4RZQ
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] orders.notify-placed cmvenn8iq00l504ox0aj88z8t { sms: 'sent', email: 'sent' }
+[sms:test] to +8801996048642 (not sent): Order BD-261019-SNFS5 placed: 1 shop order, total Tk 320 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-SNFS5
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] orders.notify-placed cmvenn90h00ld04oxtbkxroen { sms: 'sent', email: 'sent' }
+[sms:test] to +8801997511937 (not sent): Order BD-261019-HQ7D5 placed: 1 shop order, total Tk 320 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-HQ7D5
+[worker] orders.notify-placed cmvenn92r00ll04oxzaj54s3f { sms: 'sent', email: 'sent' }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[sms:test] to +8801945404050 (not sent): Order BD-261019-ZP6N4 placed: 1 shop order, total Tk 320 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-ZP6N4
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] orders.notify-placed cmvenngaj00m204ox4hw18kuh { sms: 'sent', email: 'sent' }
+[sms:test] to +8801953324798 (not sent): Order BD-261019-6WHPB placed: 1 shop order, total Tk 320 cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261019-6WHPB
+[worker] orders.notify-placed cmvenngau00m804oxmjh55h8k { sms: 'sent', email: 'sent' }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] stopping

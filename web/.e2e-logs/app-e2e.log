@@ -1,0 +1,10 @@
+▲ Next.js 16.4.2
+- Local:         http://localhost:3300
+- Network:       http://192.168.68.51:3300
+✓ Ready in 158ms
+✓ Running next.config.ts took 22ms
+[otp:test] OTP for +8801933964713 is 123456 (no SMS sent)
+[sms:test] to +8801923006704 (not sent): Your order BD-261018-26739-1 is with the courier (Courier: RedX, tracking: RX-E2E-0001). Pay cash on delivery. Track: http://localhost:3300/track?orderNo=BD-261018-26739
+[otp:test] OTP for +8801939613681 is 123456 (no SMS sent)
+[otp:test] OTP for +8801973146598 is 123456 (no SMS sent)
+[otp:test] OTP for +8801973146598 is 123456 (no SMS sent)

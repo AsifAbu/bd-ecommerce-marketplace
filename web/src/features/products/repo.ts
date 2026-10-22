@@ -48,6 +48,16 @@ export function listProducts(shopId: string) {
   });
 }
 
+/** The shop's own products whose title contains `q` (for "copy from one of my products"). */
+export function searchOwnProducts(shopId: string, q: string) {
+  return prisma.product.findMany({
+    where: { shopId, deletedAt: null, ...(q ? { title: { contains: q, mode: "insensitive" } } : {}) },
+    select: { id: true, title: true, category: { select: { name: true } } },
+    orderBy: { updatedAt: "desc" },
+    take: 8,
+  });
+}
+
 export function getProduct(shopId: string, productId: string) {
   return prisma.product.findFirst({
     where: { id: productId, shopId, deletedAt: null },

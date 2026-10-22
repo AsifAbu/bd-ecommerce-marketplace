@@ -1,0 +1,175 @@
+▲ Next.js 16.4.2
+- Local:         http://localhost:3330
+- Network:       http://192.168.68.51:3330
+✓ Ready in 155ms
+✓ Running next.config.ts took 20ms
+[otp:test] OTP for +8801924836281 is 123456 (no SMS sent)
+[sms:test] to +8801700000002 (not sent): Your order BD-261018-GD9M3-1 is with the courier (Courier: RedX, tracking: RX-E2E-12345). Pay cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261018-GD9M3
+[sms:test] to +8801700000002 (not sent): Your order BD-261018-9J6EN-1 was cancelled: Customer called to cancel. Nothing to pay.
+[otp:test] OTP for +8801997325074 is 123456 (no SMS sent)
+[otp:test] OTP for +8801942945030 is 123456 (no SMS sent)
+[otp:test] OTP for +8801915814348 is 123456 (no SMS sent)
+[otp:test] OTP for +8801998170554 is 123456 (no SMS sent)
+[otp:test] OTP for +8801948658701 is 123456 (no SMS sent)
+[otp:test] OTP for +8801918860658 is 123456 (no SMS sent)
+[otp:test] OTP for +8801974593837 is 123456 (no SMS sent)
+[otp:test] OTP for +8801959213444 is 123456 (no SMS sent)
+[otp:test] OTP for +8801962298461 is 123456 (no SMS sent)
+[otp:test] OTP for +8801945541321 is 123456 (no SMS sent)
+[otp:test] OTP for +8801960607108 is 123456 (no SMS sent)
+[otp:test] OTP for +8801991390870 is 123456 (no SMS sent)
+[otp:test] OTP for +8801996681064 is 123456 (no SMS sent)
+[otp:test] OTP for +8801911514814 is 123456 (no SMS sent)
+[otp:test] OTP for +8801968422800 is 123456 (no SMS sent)
+[otp:test] OTP for +8801956739210 is 123456 (no SMS sent)
+[otp:test] OTP for +8801939823503 is 123456 (no SMS sent)
+[otp:test] OTP for +8801916619302 is 123456 (no SMS sent)
+[otp:test] OTP for +8801967942516 is 123456 (no SMS sent)
+[sms:test] to +8801954403685 (not sent): Your order BD-261018-6M87B-1 is with the courier (Courier: RedX, tracking: RX-E2E-0001). Pay cash on delivery. Track: http://localhost:3330/track?orderNo=BD-261018-6M87B
+[sms:test] to +8801916702357 (not sent): Your order BD-261018-8VZ5Y-1 was cancelled: Out of stock at the warehouse. Nothing to pay.
+[sms:test] to +8801937052535 (not sent): Your order BD-261018-KTPW4-1 was cancelled: Customer asked to cancel. Nothing to pay.
+[otp:test] OTP for +8801906614635 is 123456 (no SMS sent)
+[otp:test] OTP for +8801952746988 is 123456 (no SMS sent)
+[otp:test] OTP for +8801906557315 is 123456 (no SMS sent)
+[otp:test] OTP for +8801972566678 is 123456 (no SMS sent)
+[otp:test] OTP for +8801985826275 is 123456 (no SMS sent)
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at fm (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:41075)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async fv (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:50701)
+    at async fx (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:54985)
+    at async fJ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:60306)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/src_features_accounts_04np1wejp62o5._.js:1:1250
+    at async d (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_1m6er-jg6nc4s._.js:1:410)
+    at async rN (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:3423)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:1865
+    at async r$ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:226:11995)
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at fm (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:41075)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async fv (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:50701)
+    at async fx (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:54985)
+    at async fJ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:60306)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/src_features_accounts_04np1wejp62o5._.js:1:1250
+    at async d (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_1m6er-jg6nc4s._.js:1:410)
+    at async rN (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:3423)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:1865
+    at async r$ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:226:11995)
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at fm (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:41075)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async fv (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:50701)
+    at async fx (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:54985)
+    at async fJ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:60306)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/src_features_accounts_04np1wejp62o5._.js:1:1250
+    at async d (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_1m6er-jg6nc4s._.js:1:410)
+    at async rN (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:3423)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:1865
+    at async r$ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:226:11995)
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at fm (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:41075)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async fv (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:50701)
+    at async fx (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:54985)
+    at async fJ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:60306)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/src_features_accounts_04np1wejp62o5._.js:1:1250
+    at async d (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_1m6er-jg6nc4s._.js:1:410)
+    at async rN (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:3423)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:1865
+    at async r$ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:226:11995)
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at fm (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:41075)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async fv (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:50701)
+    at async fx (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:54985)
+    at async fJ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:60306)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/src_features_accounts_04np1wejp62o5._.js:1:1250
+    at async d (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_1m6er-jg6nc4s._.js:1:410)
+    at async rN (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:3423)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:1865
+    at async r$ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:226:11995)
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at fm (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:41075)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async fv (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:50701)
+    at async fx (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:54985)
+    at async fJ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:60306)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/src_features_accounts_04np1wejp62o5._.js:1:1250
+    at async d (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_1m6er-jg6nc4s._.js:1:410)
+    at async rN (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:3423)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:1865
+    at async r$ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:226:11995)
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at fm (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:41075)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async fv (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:50701)
+    at async fx (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:54985)
+    at async fJ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:60306)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/src_features_accounts_04np1wejp62o5._.js:1:1250
+    at async d (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_1m6er-jg6nc4s._.js:1:410)
+    at async rN (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:3423)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:1865
+    at async r$ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:226:11995)
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at fm (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:41075)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async fv (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:50701)
+    at async fx (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:54985)
+    at async fJ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:60306)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/src_features_accounts_04np1wejp62o5._.js:1:1250
+    at async d (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_1m6er-jg6nc4s._.js:1:410)
+    at async rN (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:3423)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:1865
+    at async r$ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:226:11995)
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at fm (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:41075)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async fv (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:50701)
+    at async fx (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:54985)
+    at async fJ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:60306)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/src_features_accounts_04np1wejp62o5._.js:1:1250
+    at async d (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_1m6er-jg6nc4s._.js:1:410)
+    at async rN (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:3423)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:1865
+    at async r$ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:226:11995)
+[otp:test] OTP for +8801994103797 is 123456 (no SMS sent)
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at fm (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:41075)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async fv (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:50701)
+    at async fx (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:54985)
+    at async fJ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:60306)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/src_features_accounts_04np1wejp62o5._.js:1:1250
+    at async d (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_1m6er-jg6nc4s._.js:1:410)
+    at async rN (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:3423)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:1865
+    at async r$ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:226:11995)
+[otp:test] OTP for +8801901091172 is 123456 (no SMS sent)
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at fm (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:41075)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async fv (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:50701)
+    at async fx (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:54985)
+    at async fJ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_03iu4_7r4ukbx._.js:404:60306)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/src_features_accounts_04np1wejp62o5._.js:1:1250
+    at async d (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/.next/server/chunks/ssr/_1m6er-jg6nc4s._.js:1:410)
+    at async rN (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:3423)
+    at async /Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:227:1865
+    at async r$ (/Users/abuasif/Official Work/AI Try Out/Claude_E_Commerce_Site/web/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:226:11995)
+[otp:test] OTP for +8801910765779 is 123456 (no SMS sent)
+[otp:test] OTP for +8801936825064 is 123456 (no SMS sent)
+[otp:test] OTP for +8801977161438 is 123456 (no SMS sent)
+[otp:test] OTP for +8801977161438 is 123456 (no SMS sent)
+[otp:test] OTP for +8801919317228 is 123456 (no SMS sent)
+[otp:test] OTP for +8801999330713 is 123456 (no SMS sent)
+[otp:test] OTP for +8801943613118 is 123456 (no SMS sent)
+[otp:test] OTP for +8801974890225 is 123456 (no SMS sent)
+[otp:test] OTP for +8801913155621 is 123456 (no SMS sent)
+[otp:test] OTP for +8801913155621 is 123456 (no SMS sent)
+[otp:test] OTP for +8801900149397 is 123456 (no SMS sent)
+[otp:test] OTP for +8801996048642 is 123456 (no SMS sent)
+[otp:test] OTP for +8801997511937 is 123456 (no SMS sent)
+[otp:test] OTP for +8801945404050 is 123456 (no SMS sent)
+[otp:test] OTP for +8801953324798 is 123456 (no SMS sent)
+[otp:test] OTP for +8801913230377 is 123456 (no SMS sent)
+[otp:test] OTP for +8801981446257 is 123456 (no SMS sent)

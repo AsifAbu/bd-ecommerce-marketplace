@@ -1,0 +1,11 @@
+[worker] started (test mode): example.log, shops.licence-expiry, shops.refresh-scores, products.refresh-counts, cart.purge-guest-carts, search.reindex-product, search.reindex-all, orders.notify-placed, orders.handover-check, orders.notify-overdue, payouts.due-check, returns.escalate-overdue, returns.notify, complaints.flag-overdue, complaints.notify
+[sms:test] to +8801908206780 (not sent): We sent your return request for 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E 5r8gfh73] (order BD-261018-5PZA6-1) to [TEST] E2E Shop f3ae27e6. The shop answers within 48 hours. http://localhost:3300/orders/BD-261018-5PZA6
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] returns.notify cmvdc3hdo00099coxpaddnyc1 requested { sent: 2 }
+[sms:test] to +8801908206780 (not sent): [TEST] E2E Shop f3ae27e6 accepted your return of 1 x [TEST] Corsair Vengeance 16GB DDR5 RAM [E2E 5r8gfh73] (order BD-261018-5PZA6-1). The item will be collected or you can drop it off; the refund follows. http://localhost:3300/orders/BD-261018-5PZA6
+[worker] returns.notify cmvdc3hdo00099coxpaddnyc1 accepted { sent: 2 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[worker] search.reindex-product { skipped: false, indexed: 1, removed: 0 }
+[sms:test] to +8801973146598 (not sent): Order BD-261018-QYY4E placed: 1 shop order, total Tk 320 cash on delivery. Track: http://localhost:3300/track?orderNo=BD-261018-QYY4E
+[worker] orders.notify-placed cmvdc3pdb00199coxltvn6u2f { sms: 'sent', email: 'sent' }
+[worker] stopping

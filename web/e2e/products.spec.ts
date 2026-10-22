@@ -26,7 +26,7 @@ test("staff create a processor listing through the form, see it listed and deact
 
   await page.getByRole("link", { name: "Products", exact: true }).click();
   await page.getByRole("link", { name: "Add a product" }).click();
-  await page.getByRole("link", { name: "Electronics › Computer Components › Processor" }).click();
+  await page.getByRole("combobox", { name: "Category" }).selectOption({ label: "Electronics › Computer Components › Processor" });
 
   // The form shows Processor's attributes and the guideline fields.
   for (const label of ["Brand", "Socket", "Core count", "Base clock (GHz)", "Country of origin", "Return eligibility"]) {
@@ -87,7 +87,7 @@ test("staff import products from CSV: every error is listed and nothing is impor
   await page.waitForURL(/\/seller\/[^/]+$/);
   await page.getByRole("link", { name: "Products", exact: true }).click();
   await page.getByRole("link", { name: "Import products from CSV" }).click();
-  await page.getByRole("link", { name: "Electronics › Computer Components › Processor" }).click();
+  await page.getByRole("combobox", { name: "Category" }).selectOption({ label: "Electronics › Computer Components › Processor" });
   await expect(page.getByRole("cell", { name: "One of: AM4, AM5, LGA1700, LGA1851" })).toBeVisible();
 
   const header = "handle,title,description,sku,price,stock,brand,socket,core_count,base_clock_ghz,quantity,quantity_unit,weight_g,country_of_origin,return_eligibility";
@@ -111,4 +111,27 @@ test("staff import products from CSV: every error is listed and nothing is impor
   await page.getByLabel("Stock: Default").fill("9");
   await page.getByRole("button", { name: "Update stock" }).click();
   await expect(page.getByText("Stock updated")).toBeVisible();
+});
+
+test("the category dropdown changes the form, and a new product can start from one of the shop's own products", async ({ page }) => {
+  await login(page, "staff.tech@ecom.test", "/seller");
+  await page.getByRole("link", { name: /Test Tech Shop/ }).click();
+  await page.waitForURL(/\/seller\/[^/]+$/);
+  await page.goto(`${new URL(page.url()).pathname}/products/new`);
+
+  // No category yet: no form. Choosing one shows that category's form; choosing another changes it.
+  await expect(page.getByRole("button", { name: "Create product" })).toHaveCount(0);
+  await page.getByRole("combobox", { name: "Category" }).selectOption({ label: "Electronics › Computer Components › Processor" });
+  await expect(field(page, "Socket")).toBeVisible();
+  await page.getByRole("combobox", { name: "Category" }).selectOption({ label: "Electronics › Computer Components › RAM" });
+  await expect(field(page, "Socket")).toHaveCount(0);
+
+  // Search the shop's own products and start from one: title and details are filled, stock is empty.
+  await page.getByRole("searchbox", { name: "Search your products" }).fill("Ryzen 5 7600");
+  await page.getByRole("button", { name: "Search" }).click();
+  await page.getByRole("list", { name: "Your products" }).getByRole("link").first().click();
+  await expect(page.getByText(/Filled in from/)).toBeVisible();
+  await expect(field(page, "Title")).toHaveValue(/Ryzen 5 7600/);
+  await expect(field(page, "Socket")).toBeVisible();
+  await expect(field(page, "Stock")).toHaveValue("");
 });

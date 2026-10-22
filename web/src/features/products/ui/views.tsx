@@ -10,10 +10,11 @@ import { leafChoices, priceRange, variantLabel } from "../display";
 import { LISTING_STATE_LABELS, listingState } from "../live";
 import { LOW_STOCK_AT } from "../low-stock";
 import * as repo from "../repo";
+import { CategorySelect } from "./category-select";
 import { ImageManager } from "./image-manager";
 import { ImportForm } from "./import-form";
 import { ProductActions, StockForm } from "./product-actions";
-import { ProductForm } from "./product-form";
+import { ProductForm, type ProductValues } from "./product-form";
 import { linkClass } from "./styles";
 
 /** Seller pages for products. Every view takes a `shopId` already checked by requireShopRole(). */
@@ -151,34 +152,21 @@ export async function ProductListView({ shopId }: { shopId: string }) {
   );
 }
 
-/** Leaf categories as links to `${hrefBase}?categoryId=` (licence-only leaves for medicine shops only). */
-async function CategoryPicker({ shopId, hrefBase }: { shopId: string; hrefBase: string }) {
+/** Leaf categories as a dropdown that opens `${hrefBase}?categoryId=` (licence-only leaves for medicine shops only). */
+async function CategoryPicker({ shopId, hrefBase, selectedId }: { shopId: string; hrefBase: string; selectedId?: string }) {
   const [shop, categories] = await Promise.all([repo.getListingShop(shopId), listCategories()]);
   const choices = leafChoices(categories, { includeLicensed: shop?.type === "medicine" });
   return (
-    <Section title="Choose a category" id="choose-category" className="max-w-2xl">
-      <p className="text-muted">Every product sits in one leaf category; its form shows that category&apos;s fields.</p>
-      <ul className="divide-y divide-line border-y border-line">
-        {choices.map((c) => (
-          <li key={c.id}>
-            <Link
-              className="-mx-3 flex min-h-11 flex-wrap items-center gap-x-3 rounded-md px-3 py-2.5 transition-colors hover:bg-surface"
-              href={`${hrefBase}?categoryId=${encodeURIComponent(c.id)}`}
-            >
-              {c.label}
-              {c.requiresLicence && <span className="text-sm text-muted">(needs a verified drug licence)</span>}
-            </Link>
-          </li>
-        ))}
-      </ul>
-      <p className="text-muted">
+    <div className="flex flex-col gap-2">
+      <CategorySelect hrefBase={hrefBase} options={choices} selectedId={selectedId} />
+      <p className="text-sm text-muted">
         Can&apos;t find the right category?{" "}
         <Link className={linkClass} href="/catalog/requests/new">
           Request a new one
         </Link>
         .
       </p>
-    </Section>
+    </div>
   );
 }
 
@@ -202,21 +190,74 @@ function CategoryLine({ name, changeHref }: { name: string; changeHref: string }
   );
 }
 
-/** /seller/[shopId]/products/new: pick a leaf, then its generated form (US-030). */
-export async function NewProductView({ shopId, categoryId }: { shopId: string; categoryId?: string }) {
-  const schema = categoryId ? await loadSchema(categoryId) : null;
+/** Form values copied from one of the shop's own products: stock and SKU are left empty, photos are not copied. */
+function copyValues(p: NonNullable<Awaited<ReturnType<typeof repo.getProduct>>>): ProductValues {
+  return {
+    title: p.title,
+    bengaliName: p.bengaliName ?? "",
+    description: p.description,
+    attributes: (p.attributes ?? {}) as Record<string, unknown>,
+    variants: p.variants.map((v) => ({ sku: "", price: v.price.toString(), stock: "", options: (v.options ?? {}) as Record<string, string> })),
+  };
+}
+
+/** Search the shop's own products; choosing one opens this page with `?copyFrom=`. */
+async function CopyFromProduct({ shopId, q }: { shopId: string; q: string }) {
+  const found = await repo.searchOwnProducts(shopId, q);
+  return (
+    <Section title="Start from one of your products" id="copy-from" className="max-w-xl">
+      <form role="search" aria-label="Search your products" className="flex gap-2" action={`/seller/${shopId}/products/new`}>
+        <input
+          name="q"
+          type="search"
+          defaultValue={q}
+          aria-label="Search your products"
+          placeholder="Product name"
+          className="min-h-11 min-w-0 flex-1 rounded-md border border-line bg-paper px-3"
+        />
+        <button type="submit" className={buttonStyles({ variant: "secondary" })}>
+          Search
+        </button>
+      </form>
+      {found.length === 0 ? (
+        <p className="text-sm text-muted">{q ? "None of your products match." : "You have no products yet."}</p>
+      ) : (
+        <ul className="divide-y divide-line border-y border-line" aria-label="Your products">
+          {found.map((p) => (
+            <li key={p.id}>
+              <Link
+                className="-mx-3 flex min-h-11 flex-wrap items-center justify-between gap-x-3 rounded-md px-3 py-2 hover:bg-surface"
+                href={`/seller/${shopId}/products/new?copyFrom=${encodeURIComponent(p.id)}`}
+              >
+                <span className="break-words">{p.title}</span>
+                <span className="text-sm text-muted">{p.category.name}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="text-sm text-muted">The form is filled in from the product you choose. Add the stock and check the details. Photos are not copied.</p>
+    </Section>
+  );
+}
+
+/** /seller/[shopId]/products/new: pick a category from the dropdown, then its generated form (US-030); can start from an own product. */
+export async function NewProductView({ shopId, categoryId, copyFrom, q = "" }: { shopId: string; categoryId?: string; copyFrom?: string; q?: string }) {
+  const source = copyFrom ? await repo.getProduct(shopId, copyFrom) : null;
+  const chosenCategory = source?.categoryId ?? categoryId;
+  const schema = chosenCategory ? await loadSchema(chosenCategory) : null;
+  const base = `/seller/${shopId}/products/new`;
   return (
     <div className="flex max-w-3xl flex-col gap-6">
       <BackLink href={`/seller/${shopId}/products`}>All products</BackLink>
       <PageHeader title="Add a product" />
+      {copyFrom && !source && <Notice tone="error">That product was not found in your shop.</Notice>}
+      {source && <Notice tone="success">Filled in from &ldquo;{source.title}&rdquo;. Add the stock and check the details before you create it.</Notice>}
       {typeof schema === "string" && <Notice tone="error">{schema}</Notice>}
-      {schema && typeof schema !== "string" ? (
-        <>
-          <CategoryLine name={schema.name} changeHref={`/seller/${shopId}/products/new`} />
-          <ProductForm shopId={shopId} schema={schema} />
-        </>
-      ) : (
-        <CategoryPicker shopId={shopId} hrefBase={`/seller/${shopId}/products/new`} />
+      <CategoryPicker shopId={shopId} hrefBase={base} selectedId={schema && typeof schema !== "string" ? schema.categoryId : undefined} />
+      <CopyFromProduct shopId={shopId} q={q} />
+      {schema && typeof schema !== "string" && (
+        <ProductForm key={source?.id ?? "blank"} shopId={shopId} schema={schema} initial={source ? copyValues(source) : undefined} />
       )}
     </div>
   );

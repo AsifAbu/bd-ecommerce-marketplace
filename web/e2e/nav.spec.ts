@@ -49,13 +49,31 @@ test("a logged-in customer sees their name in the header and can open their prof
   await expect(page).toHaveURL(/\/account$/);
 });
 
-test("a shop owner finds their shop in the menu", async ({ page }) => {
+const shopMenu = (page: Page) => header(page).locator("details").filter({ has: page.getByLabel("My shop menu") });
+
+test("a shop owner reaches Add a product from the My shop menu; shop links are not in the account menu", async ({ page }) => {
   await login(page, "owner.tech@ecom.test");
   await page.goto("/");
+  const account = accountMenu(page);
+  await account.locator("summary").click();
+  await expect(account.getByText("Shop owner")).toBeVisible();
+  await expect(account.getByRole("link", { name: "Add a product" })).toHaveCount(0);
+  await account.locator("summary").click();
+
+  const menu = shopMenu(page);
+  await menu.locator("summary").click();
+  await menu.getByRole("link", { name: "Add a product" }).click();
+  await expect(page).toHaveURL(/\/seller\/[^/]+\/products\/new$/);
+  await expect(header(page).getByText("Seller Centre")).toBeVisible();
+});
+
+test("a customer has no My shop menu and sees the Customer role", async ({ page }) => {
+  await login(page, "customer.verified@ecom.test");
+  await page.goto("/");
+  await expect(shopMenu(page)).toHaveCount(0);
   const menu = accountMenu(page);
   await menu.locator("summary").click();
-  await menu.getByRole("link", { name: /Test Tech Shop/ }).click();
-  await expect(page).toHaveURL(/\/seller\/[^/]+$/);
+  await expect(menu.getByText("Customer", { exact: true })).toBeVisible();
 });
 
 test("the admin approves a newly applied shop from the header menu", async ({ page }) => {

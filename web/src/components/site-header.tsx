@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { auth } from "@/auth";
 import { CartLink } from "@/features/cart/ui/cart-link";
 import { AccountMenu, GuestLinks } from "./account-menu";
+import { AreaLabel } from "./area-label";
 import { CategoryLink, CategoryMenu, loadCategoryTree } from "./category-menu";
 import { Logo } from "./brand/logo";
 import { MobileMenu } from "./mobile-menu";
@@ -28,6 +29,9 @@ export function SiteHeader() {
           </Suspense>
         </div>
         <Logo href="/" className="min-h-11 px-1 lg:px-0" markClassName="h-8 w-auto lg:h-9" nameClassName="text-xl lg:text-2xl" />
+        <Suspense fallback={null}>
+          <AreaLabel />
+        </Suspense>
         <div className="hidden lg:block">
           <Suspense fallback={<CategoryLink />}>
             <CategoryMenu />
