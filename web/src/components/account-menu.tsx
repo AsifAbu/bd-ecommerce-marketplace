@@ -3,8 +3,8 @@ import { connection } from "next/server";
 import { auth } from "@/auth";
 import { LogoutButton } from "@/features/accounts/ui/page-shell";
 import { adminWaiting, loadMenuData, type MenuData } from "@/lib/menu-data";
-import { ChevronDown } from "lucide-react";
-import { buttonStyles, DisclosureMenu, menuItemStyles } from "./ui";
+import { ChevronDown, Store } from "lucide-react";
+import { Badge, buttonStyles, DisclosureMenu, menuItemStyles } from "./ui";
 
 const itemClass = menuItemStyles;
 const headingClass = "px-3 pb-1 pt-3 text-xs font-medium text-muted";
@@ -31,7 +31,86 @@ export async function AccountMenu() {
       </Link>
     );
   }
-  return <UserDropdown data={data} />;
+  return (
+    <div className="flex items-center gap-1 sm:gap-2">
+      {data.shops.length > 0 && <ShopMenu shops={data.shops} />}
+      <UserDropdown data={data} />
+    </div>
+  );
+}
+
+/** Who the user is on this site, for the badge in the account menu. */
+export function roleLabel(data: Pick<MenuData, "isPlatformAdmin" | "shops">): string {
+  if (data.isPlatformAdmin) return "Admin";
+  if (data.shops.some((s) => s.role === "owner")) return "Shop owner";
+  if (data.shops.some((s) => s.role === "staff")) return "Shop staff";
+  return "Customer";
+}
+
+/** Shop things (add a product, products, orders) for owners and staff; "me" things stay in the account menu. */
+function ShopMenu({ shops }: { shops: MenuData["shops"] }) {
+  return (
+    <DisclosureMenu
+      summaryLabel="My shop menu"
+      summaryClassName="border border-line px-2 sm:px-3"
+      summary={
+        <>
+          <Store aria-hidden="true" size={18} />
+          <span className="hidden sm:inline">My shop</span>
+          <ChevronDown aria-hidden="true" size={16} className="hidden transition-transform group-open:rotate-180 sm:block" />
+        </>
+      }
+      panelClassName="w-72"
+    >
+      {shops.map((s) => {
+        const base = `/seller/${s.id}`;
+        return (
+          <section key={s.id} aria-label={s.name} className="border-b border-line pb-1 last:border-b-0">
+            <p className="flex items-center justify-between gap-2 px-3 pb-1 pt-3 text-xs font-medium text-muted">
+              <span className="truncate">{s.name}</span>
+              <span className={`shrink-0 ${s.status === "approved" ? "text-jade" : "text-gold-ink"}`}>
+                {s.status === "approved" ? s.role : s.status}
+              </span>
+            </p>
+            <ul>
+              <li>
+                <Link href={`${base}/products/new`} className={`${itemClass} font-semibold text-jade`}>
+                  Add a product
+                </Link>
+              </li>
+              <li>
+                <Link href={`${base}/products`} className={itemClass}>
+                  Products
+                </Link>
+              </li>
+              <li>
+                <Link href={`${base}/orders`} className={itemClass}>
+                  Orders
+                </Link>
+              </li>
+              <li>
+                <Link href={base} className={itemClass}>
+                  Shop dashboard
+                </Link>
+              </li>
+              {s.role === "owner" && (
+                <li>
+                  <Link href={`${base}/payouts`} className={itemClass}>
+                    Payouts
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </section>
+        );
+      })}
+      <div className="border-t border-line">
+        <Link href="/shops/apply" className={`${itemClass} font-medium text-jade`}>
+          Open another shop
+        </Link>
+      </div>
+    </DisclosureMenu>
+  );
 }
 
 export function GuestLinks() {
@@ -69,6 +148,12 @@ function UserDropdown({ data }: { data: MenuData }) {
       }
       panelClassName="w-72"
     >
+        <div className="flex items-center justify-between gap-2 border-b border-line px-3 py-2.5">
+          <span className="min-w-0 truncate text-sm font-medium">{data.displayName}</span>
+          <Badge tone="neutral" className="shrink-0">
+            {roleLabel(data)}
+          </Badge>
+        </div>
         <ul>
           <li>
             <Link href="/account" className={`${itemClass} font-semibold`}>
@@ -107,24 +192,15 @@ function UserDropdown({ data }: { data: MenuData }) {
           </li>
         </ul>
 
-        <p className={headingClass}>Selling</p>
-        <ul>
-          {data.shops.map((s) => (
-            <li key={s.id}>
-              <Link href={`/seller/${s.id}`} className={itemClass}>
-                <span className="truncate">{s.name}</span>
-                <span className={`ml-2 shrink-0 text-xs ${s.status === "approved" ? "text-jade" : "text-gold-ink"}`}>
-                  {s.status === "approved" ? s.role : s.status}
-                </span>
+        {data.shops.length === 0 && (
+          <ul>
+            <li>
+              <Link href="/shops/apply" className={`${itemClass} font-medium text-jade`}>
+                Open a shop
               </Link>
             </li>
-          ))}
-          <li>
-            <Link href="/shops/apply" className={`${itemClass} font-medium text-jade`}>
-              {data.shops.length ? "Open another shop" : "Open a shop"}
-            </Link>
-          </li>
-        </ul>
+          </ul>
+        )}
 
         {data.isPlatformAdmin && data.admin && (
           <>
