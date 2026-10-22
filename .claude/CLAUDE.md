@@ -21,6 +21,7 @@
 | --- | --- |
 | The plan (owner's deliverable) | `docs/Product-Plan.docx` |
 | Use case diagrams | `docs/Use-Case-Diagrams.docx` |
+| Full rebuild from scratch: local setup, free hosted deploy, every tool explained, what's not built | `docs/Setup-Guide.md` |
 | Plan source (edit this, then rebuild) | `.claude/source/plan-v2.4.md` |
 | All decisions D1–D15, ADRs, preferences | `.claude/knowledge/decisions.md` |
 | Bangladesh rules, competitors, courier rates, sources | `.claude/knowledge/research.md` |
